@@ -61,7 +61,7 @@ function answerIsValid(answerId, value) {
   return value !== "";
 }
 
-export function initialiseQuestionnaire() {
+export function initialiseQuestionnaire({ onComplete = null, onRestart = null } = {}) {
   const form = document.querySelector("#questionnaire-form");
   if (!form) return;
 
@@ -217,7 +217,10 @@ export function initialiseQuestionnaire() {
       completeQuestionnaire();
       form.hidden = true;
       completionPanel.hidden = false;
-      completionPanel.querySelector(".questionnaire-step-heading")?.focus();
+      const completionHandled = onComplete?.(getState().answers) === true;
+      if (!completionHandled) {
+        completionPanel.querySelector(".questionnaire-step-heading")?.focus();
+      }
       return;
     }
 
@@ -244,6 +247,7 @@ export function initialiseQuestionnaire() {
 
   confirmRestartButton.addEventListener("click", () => {
     resetQuestionnaire();
+    onRestart?.();
     syncControlsFromState();
     STEP_CONFIG.forEach((_, stepIndex) => clearError(stepIndex));
     hideRestartConfirmation();

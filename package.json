@@ -1,0 +1,8 @@
+{
+  "name": "northstar-apple-product-recommender",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}

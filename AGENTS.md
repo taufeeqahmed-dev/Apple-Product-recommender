@@ -1,20 +1,39 @@
 # Repository guidance
 
-This repository contains Northstar, an unofficial student portfolio project that will help people choose a MacBook based on their needs.
+This repository contains Northstar, an unofficial student portfolio project that helps people choose a MacBook based on their needs.
 
-## Current scope
+## Current scope and stage
 
 - Version one covers MacBook recommendations only.
-- Stage 1 is complete and committed.
-- Do not begin Stage 2 unless the user explicitly approves it.
+- Stages 1 and 2 are complete, committed and pushed.
+- Stage 3 is implemented and verified locally but is awaiting user review; do not commit or push it without explicit approval.
+- Do not begin Stage 4 without explicit user approval.
 - Read `PROJECT_STATUS.md` before making changes.
+
+## Architecture boundaries
+
+- Keep verified Apple facts in `js/products.js` and schema validation in `js/product-schema.js`.
+- Keep hard thresholds and project suitability matrices in `js/recommendation-rules.js`.
+- Keep the recommendation engine pure and deterministic in `js/recommendation-engine.js`.
+- Keep result rendering in `js/results.js` and questionnaire state private to `js/questionnaire-state.js`.
+- Validate the entire catalogue before calculating recommendations.
+- Treat all suitability bands, fit scores, reasons and compromises as independent project judgements, never Apple claims.
+
+## Product-data rules
+
+- Use only official Apple UK product, buying, technical-specification and relevant support pages.
+- Verify each exact configuration and price; never apply a family starting price to multiple models.
+- Record stable IDs, `GB`/`GBP`, source URLs, availability and verification dates.
+- Use `null` for genuinely unavailable information and do not infer missing facts.
+- Prices are dated snapshots that may later change.
+- Do not add configurable upgrades outside an explicitly approved dataset.
 
 ## Working rules
 
 - Use semantic HTML, responsive CSS and JavaScript modules without external frameworks or libraries.
 - Preserve keyboard access, visible focus states, readable contrast and reduced-motion support.
 - Maintain an original visual identity; do not copy Apple's website or imply affiliation with Apple.
-- Do not invent product prices or specifications. Add product information only in its approved stage and record when it was verified.
 - Treat `sources/` as read-only local reference material. Do not edit, rename, move or delete its contents.
 - Keep `.agents/`, `.codex/` and `sources/` out of version control.
-- Keep changes within the currently approved development stage, run proportionate checks and update project documentation when behavior or scope changes.
+- Run the dependency-free test suite with `node --test` and perform proportionate browser/accessibility checks.
+- Keep changes within the currently approved development stage and update documentation when behaviour or scope changes.

@@ -1,5 +1,401 @@
-/**
- * MacBook product records will be added in a later development stage.
- * The frozen empty array prevents accidental changes during Stage 1.
- */
-export const products = Object.freeze([]);
+import { createProductCatalogue } from "./product-schema.js";
+
+const VERIFIED_ON = "2026-07-31";
+
+const SOURCE_URLS = Object.freeze({
+  neo: Object.freeze({
+    product: "https://www.apple.com/uk/macbook-neo/",
+    specifications: "https://www.apple.com/uk/macbook-neo/specs/",
+    displays: "https://support.apple.com/en-gb/126473",
+  }),
+  air: Object.freeze({
+    product: "https://www.apple.com/uk/macbook-air/",
+    specifications: "https://www.apple.com/uk/macbook-air/specs/",
+  }),
+  pro: Object.freeze({
+    product: "https://www.apple.com/uk/macbook-pro/",
+    specifications: "https://www.apple.com/uk/macbook-pro/specs/",
+    displays: "https://support.apple.com/en-gb/101571",
+  }),
+});
+
+function createSources({ family, buyingUrl, displayFinishId }) {
+  const buyingFields = [
+    "configurationName",
+    "availability.status",
+    "price.amountMinor",
+    "facts.chip",
+    "facts.unifiedMemoryGb",
+    "facts.storageGb",
+  ];
+  if (displayFinishId !== null) buyingFields.push("facts.displayFinishId");
+
+  const sources = [
+    {
+      type: "product",
+      url: SOURCE_URLS[family].product,
+      verifiedOn: VERIFIED_ON,
+      supportsFields: ["displayName", "availability.status"],
+    },
+    {
+      type: "buying",
+      url: buyingUrl,
+      verifiedOn: VERIFIED_ON,
+      supportsFields: buyingFields,
+    },
+    {
+      type: "technical-specifications",
+      url: SOURCE_URLS[family].specifications,
+      verifiedOn: VERIFIED_ON,
+      supportsFields: [
+        "facts.marketedScreenSizeInches",
+        "facts.displayDiagonalInches",
+        "facts.weightKg",
+        "facts.chip",
+        "facts.unifiedMemoryGb",
+        "facts.storageGb",
+        "facts.keyboardFeatureId",
+        "facts.externalDisplaySupport",
+      ],
+    },
+  ];
+
+  if (SOURCE_URLS[family].displays) {
+    sources.push({
+      type: "support",
+      url: SOURCE_URLS[family].displays,
+      verifiedOn: VERIFIED_ON,
+      supportsFields: ["facts.externalDisplaySupport"],
+    });
+  }
+
+  return sources;
+}
+
+function createRecord({
+  id,
+  familyId,
+  modelId,
+  displayName,
+  configurationName,
+  buyingUrl,
+  amountMinor,
+  marketedScreenSizeInches,
+  displayDiagonalInches,
+  weightKg,
+  chip,
+  unifiedMemoryGb,
+  storageGb,
+  keyboardFeatureId,
+  displayFinishId = null,
+  externalDisplayCount,
+  externalDisplaySummary,
+}) {
+  const family = familyId.replace("macbook-", "");
+  const externalDisplaySource = SOURCE_URLS[family].displays ?? SOURCE_URLS[family].specifications;
+
+  return {
+    id,
+    familyId,
+    modelId,
+    configurationType: "base",
+    displayName,
+    configurationName,
+    region: "GB",
+    currency: "GBP",
+    verifiedOn: VERIFIED_ON,
+    availability: {
+      status: "available",
+      verifiedOn: VERIFIED_ON,
+      sourceUrl: buyingUrl,
+    },
+    price: {
+      amountMinor,
+      snapshotDate: VERIFIED_ON,
+      sourceUrl: buyingUrl,
+      taxTreatment: null,
+    },
+    facts: {
+      marketedScreenSizeInches,
+      displayDiagonalInches,
+      weightKg,
+      chip,
+      unifiedMemoryGb,
+      storageGb,
+      keyboardFeatureId,
+      displayFinishId,
+      externalDisplaySupport: {
+        maxCountWithBuiltInDisplayActive: externalDisplayCount,
+        summary: externalDisplaySummary,
+        sourceUrl: externalDisplaySource,
+      },
+    },
+    sources: createSources({ family, buyingUrl, displayFinishId }),
+  };
+}
+
+const records = [
+  createRecord({
+    id: "macbook-neo-13-a18-pro-8gb-256gb",
+    familyId: "macbook-neo",
+    modelId: "macbook-neo-13",
+    displayName: "MacBook Neo 13-inch",
+    configurationName: "A18 Pro, 8GB unified memory, 256GB SSD",
+    buyingUrl: "https://www.apple.com/uk/shop/buy-mac/macbook-neo/silver-256gb",
+    amountMinor: 69900,
+    marketedScreenSizeInches: 13,
+    displayDiagonalInches: 13,
+    weightKg: 1.23,
+    chip: {
+      id: "a18-pro",
+      displayName: "Apple A18 Pro",
+      cpuCoreCount: 6,
+      gpuCoreCount: 5,
+      neuralEngineCoreCount: 16,
+    },
+    unifiedMemoryGb: 8,
+    storageGb: 256,
+    keyboardFeatureId: "magic-keyboard",
+    externalDisplayCount: 1,
+    externalDisplaySummary: "One external display while the built-in display remains active.",
+  }),
+  createRecord({
+    id: "macbook-neo-13-a18-pro-8gb-512gb",
+    familyId: "macbook-neo",
+    modelId: "macbook-neo-13",
+    displayName: "MacBook Neo 13-inch",
+    configurationName: "A18 Pro, 8GB unified memory, 512GB SSD",
+    buyingUrl: "https://www.apple.com/uk/shop/buy-mac/macbook-neo/silver-512gb",
+    amountMinor: 79900,
+    marketedScreenSizeInches: 13,
+    displayDiagonalInches: 13,
+    weightKg: 1.23,
+    chip: {
+      id: "a18-pro",
+      displayName: "Apple A18 Pro",
+      cpuCoreCount: 6,
+      gpuCoreCount: 5,
+      neuralEngineCoreCount: 16,
+    },
+    unifiedMemoryGb: 8,
+    storageGb: 512,
+    keyboardFeatureId: "magic-keyboard-touch-id",
+    externalDisplayCount: 1,
+    externalDisplaySummary: "One external display while the built-in display remains active.",
+  }),
+  createRecord({
+    id: "macbook-air-13-m5-10cpu-8gpu-16gb-512gb",
+    familyId: "macbook-air",
+    modelId: "macbook-air-13-m5",
+    displayName: "MacBook Air 13-inch",
+    configurationName: "M5, 10-core CPU, 8-core GPU, 16GB unified memory, 512GB SSD",
+    buyingUrl:
+      "https://www.apple.com/uk/shop/buy-mac/macbook-air/13-inch-silver-m5-chip-10-core-cpu-8-core-gpu-16gb-memory-512gb-storage",
+    amountMinor: 129900,
+    marketedScreenSizeInches: 13,
+    displayDiagonalInches: 13.6,
+    weightKg: 1.23,
+    chip: {
+      id: "m5",
+      displayName: "Apple M5",
+      cpuCoreCount: 10,
+      gpuCoreCount: 8,
+      neuralEngineCoreCount: 16,
+    },
+    unifiedMemoryGb: 16,
+    storageGb: 512,
+    keyboardFeatureId: "magic-keyboard-touch-id",
+    externalDisplayCount: 2,
+    externalDisplaySummary: "Up to two external displays with the built-in display active.",
+  }),
+  createRecord({
+    id: "macbook-air-13-m5-10cpu-10gpu-16gb-512gb",
+    familyId: "macbook-air",
+    modelId: "macbook-air-13-m5",
+    displayName: "MacBook Air 13-inch",
+    configurationName: "M5, 10-core CPU, 10-core GPU, 16GB unified memory, 512GB SSD",
+    buyingUrl:
+      "https://www.apple.com/uk/shop/buy-mac/macbook-air/13-inch-silver-m5-chip-10-core-cpu-10-core-gpu-16gb-memory-512gb-storage",
+    amountMinor: 139900,
+    marketedScreenSizeInches: 13,
+    displayDiagonalInches: 13.6,
+    weightKg: 1.23,
+    chip: {
+      id: "m5",
+      displayName: "Apple M5",
+      cpuCoreCount: 10,
+      gpuCoreCount: 10,
+      neuralEngineCoreCount: 16,
+    },
+    unifiedMemoryGb: 16,
+    storageGb: 512,
+    keyboardFeatureId: "magic-keyboard-touch-id",
+    externalDisplayCount: 2,
+    externalDisplaySummary: "Up to two external displays with the built-in display active.",
+  }),
+  createRecord({
+    id: "macbook-air-15-m5-10cpu-10gpu-16gb-512gb",
+    familyId: "macbook-air",
+    modelId: "macbook-air-15-m5",
+    displayName: "MacBook Air 15-inch",
+    configurationName: "M5, 10-core CPU, 10-core GPU, 16GB unified memory, 512GB SSD",
+    buyingUrl:
+      "https://www.apple.com/uk/shop/buy-mac/macbook-air/15-inch-silver-m5-chip-10-core-cpu-10-core-gpu-16gb-memory-512gb-storage",
+    amountMinor: 149900,
+    marketedScreenSizeInches: 15,
+    displayDiagonalInches: 15.3,
+    weightKg: 1.51,
+    chip: {
+      id: "m5",
+      displayName: "Apple M5",
+      cpuCoreCount: 10,
+      gpuCoreCount: 10,
+      neuralEngineCoreCount: 16,
+    },
+    unifiedMemoryGb: 16,
+    storageGb: 512,
+    keyboardFeatureId: "magic-keyboard-touch-id",
+    externalDisplayCount: 2,
+    externalDisplaySummary: "Up to two external displays with the built-in display active.",
+  }),
+  createRecord({
+    id: "macbook-pro-14-m5-10cpu-10gpu-16gb-1tb",
+    familyId: "macbook-pro",
+    modelId: "macbook-pro-14-m5",
+    displayName: "MacBook Pro 14-inch",
+    configurationName: "M5, 10-core CPU, 10-core GPU, 16GB unified memory, 1TB SSD",
+    buyingUrl:
+      "https://www.apple.com/uk/shop/buy-mac/macbook-pro/14-inch-silver-standard-display-apple-m5-chip-10-core-cpu-10-core-gpu-16gb-memory-1tb-storage",
+    amountMinor: 199900,
+    marketedScreenSizeInches: 14,
+    displayDiagonalInches: 14.2,
+    weightKg: 1.55,
+    chip: {
+      id: "m5",
+      displayName: "Apple M5",
+      cpuCoreCount: 10,
+      gpuCoreCount: 10,
+      neuralEngineCoreCount: 16,
+    },
+    unifiedMemoryGb: 16,
+    storageGb: 1000,
+    keyboardFeatureId: "magic-keyboard-touch-id",
+    displayFinishId: "standard",
+    externalDisplayCount: 2,
+    externalDisplaySummary: "Up to two external displays with the built-in display active.",
+  }),
+  createRecord({
+    id: "macbook-pro-14-m5-pro-15cpu-16gpu-24gb-1tb",
+    familyId: "macbook-pro",
+    modelId: "macbook-pro-14-m5-pro",
+    displayName: "MacBook Pro 14-inch",
+    configurationName: "M5 Pro, 15-core CPU, 16-core GPU, 24GB unified memory, 1TB SSD",
+    buyingUrl:
+      "https://www.apple.com/uk/shop/buy-mac/macbook-pro/14-inch-silver-standard-display-apple-m5-pro-chip-15-core-cpu-16-core-gpu-24gb-memory-1tb-storage",
+    amountMinor: 249900,
+    marketedScreenSizeInches: 14,
+    displayDiagonalInches: 14.2,
+    weightKg: 1.6,
+    chip: {
+      id: "m5-pro",
+      displayName: "Apple M5 Pro",
+      cpuCoreCount: 15,
+      gpuCoreCount: 16,
+      neuralEngineCoreCount: 16,
+    },
+    unifiedMemoryGb: 24,
+    storageGb: 1000,
+    keyboardFeatureId: "magic-keyboard-touch-id",
+    displayFinishId: "standard",
+    externalDisplayCount: 3,
+    externalDisplaySummary: "Up to three external displays with the built-in display active.",
+  }),
+  createRecord({
+    id: "macbook-pro-14-m5-max-18cpu-32gpu-36gb-2tb",
+    familyId: "macbook-pro",
+    modelId: "macbook-pro-14-m5-max",
+    displayName: "MacBook Pro 14-inch",
+    configurationName: "M5 Max, 18-core CPU, 32-core GPU, 36GB unified memory, 2TB SSD",
+    buyingUrl:
+      "https://www.apple.com/uk/shop/buy-mac/macbook-pro/14-inch-silver-standard-display-apple-m5-max-chip-18-core-cpu-32-core-gpu-36gb-memory-2tb-storage",
+    amountMinor: 409900,
+    marketedScreenSizeInches: 14,
+    displayDiagonalInches: 14.2,
+    weightKg: 1.62,
+    chip: {
+      id: "m5-max",
+      displayName: "Apple M5 Max",
+      cpuCoreCount: 18,
+      gpuCoreCount: 32,
+      neuralEngineCoreCount: 16,
+    },
+    unifiedMemoryGb: 36,
+    storageGb: 2000,
+    keyboardFeatureId: "magic-keyboard-touch-id",
+    displayFinishId: "standard",
+    externalDisplayCount: 4,
+    externalDisplaySummary: "Up to four external displays with the built-in display active.",
+  }),
+  createRecord({
+    id: "macbook-pro-16-m5-pro-18cpu-20gpu-24gb-1tb",
+    familyId: "macbook-pro",
+    modelId: "macbook-pro-16-m5-pro",
+    displayName: "MacBook Pro 16-inch",
+    configurationName: "M5 Pro, 18-core CPU, 20-core GPU, 24GB unified memory, 1TB SSD",
+    buyingUrl:
+      "https://www.apple.com/uk/shop/buy-mac/macbook-pro/16-inch-silver-standard-display-apple-m5-pro-chip-18-core-cpu-20-core-gpu-24gb-memory-1tb-storage",
+    amountMinor: 299900,
+    marketedScreenSizeInches: 16,
+    displayDiagonalInches: 16.2,
+    weightKg: 2.14,
+    chip: {
+      id: "m5-pro",
+      displayName: "Apple M5 Pro",
+      cpuCoreCount: 18,
+      gpuCoreCount: 20,
+      neuralEngineCoreCount: 16,
+    },
+    unifiedMemoryGb: 24,
+    storageGb: 1000,
+    keyboardFeatureId: "magic-keyboard-touch-id",
+    displayFinishId: "standard",
+    externalDisplayCount: 3,
+    externalDisplaySummary: "Up to three external displays with the built-in display active.",
+  }),
+  createRecord({
+    id: "macbook-pro-16-m5-max-18cpu-32gpu-36gb-2tb",
+    familyId: "macbook-pro",
+    modelId: "macbook-pro-16-m5-max",
+    displayName: "MacBook Pro 16-inch",
+    configurationName: "M5 Max, 18-core CPU, 32-core GPU, 36GB unified memory, 2TB SSD",
+    buyingUrl:
+      "https://www.apple.com/uk/shop/buy-mac/macbook-pro/16-inch-silver-standard-display-apple-m5-max-chip-18-core-cpu-32-core-gpu-36gb-memory-2tb-storage",
+    amountMinor: 439900,
+    marketedScreenSizeInches: 16,
+    displayDiagonalInches: 16.2,
+    weightKg: 2.15,
+    chip: {
+      id: "m5-max",
+      displayName: "Apple M5 Max",
+      cpuCoreCount: 18,
+      gpuCoreCount: 32,
+      neuralEngineCoreCount: 16,
+    },
+    unifiedMemoryGb: 36,
+    storageGb: 2000,
+    keyboardFeatureId: "magic-keyboard-touch-id",
+    displayFinishId: "standard",
+    externalDisplayCount: 4,
+    externalDisplaySummary: "Up to four external displays with the built-in display active.",
+  }),
+];
+
+export const productCatalogue = createProductCatalogue({
+  schemaVersion: "1.0.0",
+  region: "GB",
+  currency: "GBP",
+  verifiedOn: VERIFIED_ON,
+  products: records,
+});
+
+export const products = productCatalogue.products;

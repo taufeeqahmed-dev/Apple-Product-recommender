@@ -48,7 +48,7 @@
           <p class="eyebrow">MacBook guidance, made human</p>
           <h1 id="hero-title">Find the right direction before choosing your next MacBook.</h1>
           <p class="hero-summary">
-            Northstar will turn your priorities into a small set of clearly explained
+            Northstar turns your priorities into a small set of clearly explained
             recommendations—without expecting you to understand every technical term first.
           </p>
           <div class="button-group">
@@ -68,7 +68,7 @@
           <div class="principle-card principle-card-two">
             <span class="principle-number">02</span>
             <strong>Clear reasoning</strong>
-            <span>Every future match will explain why it fits.</span>
+            <span>Every match explains why it fits.</span>
           </div>
           <div class="principle-card principle-card-three">
             <span class="principle-number">03</span>
@@ -81,11 +81,11 @@
       <section class="process-section" id="how-it-works" aria-labelledby="process-title">
         <div class="layout">
           <div class="section-heading">
-            <p class="eyebrow">The planned experience</p>
+            <p class="eyebrow">The Northstar experience</p>
             <h2 id="process-title">A considered recommendation in three steps.</h2>
             <p>
-              The quiz and matching system will be added in later development stages. This
-              first version establishes the experience around them.
+              The questionnaire and matching system work together to turn everyday priorities
+              into a short, transparent list.
             </p>
           </div>
 
@@ -583,8 +583,8 @@
           <p class="stage-label">All eight steps complete</p>
           <h3 class="questionnaire-step-heading" tabindex="-1">Questionnaire complete</h3>
           <p>
-            Your answers have been recorded for this questionnaire. Product matching and
-            recommendations will be added in Stage 3.
+            Your answers have been matched against the verified product snapshot. Your ranked
+            recommendations are shown below.
           </p>
           <button
             class="button button-secondary"
@@ -617,27 +617,33 @@
         </div>
       </section>
 
-      <section
-        class="placeholder-section placeholder-section-reverse layout"
-        id="results"
-        aria-labelledby="results-title"
-      >
-        <div class="placeholder-copy">
-          <p class="stage-label">Planned for a later stage</p>
-          <h2 id="results-title">Recommendation results</h2>
-          <p>
-            Future results will present a small number of MacBook matches and explain the
-            reasoning behind them. No products, prices or specifications are included yet.
-          </p>
-        </div>
-        <div class="result-placeholder" aria-hidden="true">
-          <div class="result-placeholder-accent"></div>
-          <div class="result-placeholder-lines">
-            <span></span>
-            <span></span>
-            <span></span>
+      <section class="results-section layout" id="results" aria-labelledby="results-title" data-state="empty">
+        <div class="results-heading">
+          <div>
+            <p class="stage-label" id="results-stage-label">Complete the questionnaire first</p>
+            <h2 id="results-title" tabindex="-1">Recommendation results</h2>
+            <p id="results-summary">
+              Your top verified matches will appear here after all eight answers are complete.
+            </p>
           </div>
+          <button
+            class="button button-secondary"
+            id="results-restart"
+            type="button"
+            data-restart-questionnaire
+            aria-controls="restart-confirmation"
+            aria-expanded="false"
+            hidden
+          >
+            Restart questionnaire
+          </button>
         </div>
+        <p class="visually-hidden" id="results-announcement" role="status" aria-live="polite"></p>
+        <div id="recommendation-output"></div>
+        <p class="results-method-note">
+          Fit scores, reasons and compromises are independent Northstar project judgements, not
+          Apple claims. Prices are dated UK snapshots and may change.
+        </p>
       </section>
 
       <aside class="disclaimer layout" aria-labelledby="disclaimer-title">

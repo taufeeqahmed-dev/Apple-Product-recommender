@@ -87,6 +87,18 @@ a {
   transform: translateY(0);
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .site-header {
   position: sticky;
   top: 0;
@@ -787,6 +799,170 @@ button.button {
   width: 58%;
 }
 
+.results-section {
+  padding-block: clamp(5rem, 10vw, 8rem);
+  border-top: 1px solid var(--colour-line);
+}
+
+.results-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+}
+
+.results-heading h2 {
+  margin: 0.9rem 0 0.65rem;
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.results-heading h2:focus {
+  border-radius: 0.2rem;
+}
+
+.results-heading p:last-child {
+  max-width: 44rem;
+  margin: 0;
+  color: var(--colour-muted);
+}
+
+.recommendation-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.recommendation-card,
+.results-message {
+  border: 1px solid var(--colour-line);
+  border-radius: var(--radius-medium);
+  background:
+    linear-gradient(145deg, rgba(104, 224, 193, 0.075), transparent 40%),
+    var(--colour-surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.recommendation-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: clamp(1.25rem, 2.5vw, 1.75rem);
+}
+
+.recommendation-card-header {
+  padding-bottom: 1.15rem;
+  border-bottom: 1px solid var(--colour-line);
+}
+
+.recommendation-rank {
+  margin: 0 0 0.45rem;
+  color: var(--colour-accent);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.recommendation-card h3 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.4vw, 1.8rem);
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.recommendation-price {
+  margin: 0.75rem 0 0;
+  color: var(--colour-ink);
+  font-weight: 800;
+}
+
+.recommendation-score {
+  margin: 0.25rem 0 0;
+  color: var(--colour-violet);
+  font-size: 0.88rem;
+  font-weight: 750;
+}
+
+.recommendation-configuration {
+  margin: 1.1rem 0;
+  color: var(--colour-muted);
+}
+
+.recommendation-facts,
+.recommendation-reasons,
+.recommendation-compromises,
+.results-blockers {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.recommendation-facts {
+  display: grid;
+  gap: 0.25rem;
+  padding-bottom: 1.1rem;
+  color: var(--colour-muted);
+  font-size: 0.9rem;
+}
+
+.recommendation-card h4,
+.results-message h4 {
+  margin: 1.1rem 0 0.45rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+}
+
+.recommendation-reasons,
+.recommendation-compromises,
+.results-blockers {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--colour-muted);
+  font-size: 0.92rem;
+}
+
+.recommendation-no-compromises {
+  margin: 0;
+  color: var(--colour-muted);
+  font-size: 0.92rem;
+}
+
+.recommendation-source {
+  margin-top: auto;
+  padding-top: 1.5rem;
+  color: var(--colour-accent);
+  font-weight: 750;
+  text-underline-offset: 0.2rem;
+}
+
+.results-message {
+  max-width: 48rem;
+  padding: clamp(1.4rem, 3vw, 2rem);
+}
+
+.results-message-warning {
+  border-color: rgba(246, 200, 95, 0.38);
+  background: rgba(246, 200, 95, 0.075);
+}
+
+.results-message h3 {
+  margin-top: 0;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+.results-message > p {
+  color: var(--colour-muted);
+}
+
+.results-method-note {
+  max-width: 58rem;
+  margin: 2rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--colour-line);
+  color: var(--colour-muted);
+  font-size: 0.88rem;
+}
+
 .disclaimer {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -883,6 +1059,10 @@ button.button {
   .placeholder-section-reverse .placeholder-copy {
     order: initial;
   }
+
+  .recommendation-list {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 46rem) {
@@ -913,6 +1093,15 @@ button.button {
 
   .questionnaire-actions .button,
   .questionnaire-actions .text-button {
+    width: 100%;
+  }
+
+  .results-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .results-heading .button {
     width: 100%;
   }
 
