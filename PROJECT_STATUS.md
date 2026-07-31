@@ -10,10 +10,9 @@ Northstar is independent and is not affiliated with, endorsed by or sponsored by
 
 ## Current stage
 
-- Stage 1 foundation: complete, committed and pushed.
-- Stage 2 questionnaire: complete, committed and pushed.
-- Stage 3 data and recommendations: implemented and verified locally; not committed or pushed.
-- Stage 4: not started.
+- Stages 1, 2 and 3: complete, verified, committed and pushed.
+- The working implementation includes verified product data, the recommendation engine, accessible results and automated tests.
+- Stage 4: not started and requires explicit approval.
 
 ## Completed Stage 3 work
 
@@ -142,4 +141,4 @@ The complete questionnaire-to-results journey was tested through the local previ
 
 ## Version-control state
 
-Stage 3 changes are intentionally uncommitted and unpushed pending user review. The read-only `sources/` directory was not modified.
+Stages 1, 2 and 3 are complete, verified, committed and pushed. Stage 4 has not started and requires explicit approval. The read-only `sources/` directory was not modified.
