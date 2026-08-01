@@ -461,6 +461,25 @@ button.button {
   font-size: 1.05rem;
 }
 
+.no-js-message {
+  max-width: 48rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(246, 200, 95, 0.45);
+  border-radius: var(--radius-small);
+  background: rgba(246, 200, 95, 0.08);
+  color: var(--colour-ink);
+}
+
+.js .no-js-message {
+  display: none;
+}
+
+html:not(.js) .questionnaire-progress-wrap,
+html:not(.js) .questionnaire-form,
+html:not(.js) .results-section {
+  display: none;
+}
+
 .questionnaire-progress-wrap {
   display: grid;
   grid-template-columns: auto minmax(12rem, 1fr);
@@ -697,32 +716,6 @@ button.button {
   margin-top: 1.5rem;
 }
 
-.placeholder-section {
-  display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(20rem, 1.15fr);
-  align-items: center;
-  gap: clamp(3rem, 8vw, 7rem);
-  padding-block: clamp(5rem, 10vw, 8rem);
-}
-
-.placeholder-section-reverse {
-  border-top: 1px solid var(--colour-line);
-}
-
-.placeholder-section-reverse .placeholder-copy {
-  order: 2;
-}
-
-.placeholder-copy h2 {
-  font-size: clamp(2rem, 4vw, 3rem);
-}
-
-.placeholder-copy p:last-child {
-  max-width: 36rem;
-  margin-bottom: 0;
-  color: var(--colour-muted);
-}
-
 .stage-label {
   display: inline-block;
   padding: 0.4rem 0.65rem;
@@ -730,73 +723,6 @@ button.button {
   border-radius: 999px;
   background: rgba(104, 224, 193, 0.08);
   font-size: 0.68rem;
-}
-
-.placeholder-panel,
-.result-placeholder {
-  min-height: 22rem;
-  padding: 2rem;
-  border: 1px solid var(--colour-line);
-  border-radius: var(--radius-large);
-  background: var(--colour-surface);
-  box-shadow: var(--shadow-soft);
-}
-
-.placeholder-panel {
-  display: grid;
-  align-content: center;
-  gap: 1rem;
-}
-
-.placeholder-panel > span:not(.placeholder-button) {
-  display: block;
-  height: 3rem;
-  border: 1px solid var(--colour-line);
-  border-radius: 0.75rem;
-  background: linear-gradient(90deg, var(--colour-surface-raised), rgba(23, 36, 58, 0.45));
-}
-
-.placeholder-panel .placeholder-button {
-  width: 8rem;
-  height: 2.8rem;
-  margin-top: 0.7rem;
-  border-radius: 0.7rem;
-  background: rgba(104, 224, 193, 0.22);
-}
-
-.result-placeholder {
-  position: relative;
-  display: grid;
-  grid-template-columns: 0.7fr 1.3fr;
-  align-items: center;
-  gap: 2rem;
-  overflow: hidden;
-}
-
-.result-placeholder-accent {
-  aspect-ratio: 1;
-  border-radius: 50% 50% 46% 54%;
-  background: linear-gradient(135deg, rgba(158, 140, 255, 0.34), rgba(104, 224, 193, 0.18));
-  transform: rotate(-12deg);
-}
-
-.result-placeholder-lines {
-  display: grid;
-  gap: 1rem;
-}
-
-.result-placeholder-lines span {
-  height: 0.85rem;
-  border-radius: 2rem;
-  background: var(--colour-surface-raised);
-}
-
-.result-placeholder-lines span:nth-child(2) {
-  width: 83%;
-}
-
-.result-placeholder-lines span:nth-child(3) {
-  width: 58%;
 }
 
 .results-section {
@@ -1052,14 +978,6 @@ button.button {
     margin-bottom: 2rem;
   }
 
-  .placeholder-section {
-    grid-template-columns: 1fr;
-  }
-
-  .placeholder-section-reverse .placeholder-copy {
-    order: initial;
-  }
-
   .recommendation-list {
     grid-template-columns: 1fr;
   }
@@ -1172,16 +1090,6 @@ button.button {
   .principle-card-three {
     bottom: 5%;
     left: 8%;
-  }
-
-  .placeholder-panel,
-  .result-placeholder {
-    min-height: 17rem;
-    padding: 1.25rem;
-  }
-
-  .result-placeholder {
-    gap: 1rem;
   }
 
   .footer-content {

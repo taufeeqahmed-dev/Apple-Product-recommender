@@ -172,13 +172,13 @@ test("recommendations are deterministic and inputs are not mutated", () => {
 test("the scoring scale is capped at 100 and can reach its documented maximum", () => {
   const answers = {
     maximumBudget: "flexible",
-    primaryUses: ["everyday-study"],
+    primaryUses: ["video-3d"],
     screenSize: "compact",
     portabilityPerformance: "performance-first",
-    workloadIntensity: "light",
-    minimumStorage: "unsure",
-    externalDisplays: "unsure",
-    ownershipPeriod: "up-to-2",
+    workloadIntensity: "very-demanding",
+    minimumStorage: "2tb-plus",
+    externalDisplays: "three-plus",
+    ownershipPeriod: "7-plus",
   };
   const output = recommendMacBooks({ catalogue: productCatalogue, answers });
   assert.equal(output.matches[0].score.percent, 100);
@@ -198,5 +198,5 @@ test("structured matches include reasons, compromises, exclusions and diagnostic
   assert.ok(Array.isArray(match.compromises));
   assert.ok(Array.isArray(output.exclusions));
   assert.equal(output.diagnostics.counts.catalogue, 10);
-  assert.equal(output.catalogue.rulesVersion, "1.0.0");
+  assert.equal(output.catalogue.rulesVersion, "1.1.0");
 });

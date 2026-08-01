@@ -5,9 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta
       name="description"
-      content="Northstar is an unofficial student project designed to make choosing a MacBook easier."
+      content="Northstar asks eight plain-language questions and explains up to three MacBook recommendations using a transparent scoring system."
     >
+    <meta name="theme-color" content="#08101d">
+    <link rel="canonical" href="https://taufeeqahmed-dev.github.io/apple-product-recommender/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Northstar">
+    <meta property="og:title" content="Northstar | A clearer way to choose a MacBook">
+    <meta
+      property="og:description"
+      content="Answer eight plain-language questions and get a focused, explainable MacBook shortlist."
+    >
+    <meta
+      property="og:url"
+      content="https://taufeeqahmed-dev.github.io/apple-product-recommender/"
+    >
+    <meta
+      property="og:image"
+      content="https://taufeeqahmed-dev.github.io/apple-product-recommender/docs/images/northstar-social-preview.png"
+    >
+    <meta property="og:image:alt" content="Northstar MacBook recommendation questionnaire">
+    <meta name="twitter:card" content="summary_large_image">
     <title>Northstar | A clearer way to choose a MacBook</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="css/styles.css">
   </head>
   <body id="top">
@@ -15,7 +35,7 @@
 
     <header class="site-header">
       <nav class="site-nav layout" aria-label="Primary navigation">
-        <a class="brand" href="#top" aria-label="Northstar home">
+        <a class="brand" href="#top">
           <span class="brand-mark" aria-hidden="true">N</span>
           <span>Northstar</span>
         </a>
@@ -53,7 +73,7 @@
           </p>
           <div class="button-group">
             <a class="button button-primary" href="#questionnaire">Start exploring</a>
-            <a class="button button-secondary" href="#how-it-works">See how it will work</a>
+            <a class="button button-secondary" href="#how-it-works">See how it works</a>
           </div>
         </div>
 
@@ -98,7 +118,7 @@
             <li>
               <span class="step-number" aria-hidden="true">02</span>
               <h3>Compare the fit</h3>
-              <p>Your answers will be assessed against a small, carefully structured dataset.</p>
+              <p>Your answers are assessed against a small, carefully structured dataset.</p>
             </li>
             <li>
               <span class="step-number" aria-hidden="true">03</span>
@@ -115,13 +135,18 @@
         aria-labelledby="questionnaire-title"
       >
         <div class="questionnaire-heading">
-          <p class="stage-label">Stage 2 questionnaire</p>
+          <p class="stage-label">Eight-step questionnaire</p>
           <h2 id="questionnaire-title">Tell us what matters to you.</h2>
           <p>
             Answer eight plain-language questions about how you expect to use your MacBook.
             Your answers stay available as you move between steps.
           </p>
         </div>
+
+        <p class="no-js-message">
+          Northstar needs JavaScript to run the questionnaire. Enable JavaScript and reload this
+          page to continue.
+        </p>
 
         <div class="questionnaire-progress-wrap">
           <p id="questionnaire-progress-text" aria-live="polite">Step 1 of 8</p>
@@ -661,7 +686,7 @@
 
     <footer class="site-footer">
       <div class="layout footer-content">
-        <a class="brand brand-footer" href="#top" aria-label="Northstar home">
+        <a class="brand brand-footer" href="#top">
           <span class="brand-mark" aria-hidden="true">N</span>
           <span>Northstar</span>
         </a>

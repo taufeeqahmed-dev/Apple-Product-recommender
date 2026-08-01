@@ -6,8 +6,9 @@ This repository contains Northstar, an unofficial student portfolio project that
 
 - Version one covers MacBook recommendations only.
 - Stages 1, 2 and 3 are complete, verified, committed and pushed.
-- The working implementation includes verified product data, the recommendation engine, accessible results and automated tests.
-- Stage 4 has not started and requires explicit user approval.
+- Stage 4 is approved and is being prepared on `stage-4-final-polish` for user review.
+- Do not commit, push, merge, deploy or mark Stage 4 complete until the user approves the review result.
+- The Stage 4 candidate includes testing, targeted fixes, documentation and Pages preparation.
 - Read `PROJECT_STATUS.md` before making changes.
 
 ## Architecture boundaries

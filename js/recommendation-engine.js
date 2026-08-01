@@ -293,9 +293,16 @@ function buildReasons(product, answers, score) {
     }
   });
 
-  return candidates
-    .sort((a, b) => a.priority - b.priority || b.contribution - a.contribution || a.code.localeCompare(b.code))
-    .slice(0, 3)
+  const hardReasons = candidates
+    .filter(({ priority }) => priority === 0)
+    .sort((a, b) => a.code.localeCompare(b.code));
+  const preferenceReasons = candidates
+    .filter(({ priority }) => priority === 1)
+    .sort((a, b) => b.contribution - a.contribution || a.code.localeCompare(b.code));
+  const selectedPreferences = preferenceReasons.slice(0, 2);
+  const selectedHardReasons = hardReasons.slice(0, 3 - selectedPreferences.length);
+
+  return [...selectedHardReasons, ...selectedPreferences]
     .map(({ priority, contribution, ...reason }) => reason);
 }
 

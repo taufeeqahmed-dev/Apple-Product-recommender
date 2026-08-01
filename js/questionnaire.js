@@ -101,6 +101,9 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
     if (!error) return;
     error.textContent = "";
     error.hidden = true;
+    steps[stepIndex]
+      .querySelectorAll("input, select")
+      .forEach((control) => control.removeAttribute("aria-invalid"));
   };
 
   const announceError = (stepIndex, message) => {
@@ -108,6 +111,9 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
     if (!error) return;
     error.textContent = "";
     error.hidden = false;
+    steps[stepIndex]
+      .querySelectorAll("input, select")
+      .forEach((control) => control.setAttribute("aria-invalid", "true"));
     window.requestAnimationFrame(() => {
       error.textContent = message;
     });
@@ -243,6 +249,12 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
 
   cancelRestartButton.addEventListener("click", () => {
     hideRestartConfirmation({ restoreFocus: true });
+  });
+
+  restartConfirmation.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      hideRestartConfirmation({ restoreFocus: true });
+    }
   });
 
   confirmRestartButton.addEventListener("click", () => {
