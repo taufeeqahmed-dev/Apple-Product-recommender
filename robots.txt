@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://taufeeqahmed-dev.github.io/apple-product-recommender/sitemap.xml

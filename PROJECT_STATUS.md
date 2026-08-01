@@ -11,8 +11,28 @@ Northstar is independent and is not affiliated with, endorsed by or sponsored by
 ## Current stage
 
 - Stages 1, 2 and 3: complete, verified, committed and pushed.
-- The working implementation includes verified product data, the recommendation engine, accessible results and automated tests.
-- Stage 4: not started and requires explicit approval.
+- Stage 4: approved and in progress on `stage-4-final-polish`.
+- The review candidate must not be committed, pushed, merged, deployed or marked complete before user review.
+
+## Stage 4 review candidate
+
+- Added recommendation-quality scenarios and monotonic hard-filter tests.
+- Identified a reproducible right-sizing defect for flexible-budget light/moderate everyday use,
+  added a failing regression test, and corrected the Northstar workload matrix in rules `1.1.0`.
+- Preserved an explicit performance-first path to maximum capability.
+- Improved recommendation reasons so ranking preferences are not hidden by hard-filter confirmations.
+- Added distinguishable result/link names, programmatic invalid states, Escape cancellation and
+  JavaScript-failure guidance.
+- Removed internal stage/future wording and unused placeholder CSS.
+- Added release metadata, crawler files, a favicon and a GitHub Pages workflow that triggers only
+  from `main` or manual dispatch.
+- Added algorithm, testing and portfolio documentation plus desktop, mobile, results and social
+  screenshots.
+- All 22 Node tests and all 13 JavaScript syntax checks pass.
+- Post-fix local Lighthouse scored 99/100/100/100 on mobile and 100/100/100/100 on desktop for
+  Performance/Accessibility/Best Practices/SEO.
+- Production Lighthouse and the documented user-assisted manual checks remain release gates.
+- `js/products.js` and `sources/` remain unchanged.
 
 ## Completed Stage 3 work
 
@@ -136,9 +156,13 @@ The complete questionnaire-to-results journey was tested through the local previ
 - Only 10 approved exact configurations are included; no configurable upgrades are compared.
 - Questionnaire state is memory-only and is cleared by reload.
 - No-match handling deliberately does not relax hard requirements or calculate near matches.
-- There is no backend, persistent storage, analytics, account system or deployment.
-- Automated browser checks used a Chromium-based in-app browser. Firefox, Safari, physical-device, full manual keyboard and screen-reader testing remain outstanding.
+- There is no backend, persistent storage, analytics or account system.
+- Deployment is prepared but intentionally not published before review.
+- Chrome, Firefox, Safari, physical-device, full manual keyboard and representative screen-reader
+  testing remain manual release gates as documented in `docs/testing.md`.
 
 ## Version-control state
 
-Stages 1, 2 and 3 are complete, verified, committed and pushed. Stage 4 has not started and requires explicit approval. The read-only `sources/` directory was not modified.
+Stages 1, 2 and 3 are complete, verified, committed and pushed. Stage 4 changes are uncommitted on
+`stage-4-final-polish` and await user review. Nothing has been pushed, merged or deployed. The
+read-only `sources/` directory and verified product catalogue were not modified.

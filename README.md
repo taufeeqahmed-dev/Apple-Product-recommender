@@ -1,139 +1,172 @@
 # Northstar
 
-Northstar is an unofficial student portfolio project that helps people choose a MacBook based on their needs. It uses a short, plain-language questionnaire and an explainable scoring system to produce up to three focused recommendations.
+Northstar is an unofficial student portfolio project that helps people choose a MacBook without
+requiring them to decode chip names or benchmark charts. An eight-step questionnaire applies hard
+requirements first, then uses a transparent scoring model to explain up to three focused matches.
 
-> **Disclaimer:** Northstar is an independent educational project. It is not affiliated with, endorsed by or sponsored by Apple Inc. Apple and MacBook are trademarks of Apple Inc. Product facts come from official Apple UK pages; suitability scores, reasons and compromises are Northstar project judgements.
+> **Independent project:** Northstar is not affiliated with, endorsed by or sponsored by Apple
+> Inc. Apple and MacBook are trademarks of Apple Inc. Product facts come from official Apple UK
+> pages. Suitability scores, reasons and compromises are Northstar project judgements.
 
-## Current status
+![Northstar landing page](docs/images/northstar-overview.jpg)
 
-Stages 1, 2 and 3 are complete locally. The website now includes:
+**Deployment target:**
+[`taufeeqahmed-dev.github.io/apple-product-recommender`](https://taufeeqahmed-dev.github.io/apple-product-recommender/)
+(publishes from `main` after the Stage 4 review is approved).
 
-- an accessible, responsive landing page and navigation;
-- an eight-step, MacBook-only questionnaire using native controls;
-- required-answer alerts, deliberate focus movement, answer preservation and Restart confirmation;
-- a validated catalogue of 10 exact MacBook configurations available from Apple UK;
-- UK price snapshots and specifications verified on 31 July 2026;
-- hard eligibility rules for budget, storage, external displays and workload capability;
-- a documented, deterministic 100-point scoring system;
-- explicit handling for invalid input, invalid catalogues, ties, incomplete data and no-match cases;
-- accessible top-three results with reasons, compromises, dated prices and official source links; and
-- dependency-free automated tests using Node's built-in test runner.
+## Why this project exists
 
-Stage 3 is not committed or pushed yet. Stage 4 has not begun.
+MacBook ranges are usually described through specifications. Northstar starts with the visitor's
+budget, work, portability, screen, storage, display and ownership needs instead. It keeps verified
+facts separate from project-authored suitability judgements and shows why a result ranked well,
+where it compromises, and when no verified configuration meets every hard requirement.
 
-## Product-data scope
+## Features
 
-The Stage 3 snapshot covers exact base configurations of the current MacBook Neo, MacBook Air and MacBook Pro range included in the approved dataset. It does not add configurable upgrades.
+- Eight-step, plain-language questionnaire using native form controls.
+- Keyboard-aware focus movement, required-answer alerts and answer preservation.
+- Validated catalogue of 10 exact Apple UK configurations, verified on 31 July 2026.
+- Hard filters for market, availability, data completeness, budget, storage, displays and workload.
+- Deterministic, normalized 100-point scoring with explicit tie-breaking.
+- Right-sized light/moderate workload scoring while preserving an explicit performance-first choice.
+- Up to three semantic result cards with dated prices, facts, reasons and compromises.
+- Safe invalid-input, invalid-catalogue and no-match states.
+- Responsive, reduced-motion-aware interface with no framework or runtime dependency.
 
-Every record stores a stable ID, exact configuration, region `GB`, currency `GBP`, availability, a dated price snapshot, verified facts and field-level official source references. Records are validated and frozen before the recommendation engine can use them.
+## Interface
 
-Only official Apple UK product, buying, technical-specification and relevant support pages were used. Prices can change after the recorded verification date.
+| Mobile questionnaire | Explainable desktop results |
+| --- | --- |
+| ![Northstar questionnaire at a mobile viewport](docs/images/northstar-questionnaire-mobile.jpg) | ![Three Northstar recommendation cards at a desktop viewport](docs/images/northstar-results-desktop.jpg) |
 
-## Recommendation method
+## How recommendations work
 
-Hard requirements are applied before scoring. Products are excluded if they fail availability/market checks, lack comparison-critical data, exceed the selected budget, miss the minimum storage or display requirement, or fall below the project's workload capability minimum.
+Northstar validates the entire catalogue and all answer IDs before doing any matching. Products
+that fail a hard requirement are excluded; hard requirements are never silently relaxed.
 
-Eligible products are scored using these independent Northstar weights:
+Eligible products are scored with these Northstar-authored weights:
 
-- workload fit: 30 points;
-- primary-use fit: 25 points;
-- portability versus performance: 20 points;
-- screen-size preference: 15 points; and
-- ownership-period headroom: 10 points.
+| Component | Weight |
+| --- | ---: |
+| Workload fit | 30 |
+| Primary-use fit | 25 |
+| Portability versus performance | 20 |
+| Screen-size preference | 15 |
+| Ownership-period headroom | 10 |
 
-When a visitor selects “no preference” or “unsure” for an optional scoring preference, that component is omitted and the score is normalized over the remaining applicable weight. Tie-breaking is deterministic: score, workload component, primary-use component, balance component, fewer compromises, lower price, then product ID.
+Optional “unsure” or “no preference” components are omitted and the score is normalized over the
+remaining applicable weight. Ties resolve by score, workload, primary use, balance, number of
+compromises, price and stable product ID. The result order is deterministic.
 
-The complete matrices and thresholds live in `js/recommendation-rules.js`. These internal suitability assessments are not Apple performance claims.
+The detailed matrices, formula, right-sizing correction, reason selection and pseudocode are in
+[the algorithm documentation](docs/algorithm.md).
 
-## Technology stack
-
-- **HTML5** for semantic structure, native forms and accessible status regions.
-- **CSS3** for the original visual identity, responsive layouts, focus styles and reduced-motion support.
-- **JavaScript modules** for separate state, data, validation, rules, engine and rendering concerns.
-- **Node.js built-in test runner** for dependency-free automated tests.
-- **Git and GitHub** for version control and project history.
-
-No external frameworks, component libraries or runtime dependencies are used.
-
-## Project structure
-
-```text
-.
-├── index.html                         # Landing page, questionnaire and results structure
-├── package.json                       # Dependency-free Node test command
-├── README.md                          # Project documentation
-├── PROJECT_STATUS.md                  # Detailed implementation status
-├── css/
-│   └── styles.css                     # Visual design and responsive behaviour
-├── js/
-│   ├── app.js                         # Application entry point and feature wiring
-│   ├── product-schema.js              # Catalogue schema validation and freezing
-│   ├── products.js                    # Verified Apple UK product snapshot
-│   ├── questionnaire-state.js         # Encapsulated questionnaire state
-│   ├── questionnaire.js               # Questionnaire validation and interface behaviour
-│   ├── recommendation-rules.js        # Hard thresholds and scoring matrices
-│   ├── recommendation-engine.js       # Pure deterministic matching engine
-│   ├── results.js                     # Accessible recommendation rendering
-│   └── ui.js                          # Responsive navigation behaviour
-├── tests/
-│   ├── fixtures/questionnaire-scenarios.js
-│   ├── product-data.test.js
-│   └── recommendation-engine.test.js
-└── sources/                           # Read-only local references; never modified
-```
-
-## Development stages
-
-### Stage 1 — Foundation (complete)
-
-Created the landing page, responsive navigation, original visual system, disclaimer and initial project structure.
-
-### Stage 2 — Questionnaire (complete)
-
-Implemented the accessible multi-step questionnaire with controlled state, validation, progress, Back/Continue navigation, answer preservation, Restart confirmation and focus management.
-
-### Stage 3 — Data and recommendations (complete locally)
-
-Added the verified catalogue, schema validation, hard filters, weighted scoring, deterministic recommendations, accessible results, no-match/error handling and automated tests.
-
-### Stage 4 — Testing and refinement (not started)
-
-Broaden cross-browser, physical-device, keyboard and assistive-technology testing, then refine content and presentation where evidence supports a change.
-
-### Stage 5 — Documentation and deployment (not started)
-
-Add final project media and design documentation, complete release checks and deploy the static site.
-
-## Running locally
-
-Because the site uses JavaScript modules, serve it from the repository root instead of opening `index.html` directly. No installation or build step is required.
+## Architecture
 
 ```text
-python -m http.server 4173 --bind 127.0.0.1
+index.html
+  ├─ js/questionnaire.js ── js/questionnaire-state.js
+  ├─ js/app.js
+  │    ├─ js/products.js ── js/product-schema.js
+  │    ├─ js/recommendation-rules.js
+  │    └─ js/recommendation-engine.js
+  ├─ js/results.js
+  └─ js/ui.js
 ```
 
-Open `http://127.0.0.1:4173/`. On Windows, `py` can be used instead of `python` when that launcher is configured. Stop the server with `Ctrl+C`.
+- `js/products.js` contains verified Apple facts only.
+- `js/product-schema.js` validates and freezes the full catalogue.
+- `js/recommendation-rules.js` contains Northstar thresholds and suitability matrices.
+- `js/recommendation-engine.js` is pure and deterministic.
+- `js/results.js` owns accessible result rendering.
+- `js/questionnaire-state.js` keeps questionnaire state private and returns immutable snapshots.
 
-## Running tests
+There is no backend, account, analytics, persistent storage, build step or production dependency.
 
-With Node.js available on the command line:
+## Product-data boundaries
+
+Version one compares 10 approved base configurations from the MacBook Neo, MacBook Air and MacBook
+Pro ranges. Each record includes a stable ID, `GB`/`GBP`, exact dated price, availability,
+configuration facts and field-level official sources. Missing facts remain `null`; configurable
+upgrades are not inferred or added.
+
+Prices are snapshots verified on **31 July 2026** and can change. Product facts are Apple-sourced;
+all capability bands, fit scores, reasons and compromises are independent Northstar judgements.
+
+## Accessibility
+
+The interface uses semantic landmarks, fieldsets and native controls; visible focus states; a skip
+link; associated error messages; numeric progress; deliberate heading focus; polite result status;
+and reduced-motion support. Stage 4 also adds programmatic invalid states, distinguishable result
+and source-link names, JavaScript-failure guidance and Escape cancellation for restart confirmation.
+
+Automated results do not replace assistive-technology testing. Safari/iPhone, VoiceOver, Narrator
+and physical keyboard/device checks remain explicitly listed for user-assisted verification in
+[the test report](docs/testing.md).
+
+## Testing
+
+The dependency-free test command is:
 
 ```text
 npm test
 ```
 
-The script runs the required dependency-free command:
+It runs:
 
 ```text
 node --test
 ```
 
-## Known limitations
+The current suite contains 22 data, engine and recommendation-quality tests. It covers schema
+validation, immutability, exact configurations, boundaries, ties, malformed input, no-match output,
+normalization, deterministic ordering, right-sized scenarios and monotonic hard requirements.
 
-- Product facts and prices are a 31 July 2026 snapshot and can become outdated.
-- Only the 10 approved exact configurations are compared; configurable upgrades are outside the dataset.
-- Questionnaire answers are stored only in memory and are cleared on reload.
-- The engine does not silently relax hard requirements or show near matches when no product qualifies.
-- There is no backend, account system, analytics or persistent storage.
-- Automated browser verification used a Chromium-based in-app browser; Firefox, Safari, physical-device, full manual keyboard and screen-reader testing remain outstanding.
-- The repository has not been deployed.
+Stage 4 local Lighthouse baseline and post-fix results, browser coverage, viewports, accessibility
+checks, defects and pending manual checks are recorded in [the test report](docs/testing.md).
+
+## Run locally
+
+The site uses JavaScript modules, so serve the repository root rather than opening `index.html`
+directly. No installation or build is required.
+
+```text
+python -m http.server 4173 --bind 127.0.0.1
+```
+
+Open `http://127.0.0.1:4173/`. On Windows, `py` can be used when that launcher is configured.
+
+## Deployment
+
+`.github/workflows/pages.yml` prepares a static `_site` artifact, runs the Node test suite, and uses
+the official GitHub Pages actions. It triggers only from `main` (or manual dispatch), so this review
+branch does not publish anything. After approval and merge:
+
+1. Set **Settings → Pages → Source** to **GitHub Actions**.
+2. Allow the `Deploy static site to Pages` workflow to finish.
+3. Verify the HTTPS site and run production Lighthouse against the deployed address.
+
+Relative CSS, module and asset paths have been checked from the repository subdirectory.
+
+## Limitations
+
+- Product facts and prices are dated snapshots and require future re-verification.
+- Only 10 approved exact configurations are compared; upgrades are outside scope.
+- Questionnaire state is memory-only and resets on reload.
+- Budget is a hard eligibility rule, not a value-for-money score.
+- No-match handling does not calculate or substitute near matches.
+- Chrome, Firefox, Safari, physical-device and representative screen-reader checks require the
+  environments listed in the manual verification checklist.
+- There is no backend, persistence, analytics or user account.
+
+## Portfolio material
+
+The concise problem–approach–outcome narrative and CV-ready wording are in
+[the portfolio case study](docs/portfolio-case-study.md). Release evidence is kept separately in
+[the test report](docs/testing.md), so claims can be updated without obscuring the implementation.
+
+## Current status
+
+Stages 1–3 are complete, verified, committed and pushed. Stage 4 changes are prepared on
+`stage-4-final-polish` and are awaiting review. They have not been committed, merged, pushed or
+published.

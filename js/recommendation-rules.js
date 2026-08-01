@@ -79,8 +79,10 @@ export const WORKLOAD_MINIMUM_BANDS = Object.freeze({
 });
 
 export const WORKLOAD_SCORES = Object.freeze({
-  light: Object.freeze([100, 100, 100, 100]),
-  moderate: Object.freeze([40, 100, 100, 100]),
+  // Higher capability remains available when a visitor explicitly prioritises
+  // performance, but light and moderate workloads reward a right-sized fit.
+  light: Object.freeze([100, 100, 85, 70]),
+  moderate: Object.freeze([40, 100, 95, 85]),
   demanding: Object.freeze([0, 55, 100, 100]),
   "very-demanding": Object.freeze([0, 0, 70, 100]),
 });
@@ -139,7 +141,7 @@ export function getHeadroomBand(product) {
   );
 }
 
-export const RULES_VERSION = "1.0.0";
+export const RULES_VERSION = "1.1.0";
 
 // All capability bands and scores above are Northstar project judgements.
 // They are not specifications, performance claims or recommendations from Apple.

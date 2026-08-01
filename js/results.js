@@ -4,6 +4,16 @@ const priceFormatter = new Intl.NumberFormat("en-GB", {
   maximumFractionDigits: 2,
 });
 
+const dateFormatter = new Intl.DateTimeFormat("en-GB", {
+  dateStyle: "long",
+  timeZone: "UTC",
+});
+
+function formatSnapshotDate(date) {
+  const [year, month, day] = date.split("-").map(Number);
+  return dateFormatter.format(new Date(Date.UTC(year, month - 1, day)));
+}
+
 const BLOCKER_LABELS = Object.freeze({
   availability: "current availability",
   market: "UK market data",
@@ -33,16 +43,16 @@ function createList(items, className) {
 
 function createResultCard(match, product) {
   const card = element("article", "recommendation-card");
-  card.setAttribute("aria-labelledby", `recommendation-title-${match.rank}`);
 
   const header = element("div", "recommendation-card-header");
   const rank = element("p", "recommendation-rank", `Recommendation ${match.rank}`);
+  rank.id = `recommendation-rank-${match.rank}`;
   const title = element("h3", "", product.displayName);
   title.id = `recommendation-title-${match.rank}`;
   const price = element(
     "p",
     "recommendation-price",
-    `${priceFormatter.format(product.price.amountMinor / 100)} verified on ${product.price.snapshotDate}`,
+    `${priceFormatter.format(product.price.amountMinor / 100)} verified on ${formatSnapshotDate(product.price.snapshotDate)}`,
   );
   const score = element(
     "p",
@@ -52,6 +62,11 @@ function createResultCard(match, product) {
   header.append(rank, title, price, score);
 
   const configuration = element("p", "recommendation-configuration", product.configurationName);
+  configuration.id = `recommendation-configuration-${match.rank}`;
+  card.setAttribute(
+    "aria-labelledby",
+    `${rank.id} ${title.id} ${configuration.id}`,
+  );
   const facts = element("ul", "recommendation-facts");
   [
     `${product.facts.displayDiagonalInches}-inch diagonal display`,
@@ -78,7 +93,10 @@ function createResultCard(match, product) {
   source.href = product.price.sourceUrl;
   source.target = "_blank";
   source.rel = "noreferrer";
-  source.setAttribute("aria-label", `View ${product.displayName} configuration on Apple UK (opens in a new tab)`);
+  source.setAttribute(
+    "aria-label",
+    `View ${product.displayName}, ${product.configurationName}, on Apple UK (opens in a new tab)`,
+  );
 
   card.append(
     header,
@@ -149,7 +167,7 @@ export function renderRecommendationResults(output, catalogue) {
 
   if (output.status === "ok") {
     const topMatches = output.matches.slice(0, 3);
-    stageLabel.textContent = "Your Stage 3 recommendations";
+    stageLabel.textContent = "Your recommendations";
     summary.textContent = `${topMatches.length} verified configuration${
       topMatches.length === 1 ? "" : "s"
     } ranked using your answers.`;
