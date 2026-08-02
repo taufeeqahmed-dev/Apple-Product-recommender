@@ -5,10 +5,12 @@ This repository contains Northstar, an unofficial student portfolio project that
 ## Current scope and stage
 
 - Version one covers MacBook recommendations only.
-- Stages 1, 2 and 3 are complete, verified, committed and pushed.
-- Stage 4 is approved and is being prepared on `stage-4-final-polish` for user review.
-- Do not commit, push, merge, deploy or mark Stage 4 complete until the user approves the review result.
-- The Stage 4 candidate includes testing, targeted fixes, documentation and Pages preparation.
+- Stages 1, 2, 3 and 4 are complete, reviewed and merged into `main`.
+- The GitHub Pages build and deployment succeeded.
+- The public site is live at `https://taufeeqahmed-dev.github.io/apple-product-recommender/`.
+- Any remaining Safari, VoiceOver, physical-device or production Lighthouse checks are optional
+  post-launch verification.
+- Do not modify the project further without a newly approved scope.
 - Read `PROJECT_STATUS.md` before making changes.
 
 ## Architecture boundaries
@@ -37,4 +39,4 @@ This repository contains Northstar, an unofficial student portfolio project that
 - Treat `sources/` as read-only local reference material. Do not edit, rename, move or delete its contents.
 - Keep `.agents/`, `.codex/` and `sources/` out of version control.
 - Run the dependency-free test suite with `node --test` and perform proportionate browser/accessibility checks.
-- Keep changes within the currently approved development stage and update documentation when behaviour or scope changes.
+- Do not begin further changes without a newly approved scope; update documentation whenever an approved scope changes behaviour.

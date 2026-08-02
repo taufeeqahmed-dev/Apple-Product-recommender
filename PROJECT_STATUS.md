@@ -1,6 +1,6 @@
 # Project status
 
-Last updated: 31 July 2026
+Last updated: 2 August 2026
 
 ## Project goal
 
@@ -10,11 +10,13 @@ Northstar is independent and is not affiliated with, endorsed by or sponsored by
 
 ## Current stage
 
-- Stages 1, 2 and 3: complete, verified, committed and pushed.
-- Stage 4: approved and in progress on `stage-4-final-polish`.
-- The review candidate must not be committed, pushed, merged, deployed or marked complete before user review.
+- Stages 1, 2, 3 and 4: complete, reviewed and merged into `main`.
+- The GitHub Pages build and deployment succeeded.
+- The public site is live at
+  `https://taufeeqahmed-dev.github.io/apple-product-recommender/`.
+- No further project changes are approved without a newly agreed scope.
 
-## Stage 4 review candidate
+## Completed Stage 4
 
 - Added recommendation-quality scenarios and monotonic hard-filter tests.
 - Identified a reproducible right-sizing defect for flexible-budget light/moderate everyday use,
@@ -31,8 +33,11 @@ Northstar is independent and is not affiliated with, endorsed by or sponsored by
 - All 22 Node tests and all 13 JavaScript syntax checks pass.
 - Post-fix local Lighthouse scored 99/100/100/100 on mobile and 100/100/100/100 on desktop for
   Performance/Accessibility/Best Practices/SEO.
-- Production Lighthouse and the documented user-assisted manual checks remain release gates.
+- Safari, VoiceOver, physical-device and production Lighthouse checks are optional post-launch
+  verification rather than release gates.
 - `js/products.js` and `sources/` remain unchanged.
+- The reviewed changes were merged into `main`, and the GitHub Pages build and deployment
+  completed successfully.
 
 ## Completed Stage 3 work
 
@@ -157,12 +162,15 @@ The complete questionnaire-to-results journey was tested through the local previ
 - Questionnaire state is memory-only and is cleared by reload.
 - No-match handling deliberately does not relax hard requirements or calculate near matches.
 - There is no backend, persistent storage, analytics or account system.
-- Deployment is prepared but intentionally not published before review.
-- Chrome, Firefox, Safari, physical-device, full manual keyboard and representative screen-reader
-  testing remain manual release gates as documented in `docs/testing.md`.
+- The production site is live on GitHub Pages at
+  `https://taufeeqahmed-dev.github.io/apple-product-recommender/`.
+- Additional Safari, VoiceOver, physical-device, full manual keyboard, representative screen-reader
+  and production Lighthouse checks are optional post-launch verification.
 
 ## Version-control state
 
-Stages 1, 2 and 3 are complete, verified, committed and pushed. Stage 4 changes are uncommitted on
-`stage-4-final-polish` and await user review. Nothing has been pushed, merged or deployed. The
-read-only `sources/` directory and verified product catalogue were not modified.
+Stages 1–4 are complete. Stage 4 was reviewed, merged into `main`, built and deployed successfully
+through GitHub Pages. The public site is live at
+`https://taufeeqahmed-dev.github.io/apple-product-recommender/`. The read-only `sources/` directory
+and verified product catalogue were not modified. No further changes should be made without a newly
+approved scope.
