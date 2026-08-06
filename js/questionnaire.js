@@ -5,7 +5,7 @@ import {
   resetQuestionnaire,
   setAnswer,
   setCurrentStep,
-} from "./questionnaire-state.js";
+} from "./questionnaire-state-v1-compat.js";
 
 const MAXIMUM_PRIMARY_USES = 2;
 const PRIMARY_USE_LIMIT_MESSAGE = "Choose no more than two primary uses.";

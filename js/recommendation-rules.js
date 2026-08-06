@@ -1,3 +1,5 @@
+import { RECOMMENDATION_RULES_VERSION } from "./version.js";
+
 export const SCORING_WEIGHTS = Object.freeze({
   workload: 30,
   primaryUses: 25,
@@ -141,7 +143,7 @@ export function getHeadroomBand(product) {
   );
 }
 
-export const RULES_VERSION = "1.1.0";
+export const RULES_VERSION = RECOMMENDATION_RULES_VERSION;
 
 // All capability bands and scores above are Northstar project judgements.
 // They are not specifications, performance claims or recommendations from Apple.
