@@ -37,7 +37,7 @@ function minimalValidAnswers() {
 test("application, questionnaire schema and recommendation rules are independently versioned", () => {
   assert.equal(APPLICATION_VERSION, "1.1.0");
   assert.equal(QUESTIONNAIRE_SCHEMA_VERSION, 2);
-  assert.equal(RECOMMENDATION_RULES_VERSION, "1.1.0");
+  assert.equal(RECOMMENDATION_RULES_VERSION, "2.0.0");
 });
 
 test("the declarative question model has stable unique IDs and explicit dependencies", () => {

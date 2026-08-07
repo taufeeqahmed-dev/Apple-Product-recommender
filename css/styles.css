@@ -489,6 +489,17 @@ html:not(.js) .results-section {
   margin-bottom: 1rem;
 }
 
+.questionnaire-change-summary {
+  max-width: 48rem;
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(104, 224, 193, 0.32);
+  border-radius: var(--radius-small);
+  background: rgba(104, 224, 193, 0.07);
+  color: var(--colour-ink);
+  font-size: 0.92rem;
+}
+
 .questionnaire-progress-wrap p {
   margin: 0;
   color: var(--colour-accent);

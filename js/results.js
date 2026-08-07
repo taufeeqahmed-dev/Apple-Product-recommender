@@ -22,6 +22,10 @@ const BLOCKER_LABELS = Object.freeze({
   storage: "minimum storage",
   "external-displays": "external displays",
   "workload-capability": "expected workload",
+  "workload-memory": "workload memory",
+  weight: "maximum weight",
+  "screen-size": "exact screen size",
+  "ownership-headroom": "Northstar ownership headroom",
 });
 
 function element(tagName, className, text) {
@@ -135,6 +139,19 @@ function createNoMatch(output) {
   return panel;
 }
 
+function createBudgetLimited() {
+  const panel = element("div", "results-message results-message-warning");
+  panel.append(
+    element("h3", "", "No configuration fits the permitted budget"),
+    element(
+      "p",
+      "",
+      "At least one verified configuration met the other hard requirements, but every such option was above the selected maximum budget.",
+    ),
+  );
+  return panel;
+}
+
 function createDataError(output) {
   const panel = element("div", "results-message results-message-warning");
   const isInputError = output.status === "invalid-input";
@@ -166,7 +183,11 @@ export function renderRecommendationResults(output, catalogue) {
   restartButton?.removeAttribute("hidden");
 
   if (output.status === "ok") {
-    const topMatches = output.matches.slice(0, 3);
+    const rankedGroup = output.matches.length > 0 ? output.matches : output.stretchMatches;
+    const topMatches = rankedGroup.slice(0, 3).map((match, index) => ({
+      ...match,
+      rank: match.rank ?? match.stretchRank ?? index + 1,
+    }));
     stageLabel.textContent = "Your recommendations";
     summary.textContent = `${topMatches.length} verified configuration${
       topMatches.length === 1 ? "" : "s"
@@ -185,6 +206,11 @@ export function renderRecommendationResults(output, catalogue) {
     summary.textContent = "No verified configuration passed every hard requirement.";
     container.append(createNoMatch(output));
     announcement.textContent = "No suitable configuration was found. Focus moved to the results heading.";
+  } else if (output.status === "budget-limited") {
+    stageLabel.textContent = "No match within budget";
+    summary.textContent = "Matching verified configurations were above the permitted maximum budget.";
+    container.append(createBudgetLimited());
+    announcement.textContent = "No configuration fit the permitted budget. Focus moved to the results heading.";
   } else {
     stageLabel.textContent = "Recommendation unavailable";
     summary.textContent = "Northstar stopped safely instead of calculating from invalid information.";
@@ -208,7 +234,7 @@ export function clearRecommendationResults() {
 
   section.dataset.state = "empty";
   stageLabel.textContent = "Complete the questionnaire first";
-  summary.textContent = "Your top verified matches will appear here after all eight answers are complete.";
+  summary.textContent = "Your top verified matches will appear here after the adaptive questionnaire is complete.";
   announcement.textContent = "";
   container.replaceChildren();
   restartButton?.setAttribute("hidden", "");

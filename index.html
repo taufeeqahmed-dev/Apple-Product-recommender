@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta
       name="description"
-      content="Northstar asks eight plain-language questions and explains up to three MacBook recommendations using a transparent scoring system."
+      content="Northstar asks adaptive, plain-language questions and explains up to three MacBook recommendations using a transparent scoring system."
     >
     <meta name="theme-color" content="#08101d">
     <link rel="canonical" href="https://taufeeqahmed-dev.github.io/apple-product-recommender/">
@@ -14,7 +14,7 @@
     <meta property="og:title" content="Northstar | A clearer way to choose a MacBook">
     <meta
       property="og:description"
-      content="Answer eight plain-language questions and get a focused, explainable MacBook shortlist."
+      content="Answer adaptive, plain-language questions and get a focused, explainable MacBook shortlist."
     >
     <meta
       property="og:url"
@@ -135,11 +135,11 @@
         aria-labelledby="questionnaire-title"
       >
         <div class="questionnaire-heading">
-          <p class="stage-label">Eight-step questionnaire</p>
+          <p class="stage-label">Adaptive questionnaire</p>
           <h2 id="questionnaire-title">Tell us what matters to you.</h2>
           <p>
-            Answer eight plain-language questions about how you expect to use your MacBook.
-            Your answers stay available as you move between steps.
+            Northstar asks follow-up questions based on your answers. Optional questions can be
+            skipped, and your answers stay available as you move Back and Continue.
           </p>
         </div>
 
@@ -149,439 +149,27 @@
         </p>
 
         <div class="questionnaire-progress-wrap">
-          <p id="questionnaire-progress-text" aria-live="polite">Step 1 of 8</p>
+          <p id="questionnaire-progress-text" aria-live="polite">
+            Question 1 of 11 based on your answers
+          </p>
           <progress
             id="questionnaire-progress"
             value="1"
-            max="8"
+            max="11"
             aria-labelledby="questionnaire-progress-text"
-          >1 of 8</progress>
+          >1 of 11</progress>
         </div>
+        <p
+          class="questionnaire-change-summary"
+          id="questionnaire-change-summary"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          hidden
+        ></p>
 
         <form class="questionnaire-form" id="questionnaire-form" novalidate>
-          <section class="questionnaire-step" data-step-index="0">
-            <h3 class="questionnaire-step-heading" tabindex="-1">Maximum budget</h3>
-            <fieldset aria-describedby="maximum-budget-error">
-              <legend>What is the most you would like to spend on a MacBook?</legend>
-              <div class="option-grid">
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="maximum-budget"
-                    value="up-to-1000"
-                    data-answer-id="maximumBudget"
-                    required
-                  >
-                  <span>Up to £1,000</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="maximum-budget"
-                    value="up-to-1500"
-                    data-answer-id="maximumBudget"
-                    required
-                  >
-                  <span>Up to £1,500</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="maximum-budget"
-                    value="up-to-2000"
-                    data-answer-id="maximumBudget"
-                    required
-                  >
-                  <span>Up to £2,000</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="maximum-budget"
-                    value="up-to-2500"
-                    data-answer-id="maximumBudget"
-                    required
-                  >
-                  <span>Up to £2,500</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="maximum-budget"
-                    value="over-2500"
-                    data-answer-id="maximumBudget"
-                    required
-                  >
-                  <span>More than £2,500</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="maximum-budget"
-                    value="flexible"
-                    data-answer-id="maximumBudget"
-                    required
-                  >
-                  <span>I’m not sure yet or my budget is flexible</span>
-                </label>
-              </div>
-              <p class="questionnaire-error" id="maximum-budget-error" role="alert" hidden></p>
-            </fieldset>
-          </section>
-
-          <section class="questionnaire-step" data-step-index="1" hidden>
-            <h3 class="questionnaire-step-heading" tabindex="-1">Primary use</h3>
-            <fieldset aria-describedby="primary-uses-help primary-uses-error">
-              <legend>What will you mainly use your MacBook for?</legend>
-              <p class="questionnaire-help" id="primary-uses-help">Choose one or two.</p>
-              <div class="option-grid">
-                <label class="option-card">
-                  <input
-                    type="checkbox"
-                    name="primary-uses"
-                    value="everyday-study"
-                    data-answer-id="primaryUses"
-                  >
-                  <span>Everyday tasks and studying</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="checkbox"
-                    name="primary-uses"
-                    value="office-business"
-                    data-answer-id="primaryUses"
-                  >
-                  <span>Office and business work</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="checkbox"
-                    name="primary-uses"
-                    value="coding"
-                    data-answer-id="primaryUses"
-                  >
-                  <span>Coding and software development</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="checkbox"
-                    name="primary-uses"
-                    value="photo-design"
-                    data-answer-id="primaryUses"
-                  >
-                  <span>Photography and graphic design</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="checkbox"
-                    name="primary-uses"
-                    value="audio-music"
-                    data-answer-id="primaryUses"
-                  >
-                  <span>Music and audio production</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="checkbox"
-                    name="primary-uses"
-                    value="video-3d"
-                    data-answer-id="primaryUses"
-                  >
-                  <span>Video editing, 3D work or other demanding creative projects</span>
-                </label>
-              </div>
-              <p class="questionnaire-error" id="primary-uses-error" role="alert" hidden></p>
-            </fieldset>
-          </section>
-
-          <section class="questionnaire-step" data-step-index="2" hidden>
-            <h3 class="questionnaire-step-heading" tabindex="-1">Preferred screen size</h3>
-            <div class="select-question">
-              <label for="screen-size">Which screen size would you prefer?</label>
-              <select
-                id="screen-size"
-                name="screen-size"
-                data-answer-id="screenSize"
-                aria-describedby="screen-size-error"
-                required
-              >
-                <option value="">Choose a screen size</option>
-                <option value="compact">Smaller, around 13–14 inches — easier to carry</option>
-                <option value="large">Larger, around 15–16 inches — more room to work</option>
-                <option value="no-preference">I have no preference</option>
-              </select>
-              <p class="questionnaire-error" id="screen-size-error" role="alert" hidden></p>
-            </div>
-          </section>
-
-          <section class="questionnaire-step" data-step-index="3" hidden>
-            <h3 class="questionnaire-step-heading" tabindex="-1">
-              Portability versus performance
-            </h3>
-            <fieldset aria-describedby="portability-performance-error">
-              <legend>
-                When choosing between easier carrying and extra power, which matters more to you?
-              </legend>
-              <div class="option-grid option-grid-single">
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="portability-performance"
-                    value="portability-first"
-                    data-answer-id="portabilityPerformance"
-                    required
-                  >
-                  <span>Portability matters much more</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="portability-performance"
-                    value="lean-portability"
-                    data-answer-id="portabilityPerformance"
-                    required
-                  >
-                  <span>Portability matters a little more</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="portability-performance"
-                    value="balanced"
-                    data-answer-id="portabilityPerformance"
-                    required
-                  >
-                  <span>I want a balance of both</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="portability-performance"
-                    value="lean-performance"
-                    data-answer-id="portabilityPerformance"
-                    required
-                  >
-                  <span>Performance matters a little more</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="portability-performance"
-                    value="performance-first"
-                    data-answer-id="portabilityPerformance"
-                    required
-                  >
-                  <span>Performance matters much more</span>
-                </label>
-              </div>
-              <p
-                class="questionnaire-error"
-                id="portability-performance-error"
-                role="alert"
-                hidden
-              ></p>
-            </fieldset>
-          </section>
-
-          <section class="questionnaire-step" data-step-index="4" hidden>
-            <h3 class="questionnaire-step-heading" tabindex="-1">Workload intensity</h3>
-            <fieldset aria-describedby="workload-intensity-error">
-              <legend>How demanding is the work you expect this MacBook to handle?</legend>
-              <div class="option-grid option-grid-single">
-                <label class="option-card option-card-detailed">
-                  <input
-                    type="radio"
-                    name="workload-intensity"
-                    value="light"
-                    data-answer-id="workloadIntensity"
-                    required
-                  >
-                  <span><strong>Light</strong> — browsing, email, documents and video calls</span>
-                </label>
-                <label class="option-card option-card-detailed">
-                  <input
-                    type="radio"
-                    name="workload-intensity"
-                    value="moderate"
-                    data-answer-id="workloadIntensity"
-                    required
-                  >
-                  <span><strong>Moderate</strong> — lots of browser tabs and several everyday apps</span>
-                </label>
-                <label class="option-card option-card-detailed">
-                  <input
-                    type="radio"
-                    name="workload-intensity"
-                    value="demanding"
-                    data-answer-id="workloadIntensity"
-                    required
-                  >
-                  <span><strong>Demanding</strong> — regular coding, editing or large projects</span>
-                </label>
-                <label class="option-card option-card-detailed">
-                  <input
-                    type="radio"
-                    name="workload-intensity"
-                    value="very-demanding"
-                    data-answer-id="workloadIntensity"
-                    required
-                  >
-                  <span>
-                    <strong>Very demanding</strong> — frequent video, 3D or complex professional work
-                  </span>
-                </label>
-              </div>
-              <p class="questionnaire-error" id="workload-intensity-error" role="alert" hidden></p>
-            </fieldset>
-          </section>
-
-          <section class="questionnaire-step" data-step-index="5" hidden>
-            <h3 class="questionnaire-step-heading" tabindex="-1">Minimum storage</h3>
-            <div class="select-question">
-              <label for="minimum-storage">How much built-in storage do you want at minimum?</label>
-              <p class="questionnaire-help" id="minimum-storage-help">
-                Storage is the space used by your apps, documents, photos and other files.
-              </p>
-              <select
-                id="minimum-storage"
-                name="minimum-storage"
-                data-answer-id="minimumStorage"
-                aria-describedby="minimum-storage-help minimum-storage-error"
-                required
-              >
-                <option value="">Choose a storage amount</option>
-                <option value="256gb">256 GB — suitable if most files are small or stored online</option>
-                <option value="512gb">512 GB — more room for apps, photos and projects</option>
-                <option value="1tb">1 TB — for large photo, audio or video libraries</option>
-                <option value="2tb-plus">2 TB or more — for very large professional files</option>
-                <option value="unsure">I’m not sure</option>
-              </select>
-              <p class="questionnaire-error" id="minimum-storage-error" role="alert" hidden></p>
-            </div>
-          </section>
-
-          <section class="questionnaire-step" data-step-index="6" hidden>
-            <h3 class="questionnaire-step-heading" tabindex="-1">External displays</h3>
-            <fieldset aria-describedby="external-displays-help external-displays-error">
-              <legend>How many external displays do you expect to use at the same time?</legend>
-              <p class="questionnaire-help" id="external-displays-help">
-                An external display is a monitor or television connected to your MacBook.
-              </p>
-              <div class="option-grid option-grid-single">
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="external-displays"
-                    value="none"
-                    data-answer-id="externalDisplays"
-                    required
-                  >
-                  <span>None</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="external-displays"
-                    value="one"
-                    data-answer-id="externalDisplays"
-                    required
-                  >
-                  <span>One</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="external-displays"
-                    value="two"
-                    data-answer-id="externalDisplays"
-                    required
-                  >
-                  <span>Two</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="external-displays"
-                    value="three-plus"
-                    data-answer-id="externalDisplays"
-                    required
-                  >
-                  <span>Three or more</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="external-displays"
-                    value="unsure"
-                    data-answer-id="externalDisplays"
-                    required
-                  >
-                  <span>I’m not sure</span>
-                </label>
-              </div>
-              <p class="questionnaire-error" id="external-displays-error" role="alert" hidden></p>
-            </fieldset>
-          </section>
-
-          <section class="questionnaire-step" data-step-index="7" hidden>
-            <h3 class="questionnaire-step-heading" tabindex="-1">Expected ownership period</h3>
-            <fieldset aria-describedby="ownership-period-error">
-              <legend>How long do you expect to keep this MacBook?</legend>
-              <div class="option-grid option-grid-single">
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="ownership-period"
-                    value="up-to-2"
-                    data-answer-id="ownershipPeriod"
-                    required
-                  >
-                  <span>Up to 2 years</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="ownership-period"
-                    value="3-to-4"
-                    data-answer-id="ownershipPeriod"
-                    required
-                  >
-                  <span>3–4 years</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="ownership-period"
-                    value="5-to-6"
-                    data-answer-id="ownershipPeriod"
-                    required
-                  >
-                  <span>5–6 years</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="ownership-period"
-                    value="7-plus"
-                    data-answer-id="ownershipPeriod"
-                    required
-                  >
-                  <span>7 years or more</span>
-                </label>
-                <label class="option-card">
-                  <input
-                    type="radio"
-                    name="ownership-period"
-                    value="unsure"
-                    data-answer-id="ownershipPeriod"
-                    required
-                  >
-                  <span>I’m not sure</span>
-                </label>
-              </div>
-              <p class="questionnaire-error" id="ownership-period-error" role="alert" hidden></p>
-            </fieldset>
-          </section>
+          <div id="questionnaire-question"></div>
 
           <div class="questionnaire-actions">
             <button class="button button-secondary" id="questionnaire-back" type="button" hidden>
@@ -605,7 +193,7 @@
         </form>
 
         <div class="questionnaire-complete" id="questionnaire-complete" hidden>
-          <p class="stage-label">All eight steps complete</p>
+          <p class="stage-label">Adaptive questionnaire complete</p>
           <h3 class="questionnaire-step-heading" tabindex="-1">Questionnaire complete</h3>
           <p>
             Your answers have been matched against the verified product snapshot. Your ranked
@@ -630,7 +218,7 @@
           hidden
         >
           <h3 id="restart-confirmation-title" tabindex="-1">Restart the questionnaire?</h3>
-          <p>This will clear all eight answers and return you to the first step.</p>
+          <p>This will clear every answer and return you to the first relevant question.</p>
           <div class="restart-confirmation-actions">
             <button class="button button-primary" id="confirm-restart" type="button">
               Yes, restart
@@ -648,7 +236,7 @@
             <p class="stage-label" id="results-stage-label">Complete the questionnaire first</p>
             <h2 id="results-title" tabindex="-1">Recommendation results</h2>
             <p id="results-summary">
-              Your top verified matches will appear here after all eight answers are complete.
+              Your top verified matches will appear here after the adaptive questionnaire is complete.
             </p>
           </div>
           <button

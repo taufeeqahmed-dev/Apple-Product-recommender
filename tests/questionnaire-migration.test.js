@@ -6,7 +6,7 @@ import {
   demandingCodingAnswers,
   everydayPortableAnswers,
   noMatchAnswers,
-} from "./fixtures/questionnaire-scenarios.js";
+} from "./fixtures/v1-questionnaire-scenarios.js";
 
 test("a v1 everyday fixture preserves unambiguous constraints and flags changed concepts", () => {
   const migration = migrateV1Answers(everydayPortableAnswers);

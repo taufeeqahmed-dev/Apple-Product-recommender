@@ -1,75 +1,206 @@
+import { getQuestionDefinition } from "./questionnaire-definition.js";
+import {
+  getAnswerValue,
+  getAvailableAbsoluteBudgetIds,
+  getVisibleQuestionIds,
+} from "./questionnaire-profile.js";
 import {
   completeQuestionnaire,
+  confirmPendingAnswerChange,
   getState,
-  markStepAttempted,
+  markQuestionAttempted,
+  requestAnswerChange,
   resetQuestionnaire,
-  setAnswer,
-  setCurrentStep,
-} from "./questionnaire-state-v1-compat.js";
+  setCurrentQuestion,
+} from "./questionnaire-state.js";
 
-const MAXIMUM_PRIMARY_USES = 2;
-const PRIMARY_USE_LIMIT_MESSAGE = "Choose no more than two primary uses.";
+const CONNECTION_EXCLUSIVE_IDS = new Set(["no-specific-need", "unsure"]);
 
-const STEP_CONFIG = [
-  {
-    answerId: "maximumBudget",
-    errorId: "maximum-budget-error",
-    missingMessage: "Choose your maximum budget before continuing.",
-  },
-  {
-    answerId: "primaryUses",
-    errorId: "primary-uses-error",
-    missingMessage: "Choose at least one primary use before continuing.",
-  },
-  {
-    answerId: "screenSize",
-    errorId: "screen-size-error",
-    missingMessage: "Choose your preferred screen size before continuing.",
-  },
-  {
-    answerId: "portabilityPerformance",
-    errorId: "portability-performance-error",
-    missingMessage: "Choose how you balance portability and performance before continuing.",
-  },
-  {
-    answerId: "workloadIntensity",
-    errorId: "workload-intensity-error",
-    missingMessage: "Choose your expected workload intensity before continuing.",
-  },
-  {
-    answerId: "minimumStorage",
-    errorId: "minimum-storage-error",
-    missingMessage: "Choose your minimum storage requirement before continuing.",
-  },
-  {
-    answerId: "externalDisplays",
-    errorId: "external-displays-error",
-    missingMessage: "Choose your external-display requirement before continuing.",
-  },
-  {
-    answerId: "ownershipPeriod",
-    errorId: "ownership-period-error",
-    missingMessage: "Choose your expected ownership period before continuing.",
-  },
-];
+function createElement(tagName, className = "", text = undefined) {
+  const element = document.createElement(tagName);
+  if (className) element.className = className;
+  if (text !== undefined) element.textContent = text;
+  return element;
+}
 
-function answerIsValid(answerId, value) {
-  if (answerId === "primaryUses") {
-    return value.length >= 1 && value.length <= MAXIMUM_PRIMARY_USES;
+function isAnswered(value) {
+  if (Array.isArray(value)) return value.length > 0;
+  return value !== null && value !== "" && value !== undefined;
+}
+
+export function validateQuestionValue(definition, value) {
+  if (!definition.required && !isAnswered(value)) {
+    return { valid: true, message: "" };
   }
 
-  return value !== "";
+  if (definition.type === "checkbox") {
+    const count = Array.isArray(value) ? value.length : 0;
+    if (definition.minimumSelections && count < definition.minimumSelections) {
+      return {
+        valid: false,
+        message:
+          definition.id === "primaryUses"
+            ? "Choose one or two primary uses before continuing."
+            : "Choose at least one answer before continuing.",
+      };
+    }
+    if (definition.maximumSelections && count > definition.maximumSelections) {
+      return {
+        valid: false,
+        message: `Choose no more than ${definition.maximumSelections} answers.`,
+      };
+    }
+    return { valid: true, message: "" };
+  }
+
+  if (!isAnswered(value)) {
+    return { valid: false, message: "Choose an answer before continuing." };
+  }
+  return { valid: true, message: "" };
+}
+
+export function getQuestionProgress(answers, currentQuestionId) {
+  const visibleQuestionIds = getVisibleQuestionIds(answers);
+  const currentIndex = visibleQuestionIds.indexOf(currentQuestionId);
+  return {
+    visibleQuestionIds,
+    currentIndex,
+    questionNumber: currentIndex + 1,
+    totalQuestions: visibleQuestionIds.length,
+  };
+}
+
+export function getNextCheckboxValue(definition, currentValue, optionId, checked) {
+  const selected = new Set(Array.isArray(currentValue) ? currentValue : []);
+
+  if (!checked) {
+    selected.delete(optionId);
+    return [...selected];
+  }
+
+  if (definition.id === "connectionNeeds") {
+    if (CONNECTION_EXCLUSIVE_IDS.has(optionId)) {
+      return [optionId];
+    }
+    CONNECTION_EXCLUSIVE_IDS.forEach((exclusiveId) => selected.delete(exclusiveId));
+  }
+
+  selected.add(optionId);
+  return [...selected];
+}
+
+function getQuestionOptions(definition, answers) {
+  if (definition.id !== "absoluteBudget") return definition.options;
+  const allowed = new Set(getAvailableAbsoluteBudgetIds(answers.budget.target));
+  return definition.options.filter(({ id }) => allowed.has(id));
+}
+
+function getQuestionHelp(definition) {
+  const messages = [];
+  if (!definition.required) {
+    messages.push("Optional — you can continue without answering.");
+  }
+  if (definition.maximumSelections) {
+    messages.push(`Choose up to ${definition.maximumSelections}.`);
+  }
+  if (definition.id === "batteryImportance") {
+    messages.push(
+      "This answer is recorded for explanation but cannot affect ranking because model-specific battery runtime is not verified in the catalogue.",
+    );
+  }
+  if (definition.id === "connectionNeeds") {
+    messages.push(
+      "These answers cannot affect ranking because a verified model-specific port inventory is not present in the catalogue.",
+    );
+  }
+  return messages.join(" ");
+}
+
+function controlId(questionId, optionId) {
+  return `question-${questionId}-option-${optionId}`;
+}
+
+function renderQuestionContent(container, state, { moveFocus = true } = {}) {
+  const definition = getQuestionDefinition(state.currentQuestionId);
+  const value = getAnswerValue(state.answers, definition.answerPath);
+  const section = createElement("section", "questionnaire-step");
+  section.dataset.questionId = definition.id;
+
+  const heading = createElement(
+    "h3",
+    "questionnaire-step-heading",
+    definition.required ? "Required question" : "Optional question",
+  );
+  heading.id = `question-heading-${definition.id}`;
+  heading.tabIndex = -1;
+
+  const fieldset = document.createElement("fieldset");
+  const legend = createElement("legend", "", definition.prompt);
+  const helpText = getQuestionHelp(definition);
+  const helpId = `question-help-${definition.id}`;
+  const errorId = `question-error-${definition.id}`;
+  const describedBy = [];
+
+  fieldset.append(legend);
+  if (helpText) {
+    const help = createElement("p", "questionnaire-help", helpText);
+    help.id = helpId;
+    fieldset.append(help);
+    describedBy.push(helpId);
+  }
+  describedBy.push(errorId);
+  fieldset.setAttribute("aria-describedby", describedBy.join(" "));
+
+  const optionGrid = createElement(
+    "div",
+    definition.options.length > 4 ? "option-grid" : "option-grid option-grid-single",
+  );
+  const options = getQuestionOptions(definition, state.answers);
+  options.forEach((option) => {
+    const label = createElement("label", "option-card");
+    const input = document.createElement("input");
+    input.id = controlId(definition.id, option.id);
+    input.type = definition.type;
+    input.name = `question-${definition.id}`;
+    input.value = option.id;
+    input.dataset.questionId = definition.id;
+    input.checked =
+      definition.type === "checkbox"
+        ? Array.isArray(value) && value.includes(option.id)
+        : value === option.id;
+    if (definition.required && definition.type === "radio") input.required = true;
+    const optionText = createElement("span", "", option.label);
+    label.append(input, optionText);
+    optionGrid.append(label);
+  });
+
+  const error = createElement("p", "questionnaire-error");
+  error.id = errorId;
+  error.role = "alert";
+  error.hidden = true;
+  fieldset.append(optionGrid, error);
+  section.append(heading, fieldset);
+  container.replaceChildren(section);
+
+  if (moveFocus) heading.focus();
+}
+
+function setLiveText(element, message) {
+  element.textContent = "";
+  element.hidden = false;
+  window.requestAnimationFrame(() => {
+    element.textContent = message;
+  });
 }
 
 export function initialiseQuestionnaire({ onComplete = null, onRestart = null } = {}) {
   const form = document.querySelector("#questionnaire-form");
-  if (!form) return;
-
-  const steps = [...form.querySelectorAll(".questionnaire-step")];
+  const questionContainer = document.querySelector("#questionnaire-question");
   const progress = document.querySelector("#questionnaire-progress");
   const progressText = document.querySelector("#questionnaire-progress-text");
-  const backButton = form.querySelector("#questionnaire-back");
-  const submitButton = form.querySelector("#questionnaire-continue");
+  const changeSummary = document.querySelector("#questionnaire-change-summary");
+  const backButton = document.querySelector("#questionnaire-back");
+  const submitButton = document.querySelector("#questionnaire-continue");
   const completionPanel = document.querySelector("#questionnaire-complete");
   const restartConfirmation = document.querySelector("#restart-confirmation");
   const restartConfirmationTitle = document.querySelector("#restart-confirmation-title");
@@ -79,9 +210,11 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
   let restartReturnTarget = null;
 
   if (
-    steps.length !== STEP_CONFIG.length ||
+    !form ||
+    !questionContainer ||
     !progress ||
     !progressText ||
+    !changeSummary ||
     !backButton ||
     !submitButton ||
     !completionPanel ||
@@ -93,134 +226,150 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
     return;
   }
 
-  const getErrorElement = (stepIndex) =>
-    document.querySelector(`#${STEP_CONFIG[stepIndex].errorId}`);
-
-  const clearError = (stepIndex) => {
-    const error = getErrorElement(stepIndex);
-    if (!error) return;
-    error.textContent = "";
-    error.hidden = true;
-    steps[stepIndex]
-      .querySelectorAll("input, select")
-      .forEach((control) => control.removeAttribute("aria-invalid"));
+  const updateProgress = () => {
+    const state = getState();
+    const current = getQuestionProgress(state.answers, state.currentQuestionId);
+    const label = `Question ${current.questionNumber} of ${current.totalQuestions} based on your answers`;
+    progress.value = current.questionNumber;
+    progress.max = current.totalQuestions;
+    progress.setAttribute("value", String(current.questionNumber));
+    progress.setAttribute("max", String(current.totalQuestions));
+    progress.textContent = `${current.questionNumber} of ${current.totalQuestions}`;
+    progressText.textContent = label;
+    backButton.hidden = current.currentIndex <= 0;
+    submitButton.textContent =
+      current.currentIndex === current.totalQuestions - 1 ? "See recommendations" : "Continue";
+    return current;
   };
 
-  const announceError = (stepIndex, message) => {
-    const error = getErrorElement(stepIndex);
-    if (!error) return;
-    error.textContent = "";
-    error.hidden = false;
-    steps[stepIndex]
-      .querySelectorAll("input, select")
-      .forEach((control) => control.setAttribute("aria-invalid", "true"));
-    window.requestAnimationFrame(() => {
-      error.textContent = message;
-    });
-  };
+  const currentElements = () => ({
+    section: questionContainer.querySelector(".questionnaire-step"),
+    error: questionContainer.querySelector(".questionnaire-error"),
+    controls: [...questionContainer.querySelectorAll("input[data-question-id]")],
+  });
 
-  const focusFirstControl = (stepIndex) => {
-    const firstControl = steps[stepIndex].querySelector("input, select");
-    if (firstControl) firstControl.focus();
-  };
-
-  const validateStep = (stepIndex, { focusInvalid = false } = {}) => {
-    const { answerId, missingMessage } = STEP_CONFIG[stepIndex];
-    const answer = getState().answers[answerId];
-
-    if (!answerIsValid(answerId, answer)) {
-      const message =
-        answerId === "primaryUses" && answer.length > MAXIMUM_PRIMARY_USES
-          ? PRIMARY_USE_LIMIT_MESSAGE
-          : missingMessage;
-      announceError(stepIndex, message);
-      if (focusInvalid) focusFirstControl(stepIndex);
-      return false;
+  const clearError = () => {
+    const { error, controls } = currentElements();
+    if (error) {
+      error.textContent = "";
+      error.hidden = true;
     }
-
-    clearError(stepIndex);
-    return true;
+    controls.forEach((control) => control.removeAttribute("aria-invalid"));
   };
 
-  const syncControlsFromState = () => {
-    const { answers } = getState();
+  const announceError = (message, { focusInvalid = false } = {}) => {
+    const { error, controls } = currentElements();
+    if (!error) return;
+    controls.forEach((control) => control.setAttribute("aria-invalid", "true"));
+    setLiveText(error, message);
+    if (focusInvalid) controls[0]?.focus();
+  };
 
-    form.querySelectorAll("input[type='radio']").forEach((control) => {
-      control.checked = answers[control.dataset.answerId] === control.value;
-    });
+  const renderCurrentQuestion = ({ moveFocus = true } = {}) => {
+    renderQuestionContent(questionContainer, getState(), { moveFocus });
+    updateProgress();
+  };
 
-    form.querySelectorAll("input[type='checkbox']").forEach((control) => {
-      control.checked = answers.primaryUses.includes(control.value);
-    });
-
-    form.querySelectorAll("select[data-answer-id]").forEach((control) => {
-      control.value = answers[control.dataset.answerId];
+  const syncCurrentControls = () => {
+    const state = getState();
+    const definition = getQuestionDefinition(state.currentQuestionId);
+    const value = getAnswerValue(state.answers, definition.answerPath);
+    currentElements().controls.forEach((control) => {
+      control.checked =
+        definition.type === "checkbox"
+          ? Array.isArray(value) && value.includes(control.value)
+          : value === control.value;
     });
   };
 
-  const showStep = (stepIndex, { moveFocus = true } = {}) => {
-    setCurrentStep(stepIndex);
-
-    steps.forEach((step, index) => {
-      step.hidden = index !== stepIndex;
-    });
-
-    const visibleStepNumber = stepIndex + 1;
-    progress.value = visibleStepNumber;
-    progress.setAttribute("value", String(visibleStepNumber));
-    progress.textContent = `${visibleStepNumber} of ${steps.length}`;
-    progressText.textContent = `Step ${visibleStepNumber} of ${steps.length}`;
-    backButton.hidden = stepIndex === 0;
-    submitButton.textContent = stepIndex === steps.length - 1 ? "Complete questionnaire" : "Continue";
-
-    if (moveFocus) {
-      steps[stepIndex].querySelector(".questionnaire-step-heading")?.focus();
+  const announceAdaptiveChange = (clearedQuestionIds, beforeTotal, afterTotal) => {
+    const messages = [];
+    if (clearedQuestionIds.length > 0) {
+      const prompts = clearedQuestionIds.map(
+        (questionId) => getQuestionDefinition(questionId).prompt,
+      );
+      messages.push(
+        `${clearedQuestionIds.length === 1 ? "One answer was" : `${clearedQuestionIds.length} answers were`} cleared because ${clearedQuestionIds.length === 1 ? "it is" : "they are"} no longer relevant: ${prompts.join("; ")}`,
+      );
     }
-  };
-
-  const hideRestartConfirmation = ({ restoreFocus = false } = {}) => {
-    restartConfirmation.hidden = true;
-    restartButtons.forEach((button) => button.setAttribute("aria-expanded", "false"));
-    if (restoreFocus && restartReturnTarget) restartReturnTarget.focus();
+    if (beforeTotal !== afterTotal) {
+      messages.push(
+        `The questionnaire now has ${afterTotal} questions based on your answers, previously ${beforeTotal}.`,
+      );
+    }
+    if (messages.length > 0) setLiveText(changeSummary, messages.join(" "));
   };
 
   form.addEventListener("change", (event) => {
-    const control = event.target.closest("[data-answer-id]");
+    const control = event.target.closest("input[data-question-id]");
     if (!control) return;
 
-    const answerId = control.dataset.answerId;
-    const stepIndex = Number(control.closest(".questionnaire-step").dataset.stepIndex);
+    const before = getState();
+    const definition = getQuestionDefinition(control.dataset.questionId);
+    const beforeProgress = getQuestionProgress(before.answers, before.currentQuestionId);
+    const currentValue = getAnswerValue(before.answers, definition.answerPath);
+    const nextValue =
+      definition.type === "checkbox"
+        ? getNextCheckboxValue(definition, currentValue, control.value, control.checked)
+        : control.value;
 
-    if (control.type === "checkbox") {
-      const selectedValues = [
-        ...form.querySelectorAll("input[data-answer-id='primaryUses']:checked"),
-      ].map((checkbox) => checkbox.value);
-
-      if (selectedValues.length > MAXIMUM_PRIMARY_USES) {
-        control.checked = false;
-        const allowedValues = selectedValues.filter((value) => value !== control.value);
-        setAnswer(answerId, allowedValues);
-        announceError(stepIndex, PRIMARY_USE_LIMIT_MESSAGE);
-        return;
-      }
-
-      setAnswer(answerId, selectedValues);
-    } else {
-      setAnswer(answerId, control.value);
+    if (
+      definition.maximumSelections &&
+      Array.isArray(nextValue) &&
+      nextValue.length > definition.maximumSelections
+    ) {
+      control.checked = false;
+      announceError(`Choose no more than ${definition.maximumSelections} answers.`, {
+        focusInvalid: true,
+      });
+      return;
     }
 
-    if (answerIsValid(answerId, getState().answers[answerId])) clearError(stepIndex);
+    const requested = requestAnswerChange(definition.id, nextValue);
+    const clearedQuestionIds = requested.pendingChange?.clearedQuestionIds ?? [];
+    if (requested.pendingChange) confirmPendingAnswerChange();
+
+    syncCurrentControls();
+    const validation = validateQuestionValue(
+      definition,
+      getAnswerValue(getState().answers, definition.answerPath),
+    );
+    if (validation.valid) clearError();
+
+    const afterProgress = updateProgress();
+    announceAdaptiveChange(
+      clearedQuestionIds,
+      beforeProgress.totalQuestions,
+      afterProgress.totalQuestions,
+    );
   });
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
-    const { currentStep } = getState();
-    markStepAttempted(currentStep);
+    const state = getState();
+    const definition = getQuestionDefinition(state.currentQuestionId);
+    markQuestionAttempted(definition.id);
+    const validation = validateQuestionValue(
+      definition,
+      getAnswerValue(state.answers, definition.answerPath),
+    );
+    if (!validation.valid) {
+      announceError(validation.message, { focusInvalid: true });
+      return;
+    }
+    clearError();
 
-    if (!validateStep(currentStep, { focusInvalid: true })) return;
-
-    if (currentStep === steps.length - 1) {
-      completeQuestionnaire();
+    const current = getQuestionProgress(state.answers, state.currentQuestionId);
+    if (current.currentIndex === current.totalQuestions - 1) {
+      try {
+        completeQuestionnaire();
+      } catch {
+        announceError(
+          "Some required answers are incomplete. Use Back to review the questionnaire.",
+          { focusInvalid: true },
+        );
+        return;
+      }
       form.hidden = true;
       completionPanel.hidden = false;
       const completionHandled = onComplete?.(getState().answers) === true;
@@ -230,13 +379,23 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
       return;
     }
 
-    showStep(currentStep + 1);
+    setCurrentQuestion(current.visibleQuestionIds[current.currentIndex + 1]);
+    renderCurrentQuestion();
   });
 
   backButton.addEventListener("click", () => {
-    const { currentStep } = getState();
-    if (currentStep > 0) showStep(currentStep - 1);
+    const state = getState();
+    const current = getQuestionProgress(state.answers, state.currentQuestionId);
+    if (current.currentIndex <= 0) return;
+    setCurrentQuestion(current.visibleQuestionIds[current.currentIndex - 1]);
+    renderCurrentQuestion();
   });
+
+  const hideRestartConfirmation = ({ restoreFocus = false } = {}) => {
+    restartConfirmation.hidden = true;
+    restartButtons.forEach((button) => button.setAttribute("aria-expanded", "false"));
+    if (restoreFocus && restartReturnTarget) restartReturnTarget.focus();
+  };
 
   restartButtons.forEach((button) => {
     button.addEventListener("click", () => {
@@ -252,22 +411,19 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
   });
 
   restartConfirmation.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
-      hideRestartConfirmation({ restoreFocus: true });
-    }
+    if (event.key === "Escape") hideRestartConfirmation({ restoreFocus: true });
   });
 
   confirmRestartButton.addEventListener("click", () => {
     resetQuestionnaire();
     onRestart?.();
-    syncControlsFromState();
-    STEP_CONFIG.forEach((_, stepIndex) => clearError(stepIndex));
     hideRestartConfirmation();
     completionPanel.hidden = true;
     form.hidden = false;
-    showStep(0);
+    changeSummary.hidden = true;
+    changeSummary.textContent = "";
+    renderCurrentQuestion();
   });
 
-  syncControlsFromState();
-  showStep(getState().currentStep, { moveFocus: false });
+  renderCurrentQuestion({ moveFocus: false });
 }
