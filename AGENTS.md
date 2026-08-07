@@ -8,8 +8,8 @@ choose a MacBook based on their needs.
 - Version 1.0.0 is complete, tagged and deployed from `main`.
 - Version 1.1 is being prepared on `feature/adaptive-questionnaire-v1.1`.
 - v1.1 Phases 1–4 are reviewed, committed and pushed.
-- Phase 5 testing, release-readiness and documentation changes are a local review candidate; do not
-  describe them as committed, merged, released or deployed until that happens.
+- A focused schema-3 questionnaire simplification is a local review candidate after Phase 5. Do not
+  describe it as committed, merged, released or deployed, and do not resume release preparation yet.
 - Optional Phase 6 shareable results are not approved to begin.
 - Do not modify the project beyond an explicitly approved phase.
 - Read `PROJECT_STATUS.md` before making changes.
@@ -24,6 +24,13 @@ choose a MacBook based on their needs.
 - Validate the entire catalogue before calculating recommendations.
 - Reconcile hidden answers before validation or scoring; hidden answers must never affect results.
 - Clear only dependent answers that become irrelevant and announce the change accessibly.
+- Keep the questionnaire to seven core and at most nine total steps unless a new scope is approved.
+- Keep visible progress stage-based; retain exact adaptive step counts for assistive technology without
+  repeatedly announcing total changes.
+- Only explicit Essential requirements may activate workload, exact-screen, weight or verified
+  external-display hard filters.
+- Do not display recommendation confidence when no eligible recommendation exists; explain the
+  blocking hard requirements instead.
 - Treat all suitability bands, fit scores, confidence, reasons and compromises as independent
   project judgements, never Apple claims.
 

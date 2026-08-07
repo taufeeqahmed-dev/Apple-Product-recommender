@@ -15,116 +15,98 @@ import {
   setCurrentQuestion,
 } from "../js/questionnaire-state.js";
 import { getQuestionDefinition } from "../js/questionnaire-definition.js";
-import { getAnswerValue, getVisibleQuestionIds } from "../js/questionnaire-profile.js";
 import {
-  cloneAnswers,
-  everydayPortableAnswers,
-} from "./fixtures/questionnaire-scenarios.js";
+  getAnswerValue,
+  getVisibleControls,
+  getVisibleQuestionIds,
+} from "../js/questionnaire-profile.js";
+import { cloneAnswers, everydayPortableAnswers } from "./fixtures/questionnaire-scenarios.js";
 
 function completeWithAnswers(answers) {
   resetQuestionnaire();
   getVisibleQuestionIds(answers).forEach((questionId) => {
-    const definition = getQuestionDefinition(questionId);
-    const value = getAnswerValue(answers, definition.answerPath);
-    const answered = Array.isArray(value)
-      ? value.length > 0
-      : value !== null && value !== "" && value !== undefined;
-    if (!answered) return;
-    const next = requestAnswerChange(questionId, value);
-    if (next.pendingChange) confirmPendingAnswerChange();
+    const question = getQuestionDefinition(questionId);
+    getVisibleControls(question, answers).forEach((control) => {
+      const value = getAnswerValue(answers, control.answerPath);
+      const requested = requestAnswerChange(control.id, value);
+      if (requested.pendingChange) confirmPendingAnswerChange();
+    });
   });
   completeQuestionnaire();
 }
 
-test("questionnaire state uses question IDs and returns deeply immutable snapshots", () => {
+test("questionnaire state uses step IDs and returns deeply immutable snapshots", () => {
   resetQuestionnaire();
   setCurrentQuestion("primaryUses");
   markQuestionAttempted("primaryUses");
   const state = getState();
-
+  assert.equal(state.questionnaireSchemaVersion, 3);
   assert.equal(state.currentQuestionId, "primaryUses");
   assert.deepEqual(state.validation.attemptedQuestionIds, ["primaryUses"]);
   assert.ok(Object.isFrozen(state));
-  assert.ok(Object.isFrozen(state.answers));
-  assert.ok(Object.isFrozen(state.answers.workloadDetails));
-  assert.ok(Object.isFrozen(state.answers.primaryUses));
+  assert.ok(Object.isFrozen(state.answers.activities));
   assert.throws(() => state.answers.primaryUses.push("software-development"), TypeError);
 });
 
-test("a trigger change waits for confirmation and clears only newly irrelevant answers", () => {
+test("changing primary uses clears only activity selections that are no longer relevant", () => {
   resetQuestionnaire();
-  requestAnswerChange("primaryUses", ["software-development", "cybersecurity-vms"]);
-  requestAnswerChange("softwareDevelopmentDetail", "containers-large-builds");
-  requestAnswerChange("cybersecurityVmDetail", "two-vms");
-  requestAnswerChange("sustainedDuration", "hours-most-days");
+  requestAnswerChange("primaryUses", ["study-productivity", "software-development"]);
+  requestAnswerChange("activities", ["documents-browsing-calls", "docker-containers"]);
 
-  const pending = requestAnswerChange("primaryUses", ["cybersecurity-vms"]);
-  assert.deepEqual(pending.pendingChange.clearedQuestionIds, ["softwareDevelopmentDetail"]);
-  assert.deepEqual(pending.answers.primaryUses, ["software-development", "cybersecurity-vms"]);
-  assert.equal(pending.answers.workloadDetails.softwareDevelopment, "containers-large-builds");
+  const pending = requestAnswerChange("primaryUses", ["software-development"]);
+  assert.deepEqual(pending.pendingChange.clearedQuestionIds, ["activities"]);
+  assert.deepEqual(pending.pendingChange.clearedAnswers[0].labels, [
+    "Documents, notes, email and video calls",
+  ]);
+  assert.deepEqual(pending.answers.primaryUses, ["study-productivity", "software-development"]);
 
   const confirmed = confirmPendingAnswerChange();
-  assert.deepEqual(confirmed.answers.primaryUses, ["cybersecurity-vms"]);
-  assert.equal(confirmed.answers.workloadDetails.softwareDevelopment, null);
-  assert.equal(confirmed.answers.workloadDetails.cybersecurityVms, "two-vms");
-  assert.equal(confirmed.answers.workloadDetails.sustainedDuration, "hours-most-days");
-  assert.equal(confirmed.pendingChange, null);
+  assert.deepEqual(confirmed.answers.primaryUses, ["software-development"]);
+  assert.deepEqual(confirmed.answers.activities, ["docker-containers"]);
 });
 
-test("a pending dependency-clearing change can be cancelled without modifying answers", () => {
+test("a pending dependency-clearing change can be cancelled", () => {
   resetQuestionnaire();
-  requestAnswerChange("primaryUses", ["cybersecurity-vms"]);
-  requestAnswerChange("cybersecurityVmDetail", "one-vm");
-  requestAnswerChange("sustainedDuration", "15-to-60-minutes");
-
+  requestAnswerChange("primaryUses", ["photo-editing"]);
+  requestAnswerChange("activities", ["regular-raw-editing"]);
   requestAnswerChange("primaryUses", ["study-productivity"]);
   const cancelled = cancelPendingAnswerChange();
-  assert.deepEqual(cancelled.answers.primaryUses, ["cybersecurity-vms"]);
-  assert.equal(cancelled.answers.workloadDetails.cybersecurityVms, "one-vm");
-  assert.equal(cancelled.answers.workloadDetails.sustainedDuration, "15-to-60-minutes");
+  assert.deepEqual(cancelled.answers.primaryUses, ["photo-editing"]);
+  assert.deepEqual(cancelled.answers.activities, ["regular-raw-editing"]);
   assert.equal(cancelled.pendingChange, null);
 });
 
-test("changing to an unrelated use identifies every dependent answer that will clear", () => {
+test("removing an essential clears only its dependent detail", () => {
   resetQuestionnaire();
-  requestAnswerChange("primaryUses", ["cybersecurity-vms"]);
-  requestAnswerChange("cybersecurityVmDetail", "three-plus-vms");
-  requestAnswerChange("sustainedDuration", "hours-most-days");
-
-  const pending = requestAnswerChange("primaryUses", ["study-productivity"]);
-  assert.deepEqual(pending.pendingChange.clearedQuestionIds, [
-    "cybersecurityVmDetail",
-    "sustainedDuration",
-  ]);
+  requestAnswerChange("essentialRequirements", ["maximum-weight", "external-displays"]);
+  requestAnswerChange("maximumWeight", "up-to-1.55kg");
+  requestAnswerChange("externalDisplayCount", "two");
+  const pending = requestAnswerChange("essentialRequirements", ["external-displays"]);
+  assert.deepEqual(pending.pendingChange.clearedQuestionIds, ["maximumWeight"]);
+  const confirmed = confirmPendingAnswerChange();
+  assert.equal(confirmed.answers.essentialDetails.maximumWeight, null);
+  assert.equal(confirmed.answers.essentialDetails.externalDisplayCount, "two");
 });
 
-test("cancelling an individual-answer edit restores the complete answer snapshot", () => {
+test("cancelling a grouped results edit restores the complete answer snapshot", () => {
   completeWithAnswers(everydayPortableAnswers);
-  beginEditing("budgetTarget");
-  const pending = requestAnswerChange("budgetTarget", "no-fixed-target");
-  assert.deepEqual(pending.pendingChange.clearedQuestionIds, ["budgetMode"]);
-  confirmPendingAnswerChange();
-
+  beginEditing("budget");
+  requestAnswerChange("budgetTarget", "no-fixed-target");
   const cancelled = cancelEditing();
   assert.equal(cancelled.status, "complete");
   assert.equal(cancelled.editing.active, false);
   assert.deepEqual(cancelled.answers, everydayPortableAnswers);
 });
 
-test("finishing an individual-answer edit keeps the changed answers complete", () => {
+test("finishing a grouped edit retains complete changed answers", () => {
   const expected = cloneAnswers();
-  expected.screen.size = "15-inch";
+  expected.devicePreferences.screenSize = "15-inch";
   completeWithAnswers(everydayPortableAnswers);
-  beginEditing("screenSize");
+  beginEditing("devicePreferences");
   requestAnswerChange("screenSize", "15-inch");
   completeQuestionnaire();
   const finished = finishEditing();
-
   assert.equal(finished.status, "complete");
   assert.equal(finished.editing.active, false);
-  assert.equal(
-    finished.currentQuestionId,
-    getVisibleQuestionIds(expected)[getVisibleQuestionIds(expected).length - 1],
-  );
   assert.deepEqual(finished.answers, expected);
 });

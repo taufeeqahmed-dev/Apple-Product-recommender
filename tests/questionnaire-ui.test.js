@@ -1,121 +1,88 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { getQuestionDefinition } from "../js/questionnaire-definition.js";
+import { getQuestionControl } from "../js/questionnaire-definition.js";
 import { createInitialAnswers } from "../js/questionnaire-profile.js";
 import {
   getAdaptiveChangeMessage,
   getNextCheckboxValue,
+  getProgressStageLabel,
   getQuestionProgress,
   getUnansweredRequiredQuestionIds,
   validateQuestionValue,
 } from "../js/questionnaire.js";
+import { cloneAnswers, everydayPortableAnswers } from "./fixtures/questionnaire-scenarios.js";
 
-test("adaptive progress uses only the questions visible for the current answers", () => {
+test("adaptive progress contains seven core steps", () => {
   const answers = createInitialAnswers();
-  let progress = getQuestionProgress(answers, "budgetTarget");
+  let progress = getQuestionProgress(answers, "budget");
   assert.equal(progress.questionNumber, 1);
-  assert.equal(progress.totalQuestions, 11);
+  assert.equal(progress.totalQuestions, 7);
 
-  answers.budget.target = "up-to-1500";
-  progress = getQuestionProgress(answers, "budgetTarget");
-  assert.equal(progress.totalQuestions, 12);
-  assert.ok(progress.visibleQuestionIds.includes("budgetMode"));
-
-  answers.budget.mode = "flexible";
-  progress = getQuestionProgress(answers, "budgetTarget");
-  assert.equal(progress.totalQuestions, 13);
-  assert.ok(progress.visibleQuestionIds.includes("absoluteBudget"));
+  progress = getQuestionProgress(answers, "essentialRequirements");
+  assert.equal(progress.questionNumber, 7);
 });
 
-test("workload follow-ups enter progress only for selected primary uses", () => {
-  const answers = createInitialAnswers();
-  answers.primaryUses = ["software-development", "cybersecurity-vms"];
-
-  const progress = getQuestionProgress(answers, "primaryUses");
-  assert.equal(progress.questionNumber, 2);
-  assert.equal(progress.totalQuestions, 15);
-  assert.ok(progress.visibleQuestionIds.includes("softwareDevelopmentDetail"));
-  assert.ok(progress.visibleQuestionIds.includes("cybersecurityVmDetail"));
-  assert.ok(progress.visibleQuestionIds.includes("sustainedDuration"));
-  assert.equal(progress.visibleQuestionIds.includes("photoEditingDetail"), false);
+test("only selected essential detail steps increase progress", () => {
+  const answers = cloneAnswers();
+  assert.equal(getQuestionProgress(answers, "essentialRequirements").totalQuestions, 7);
+  answers.essentialRequirements = ["maximum-weight"];
+  assert.equal(getQuestionProgress(answers, "maximumWeight").totalQuestions, 8);
+  answers.essentialRequirements = ["maximum-weight", "external-displays"];
+  assert.equal(getQuestionProgress(answers, "externalDisplayCount").totalQuestions, 9);
 });
 
-test("required and optional questions have distinct continuation validation", () => {
-  const primaryUses = getQuestionDefinition("primaryUses");
-  const optionalDetail = getQuestionDefinition("softwareDevelopmentDetail");
-  const screenSize = getQuestionDefinition("screenSize");
-
-  assert.equal(validateQuestionValue(primaryUses, []).valid, false);
-  assert.equal(
-    validateQuestionValue(primaryUses, ["study-productivity", "software-development"]).valid,
-    true,
-  );
-  assert.equal(
-    validateQuestionValue(primaryUses, [
-      "study-productivity",
-      "software-development",
-      "cybersecurity-vms",
-    ]).valid,
-    false,
-  );
-  assert.deepEqual(validateQuestionValue(optionalDetail, null), { valid: true, message: "" });
-  assert.equal(validateQuestionValue(screenSize, "").valid, false);
+test("visible progress uses calm stage labels while exact counts remain available", () => {
+  assert.equal(getProgressStageLabel(1, 7), "Getting to know your needs");
+  assert.equal(getProgressStageLabel(3, 7), "A few details left");
+  assert.equal(getProgressStageLabel(5, 7), "Almost ready");
+  assert.equal(getProgressStageLabel(8, 9), "Almost ready");
 });
 
-test("connection checkbox choices remain mutually exclusive without affecting other checkboxes", () => {
-  const connectionNeeds = getQuestionDefinition("connectionNeeds");
-  const primaryUses = getQuestionDefinition("primaryUses");
+test("required and optional compound controls validate independently", () => {
+  const target = getQuestionControl("budgetTarget");
+  const absolute = getQuestionControl("absoluteBudget");
+  assert.equal(validateQuestionValue(target, "").valid, false);
+  assert.equal(validateQuestionValue(target, "up-to-1500").valid, true);
+  assert.equal(validateQuestionValue(absolute, null).valid, true);
+});
 
+test("exclusive multi-select answers clear other selections", () => {
+  const activities = getQuestionControl("activities");
   assert.deepEqual(
-    getNextCheckboxValue(connectionNeeds, ["hdmi-without-adapter"], "no-specific-need", true),
-    ["no-specific-need"],
+    getNextCheckboxValue(activities, ["docker-containers"], "unsure", true),
+    ["unsure"],
   );
   assert.deepEqual(
-    getNextCheckboxValue(connectionNeeds, ["no-specific-need"], "hdmi-without-adapter", true),
-    ["hdmi-without-adapter"],
+    getNextCheckboxValue(activities, ["unsure"], "local-databases", true),
+    ["local-databases"],
   );
+
+  const essentials = getQuestionControl("essentialRequirements");
   assert.deepEqual(
-    getNextCheckboxValue(
-      primaryUses,
-      ["study-productivity"],
-      "software-development",
-      true,
-    ),
-    ["study-productivity", "software-development"],
+    getNextCheckboxValue(essentials, ["maximum-weight"], "none", true),
+    ["none"],
   );
 });
 
-test("adaptive change announcements name cleared answers and changed totals", () => {
-  assert.equal(
-    getAdaptiveChangeMessage(["softwareDevelopmentDetail"], 15, 13),
-    "One answer was cleared because it is no longer relevant: What kind of development work do you expect? " +
-      "The questionnaire now has 13 questions based on your answers, previously 15.",
+test("adaptive announcements name cleared selections without repeating changing totals", () => {
+  const message = getAdaptiveChangeMessage(
+    [
+      {
+        controlId: "activities",
+        prompt: "Which activities do you expect to do locally on the MacBook?",
+        labels: ["Docker or containers"],
+      },
+    ],
   );
-
-  assert.equal(
-    getAdaptiveChangeMessage(
-      ["cybersecurityVmDetail", "sustainedDuration"],
-      15,
-      12,
-    ),
-    "2 answers were cleared because they are no longer relevant: " +
-      "How many local lab virtual machines might you run at once?; " +
-      "How long will demanding tasks usually run? " +
-      "The questionnaire now has 12 questions based on your answers, previously 15.",
-  );
-
-  assert.equal(getAdaptiveChangeMessage([], 12, 12), "");
+  assert.ok(message.includes("Docker or containers"));
+  assert.equal(message.includes("questionnaire now has"), false);
+  assert.equal(message.includes("questions based on your answers"), false);
 });
 
-test("editing a trigger identifies newly visible required follow-up questions", () => {
-  const answers = createInitialAnswers();
-  answers.budget.target = "up-to-1500";
-
+test("editing a compound trigger identifies its newly required detail step", () => {
+  const answers = cloneAnswers(everydayPortableAnswers);
+  answers.essentialRequirements = ["maximum-weight"];
   const unanswered = getUnansweredRequiredQuestionIds(answers);
-  assert.ok(unanswered.includes("budgetMode"));
-  assert.equal(unanswered.includes("absoluteBudget"), false);
-
-  answers.budget.mode = "flexible";
-  assert.ok(getUnansweredRequiredQuestionIds(answers).includes("absoluteBudget"));
+  assert.deepEqual(unanswered, ["maximumWeight"]);
 });

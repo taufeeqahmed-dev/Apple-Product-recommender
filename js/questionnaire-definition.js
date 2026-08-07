@@ -4,7 +4,15 @@ function deepFreeze(value) {
   return Object.freeze(value);
 }
 
-const option = (id, label) => ({ id, label });
+const option = (id, label, details = {}) => ({ id, label, ...details });
+const control = (id, answerPath, prompt, type, options, details = {}) => ({
+  id,
+  answerPath,
+  prompt,
+  type,
+  options,
+  ...details,
+});
 
 const PRIMARY_USE_OPTIONS = [
   option("study-productivity", "University, studying and general productivity"),
@@ -16,398 +24,367 @@ const PRIMARY_USE_OPTIONS = [
   option("3d-engineering", "3D, CAD, engineering or simulation work"),
 ];
 
+const ACTIVITY_OPTIONS = [
+  option("documents-browsing-calls", "Documents, notes, email and video calls", {
+    group: "Study and productivity",
+    relevantUses: ["study-productivity"],
+  }),
+  option("research-spreadsheets-tabs", "Research, large spreadsheets and many browser tabs", {
+    group: "Study and productivity",
+    relevantUses: ["study-productivity"],
+  }),
+  option("statistics-analysis-local-tools", "Statistics, data analysis or specialist apps", {
+    group: "Study and productivity",
+    relevantUses: ["study-productivity"],
+  }),
+  option("general-programming", "General programming and scripts", {
+    group: "Programming and cybersecurity",
+    relevantUses: ["software-development", "cybersecurity-vms"],
+  }),
+  option("web-mobile-development", "Web or mobile development", {
+    group: "Programming and cybersecurity",
+    relevantUses: ["software-development", "cybersecurity-vms"],
+  }),
+  option("local-development-servers", "Local development servers", {
+    group: "Programming and cybersecurity",
+    relevantUses: ["software-development", "cybersecurity-vms"],
+  }),
+  option("local-databases", "Local databases", {
+    group: "Programming and cybersecurity",
+    relevantUses: ["software-development", "cybersecurity-vms"],
+  }),
+  option("docker-containers", "Docker or containers", {
+    group: "Programming and cybersecurity",
+    relevantUses: ["software-development", "cybersecurity-vms"],
+  }),
+  option("one-virtual-machine", "One virtual machine", {
+    group: "Programming and cybersecurity",
+    relevantUses: ["software-development", "cybersecurity-vms"],
+  }),
+  option("two-virtual-machines", "Two simultaneous virtual machines", {
+    group: "Programming and cybersecurity",
+    relevantUses: ["software-development", "cybersecurity-vms"],
+  }),
+  option("three-plus-virtual-machines", "Three or more simultaneous virtual machines", {
+    group: "Programming and cybersecurity",
+    relevantUses: ["software-development", "cybersecurity-vms"],
+  }),
+  option("larger-local-ai-models", "Larger local AI models", {
+    group: "Programming and cybersecurity",
+    relevantUses: ["software-development", "cybersecurity-vms"],
+  }),
+  option("jpeg-light-edits", "JPEG files and light edits", {
+    group: "Photography",
+    relevantUses: ["photo-editing"],
+  }),
+  option("regular-raw-editing", "Regular RAW editing", {
+    group: "Photography",
+    relevantUses: ["photo-editing"],
+  }),
+  option("large-raw-batches-panoramas", "Large RAW batches or panoramas", {
+    group: "Photography",
+    relevantUses: ["photo-editing"],
+  }),
+  option("professional-sustained-photo", "Sustained professional photo work", {
+    group: "Photography",
+    relevantUses: ["photo-editing"],
+  }),
+  option("1080p-light", "Light 1080p projects", {
+    group: "Video",
+    relevantUses: ["video-editing"],
+  }),
+  option("4k-single-stream", "Single-stream 4K projects", {
+    group: "Video",
+    relevantUses: ["video-editing"],
+  }),
+  option("4k-multicam-effects", "4K multicam projects, motion graphics or frequent effects", {
+    group: "Video",
+    relevantUses: ["video-editing"],
+  }),
+  option("6k-8k-sustained", "Sustained 6K or 8K projects", {
+    group: "Video",
+    relevantUses: ["video-editing"],
+  }),
+  option("small-projects-few-plugins", "Small projects with a few plugins", {
+    group: "Music and audio",
+    relevantUses: ["music-production"],
+  }),
+  option("medium-music-projects", "Medium music projects", {
+    group: "Music and audio",
+    relevantUses: ["music-production"],
+  }),
+  option("large-sample-libraries-many-plugins", "Large sample libraries or many plugins", {
+    group: "Music and audio",
+    relevantUses: ["music-production"],
+  }),
+  option("professional-low-latency", "Professional low-latency sessions", {
+    group: "Music and audio",
+    relevantUses: ["music-production"],
+  }),
+  option("2d-light-models", "2D work or light models", {
+    group: "3D and engineering",
+    relevantUses: ["3d-engineering"],
+  }),
+  option("moderate-3d-models", "Moderate 3D models", {
+    group: "3D and engineering",
+    relevantUses: ["3d-engineering"],
+  }),
+  option("complex-cad-simulation", "Complex CAD, 3D modelling or simulation", {
+    group: "3D and engineering",
+    relevantUses: ["3d-engineering"],
+  }),
+  option("sustained-rendering-simulation", "Sustained rendering or simulation", {
+    group: "3D and engineering",
+    relevantUses: ["3d-engineering"],
+  }),
+  option("unsure", "I’m not sure yet", { exclusive: true }),
+];
+
 export const QUESTION_DEFINITIONS = deepFreeze([
   {
-    id: "budgetTarget",
-    answerPath: "budget.target",
-    prompt: "What price would you prefer Northstar to stay within?",
-    type: "radio",
-    required: true,
-    options: [
-      option("up-to-1000", "Up to £1,000"),
-      option("up-to-1500", "Up to £1,500"),
-      option("up-to-2000", "Up to £2,000"),
-      option("up-to-2500", "Up to £2,500"),
-      option("up-to-3000", "Up to £3,000"),
-      option("up-to-4500", "Up to £4,500"),
-      option("no-fixed-target", "I do not have a fixed target yet"),
-    ],
-  },
-  {
-    id: "budgetMode",
-    answerPath: "budget.mode",
-    prompt: "How should Northstar treat that amount?",
-    type: "radio",
-    required: true,
-    visibility: { path: "budget.target", operator: "not-in", values: ["", "no-fixed-target"] },
-    options: [
-      option("strict", "Strict — do not recommend anything above it"),
-      option("flexible", "Flexible — keep primary recommendations within it"),
-      option("stretch", "Stretch — a sufficiently stronger match may rank above it"),
-    ],
-  },
-  {
-    id: "absoluteBudget",
-    answerPath: "budget.absoluteMaximum",
-    prompt: "What is the absolute most you would consider?",
-    type: "radio",
-    required: true,
-    visibility: { path: "budget.mode", operator: "in", values: ["flexible", "stretch"] },
-    options: [
-      option("up-to-1500", "Up to £1,500"),
-      option("up-to-2000", "Up to £2,000"),
-      option("up-to-2500", "Up to £2,500"),
-      option("up-to-3000", "Up to £3,000"),
-      option("up-to-4500", "Up to £4,500"),
-      option("no-absolute-limit", "I do not have an absolute maximum"),
+    id: "budget",
+    prompt: "Set your budget",
+    controls: [
+      control(
+        "budgetTarget",
+        "budget.target",
+        "What’s your budget?",
+        "radio",
+        [
+          option("up-to-1000", "Up to £1,000"),
+          option("up-to-1500", "Up to £1,500"),
+          option("up-to-2000", "Up to £2,000"),
+          option("up-to-2500", "Up to £2,500"),
+          option("up-to-3000", "Up to £3,000"),
+          option("up-to-4500", "Up to £4,500"),
+          option("no-fixed-target", "I’m not sure yet"),
+        ],
+        { required: true, help: "Choose the most you’d ideally like to spend." },
+      ),
+      control(
+        "budgetMode",
+        "budget.mode",
+        "Could you spend more for a better match?",
+        "radio",
+        [
+          option("strict", "No — do not go over my budget"),
+          option("flexible", "Maybe — stay within it where possible"),
+          option("stretch", "Yes — consider a stronger match above it"),
+        ],
+        {
+          required: true,
+          help: "If you choose Maybe or Yes, you can still set an absolute maximum.",
+          visibility: { path: "budget.target", operator: "not-in", values: ["", "no-fixed-target"] },
+        },
+      ),
+      control(
+        "absoluteBudget",
+        "budget.absoluteMaximum",
+        "What’s the most you could spend?",
+        "radio",
+        [
+          option("up-to-1500", "Up to £1,500"),
+          option("up-to-2000", "Up to £2,000"),
+          option("up-to-2500", "Up to £2,500"),
+          option("up-to-3000", "Up to £3,000"),
+          option("up-to-4500", "Up to £4,500"),
+          option("no-absolute-limit", "No absolute maximum"),
+        ],
+        {
+          required: false,
+          help: "Optional. Nothing above this amount will be recommended.",
+          visibility: { path: "budget.mode", operator: "in", values: ["flexible", "stretch"] },
+        },
+      ),
     ],
   },
   {
     id: "primaryUses",
-    answerPath: "primaryUses",
-    prompt: "What will you mainly use your MacBook for? Choose one or two.",
-    type: "checkbox",
-    required: true,
-    minimumSelections: 1,
-    maximumSelections: 2,
-    options: PRIMARY_USE_OPTIONS,
-  },
-  {
-    id: "studyProductivityDetail",
-    answerPath: "workloadDetails.studyProductivity",
-    prompt: "What best describes your study or productivity work?",
-    type: "radio",
-    required: false,
-    visibility: { path: "primaryUses", operator: "includes", value: "study-productivity" },
-    options: [
-      option("documents-browsing-calls", "Notes, documents, browsing and video calls"),
-      option("research-spreadsheets-tabs", "Research, larger spreadsheets and many browser tabs"),
-      option("statistics-analysis-local-tools", "Statistics, data analysis or substantial local tools"),
-      option("unsure", "I’m not sure"),
+    prompt: "Choose your main uses",
+    controls: [
+      control(
+        "primaryUses",
+        "primaryUses",
+        "What will you mainly use your MacBook for?",
+        "checkbox",
+        PRIMARY_USE_OPTIONS,
+        { required: true, minimumSelections: 1, maximumSelections: 2, help: "Choose up to two." },
+      ),
     ],
   },
   {
-    id: "softwareDevelopmentDetail",
-    answerPath: "workloadDetails.softwareDevelopment",
-    prompt: "What kind of development work do you expect?",
-    type: "radio",
-    required: false,
-    visibility: { path: "primaryUses", operator: "includes", value: "software-development" },
-    options: [
-      option("learning-scripts-small-sites", "Learning, scripts and small websites"),
-      option("web-mobile-local-services", "Web or mobile applications with local services"),
-      option("containers-large-builds", "Containers, large codebases or frequent builds"),
-      option("native-ml-heavy-builds", "Native projects, machine-learning tools or very heavy builds"),
-      option("unsure", "I’m not sure"),
-    ],
-  },
-  {
-    id: "cybersecurityVmDetail",
-    answerPath: "workloadDetails.cybersecurityVms",
-    prompt: "How many local lab virtual machines might you run at once?",
-    type: "radio",
-    required: false,
-    visibility: { path: "primaryUses", operator: "includes", value: "cybersecurity-vms" },
-    options: [
-      option("no-local-vms", "No local virtual machines"),
-      option("one-vm", "One virtual machine"),
-      option("two-vms", "Two virtual machines"),
-      option("three-plus-vms", "Three or more virtual machines"),
-      option("unsure", "I’m not sure"),
-    ],
-  },
-  {
-    id: "photoEditingDetail",
-    answerPath: "workloadDetails.photoEditing",
-    prompt: "What kind of photo workload do you expect?",
-    type: "radio",
-    required: false,
-    visibility: { path: "primaryUses", operator: "includes", value: "photo-editing" },
-    options: [
-      option("jpeg-light-edits", "JPEG files and light edits"),
-      option("regular-raw-editing", "Regular RAW editing"),
-      option("large-raw-batches-panoramas", "Large RAW batches or panoramas"),
-      option("professional-sustained-photo", "Sustained professional photo work"),
-      option("unsure", "I’m not sure"),
-    ],
-  },
-  {
-    id: "videoEditingDetail",
-    answerPath: "workloadDetails.videoEditing",
-    prompt: "What kind of video projects do you expect?",
-    type: "radio",
-    required: false,
-    visibility: { path: "primaryUses", operator: "includes", value: "video-editing" },
-    options: [
-      option("1080p-light", "Light 1080p projects"),
-      option("4k-single-stream", "Single-stream 4K projects"),
-      option("4k-multicam-effects", "4K multicam projects or frequent effects"),
-      option("6k-8k-sustained", "Sustained 6K or 8K projects"),
-      option("unsure", "I’m not sure"),
-    ],
-  },
-  {
-    id: "musicProductionDetail",
-    answerPath: "workloadDetails.musicProduction",
-    prompt: "What kind of music projects do you expect?",
-    type: "radio",
-    required: false,
-    visibility: { path: "primaryUses", operator: "includes", value: "music-production" },
-    options: [
-      option("small-projects-few-plugins", "Small projects with a few plugins"),
-      option("medium-projects", "Medium projects"),
-      option("large-sample-libraries-many-plugins", "Large sample libraries or many plugins"),
-      option("professional-low-latency", "Professional low-latency sessions"),
-      option("unsure", "I’m not sure"),
-    ],
-  },
-  {
-    id: "threeDEngineeringDetail",
-    answerPath: "workloadDetails.threeDEngineering",
-    prompt: "What kind of 3D or engineering work do you expect?",
-    type: "radio",
-    required: false,
-    visibility: { path: "primaryUses", operator: "includes", value: "3d-engineering" },
-    options: [
-      option("2d-light-models", "2D work or light models"),
-      option("moderate-3d-models", "Moderate 3D models"),
-      option("complex-cad-simulation", "Complex CAD or simulation"),
-      option("sustained-rendering-simulation", "Sustained rendering or simulation"),
-      option("unsure", "I’m not sure"),
-    ],
-  },
-  {
-    id: "sustainedDuration",
-    answerPath: "workloadDetails.sustainedDuration",
-    prompt: "How long will demanding tasks usually run?",
-    type: "radio",
-    required: false,
-    visibility: {
-      path: "primaryUses",
-      operator: "includes-any",
-      values: [
-        "software-development",
-        "cybersecurity-vms",
-        "photo-editing",
-        "video-editing",
-        "music-production",
-        "3d-engineering",
-      ],
-    },
-    options: [
-      option("short-bursts", "Short bursts"),
-      option("15-to-60-minutes", "15 to 60 minutes"),
-      option("hours-most-days", "Hours on most days"),
-      option("unsure", "I’m not sure"),
+    id: "activities",
+    prompt: "Tell us what you’ll do",
+    controls: [
+      control(
+        "activities",
+        "activities",
+        "What will you do on your MacBook?",
+        "checkbox",
+        ACTIVITY_OPTIONS,
+        {
+          required: true,
+          minimumSelections: 1,
+          help: "Select all that apply. Choose ‘I’m not sure yet’ on its own if needed.",
+        },
+      ),
     ],
   },
   {
     id: "multitasking",
-    answerPath: "multitasking",
-    prompt: "How much do you normally keep open at once?",
-    type: "radio",
-    required: true,
-    options: [
-      option("light", "1–3 applications and up to 10 browser tabs"),
-      option("moderate", "4–7 applications and around 11–30 tabs"),
-      option("heavy", "8–12 applications and around 31–60 tabs"),
-      option("very-heavy", "13 or more applications or more than 60 tabs"),
-      option("varies-unsure", "It varies or I am not sure"),
+    prompt: "Tell us about multitasking",
+    controls: [
+      control(
+        "multitasking",
+        "multitasking",
+        "How heavily do you multitask?",
+        "radio",
+        [
+          option("light", "Light — a few everyday apps and browser tabs"),
+          option("moderate", "Moderate — several apps and lots of tabs"),
+          option("heavy", "Heavy — demanding apps, development tools or one virtual machine"),
+          option("very-heavy", "Very heavy — multiple demanding apps or virtual machines at once"),
+          option("varies-unsure", "It varies or I’m not sure"),
+        ],
+        { required: true, help: "Choose the option closest to your normal busiest setup." },
+      ),
     ],
   },
   {
-    id: "workloadRequirementMode",
-    answerPath: "workloadRequirementMode",
-    prompt: "How should Northstar treat this workload assessment?",
-    type: "radio",
-    required: true,
-    visibility: { path: "primaryUses", operator: "minimum-length", value: 1 },
-    options: [
-      option("preference", "Use it as a preference and explain weaker matches"),
-      option("mandatory", "Treat the assessed capability and memory targets as minimum requirements"),
-    ],
-  },
-  {
-    id: "portabilityPerformance",
-    answerPath: "mobility.portabilityPerformance",
-    prompt: "How often will you carry the MacBook, and how should that balance with performance?",
-    type: "radio",
-    required: true,
-    options: [
-      option("portability-first", "Daily travel; keep it as light as practical"),
-      option("lean-portability", "Carry it most days; prefer a lighter option"),
-      option("balanced", "Carry it regularly; balance weight and performance"),
-      option("lean-performance", "Carry it occasionally; accept more weight for performance"),
-      option("performance-first", "Mainly desk-based; prioritise performance"),
-    ],
-  },
-  {
-    id: "weightTarget",
-    answerPath: "mobility.weightTarget",
-    prompt: "Do you have a preferred maximum weight?",
-    type: "radio",
-    required: false,
-    options: [
-      option("up-to-1.25kg", "Up to 1.25kg"),
-      option("up-to-1.55kg", "Up to 1.55kg"),
-      option("up-to-1.75kg", "Up to 1.75kg"),
-      option("up-to-2.05kg", "Up to 2.05kg"),
-      option("no-weight-preference", "No weight preference"),
-      option("unsure", "I’m not sure"),
-    ],
-  },
-  {
-    id: "weightRequirementMode",
-    answerPath: "mobility.weightRequirementMode",
-    prompt: "How should Northstar treat that weight?",
-    type: "radio",
-    required: true,
-    visibility: {
-      path: "mobility.weightTarget",
-      operator: "in",
-      values: ["up-to-1.25kg", "up-to-1.55kg", "up-to-1.75kg", "up-to-2.05kg"],
-    },
-    options: [option("preference", "Preference"), option("must-not-exceed", "Must not exceed")],
-  },
-  {
-    id: "batteryImportance",
-    answerPath: "mobility.batteryImportance",
-    prompt: "How important is working away from a charger?",
-    type: "radio",
-    required: false,
-    rankingUse: "unavailable-with-current-catalogue",
-    options: [
-      option("mostly-plugged-in", "Mostly plugged in"),
-      option("up-to-half-day", "Up to half a day"),
-      option("full-work-or-study-day", "A full work or study day"),
-      option("long-travel-day", "A long travel day"),
-      option("unsure", "I’m not sure"),
-    ],
-  },
-  {
-    id: "screenSize",
-    answerPath: "screen.size",
-    prompt: "Which built-in screen size would you prefer?",
-    type: "radio",
-    required: true,
-    options: [
-      option("13-inch", "13-inch"),
-      option("14-inch", "14-inch"),
-      option("15-inch", "15-inch"),
-      option("16-inch", "16-inch"),
-      option("no-preference", "No preference"),
-    ],
-  },
-  {
-    id: "screenRequirementMode",
-    answerPath: "screen.requirementMode",
-    prompt: "How important is that exact size?",
-    type: "radio",
-    required: true,
-    visibility: { path: "screen.size", operator: "not-in", values: ["", "no-preference"] },
-    options: [
-      option("preference-only", "Favour it but show other strong options"),
-      option("nearby-size-acceptable", "Favour it and clearly flag larger differences"),
-      option("exact-size-required", "Exclude every other size"),
+    id: "devicePreferences",
+    prompt: "Choose your device preferences",
+    controls: [
+      control(
+        "portabilityPerformance",
+        "devicePreferences.portabilityPerformance",
+        "What matters more to you: portability or performance?",
+        "radio",
+        [
+          option("portability-first", "Portability — I carry it every day"),
+          option("lean-portability", "Mostly portability — I carry it most days"),
+          option("balanced", "A balance of both"),
+          option("lean-performance", "Mostly performance — I carry it occasionally"),
+          option("performance-first", "Performance — it will usually stay on a desk"),
+          option("let-northstar-decide", "Let Northstar decide"),
+        ],
+        {
+          required: true,
+          help: "This is a preference unless you later choose a strict weight limit.",
+        },
+      ),
+      control(
+        "screenSize",
+        "devicePreferences.screenSize",
+        "What screen size do you prefer?",
+        "radio",
+        [
+          option("13-inch", "13-inch"),
+          option("14-inch", "14-inch"),
+          option("15-inch", "15-inch"),
+          option("16-inch", "16-inch"),
+          option("no-preference", "No preference"),
+        ],
+        { required: true },
+      ),
     ],
   },
   {
     id: "minimumStorage",
-    answerPath: "minimumStorage",
-    prompt: "How much built-in storage do you need at minimum?",
-    type: "radio",
-    required: true,
-    options: [
-      option("256gb", "256 GB"),
-      option("512gb", "512 GB"),
-      option("1tb", "1 TB"),
-      option("2tb-plus", "2 TB or more"),
-      option("unsure", "I’m not sure"),
+    prompt: "Choose your storage",
+    controls: [
+      control(
+        "minimumStorage",
+        "minimumStorage",
+        "How much storage do you need?",
+        "radio",
+        [
+          option("256gb", "256 GB"),
+          option("512gb", "512 GB"),
+          option("1tb", "1 TB"),
+          option("2tb-plus", "2 TB or more"),
+          option("unsure", "I’m not sure"),
+        ],
+        {
+          required: true,
+          help: "Choose the least you know you need. ‘I’m not sure’ keeps every storage size in consideration.",
+        },
+      ),
     ],
   },
   {
-    id: "externalDisplays",
-    answerPath: "externalDisplays.count",
-    prompt: "How many external displays do you expect to use while the MacBook’s own display remains active?",
-    type: "radio",
-    required: true,
-    options: [
-      option("none", "None"),
-      option("one", "One"),
-      option("two", "Two"),
-      option("three", "Three"),
-      option("four-plus", "Four or more"),
-      option("unsure", "I’m not sure"),
+    id: "essentialRequirements",
+    prompt: "Choose your must-haves",
+    controls: [
+      control(
+        "essentialRequirements",
+        "essentialRequirements",
+        "Which of these are absolute must-haves?",
+        "checkbox",
+        [
+          option("workload", "Comfortably handle all the activities I selected"),
+          option("exact-screen", "Have my preferred screen size", {
+            visibility: {
+              path: "devicePreferences.screenSize",
+              operator: "not-in",
+              values: ["", "no-preference"],
+            },
+          }),
+          option("maximum-weight", "Stay within a strict weight limit"),
+          option(
+            "external-displays",
+            "Support the number of external monitors I need",
+          ),
+          option("none", "None — find the best overall balance", { exclusive: true }),
+        ],
+        {
+          required: true,
+          minimumSelections: 1,
+          help: "Select only needs you would not compromise on. ‘None’ must be selected on its own.",
+        },
+      ),
     ],
   },
   {
-    id: "externalDisplayRequirementMode",
-    answerPath: "externalDisplays.requirementMode",
-    prompt: "How should Northstar treat that number?",
-    type: "radio",
-    required: true,
-    visibility: { path: "externalDisplays.count", operator: "in", values: ["one", "two", "three", "four-plus"] },
-    options: [option("preference", "Preference"), option("must-support", "Must support")],
-  },
-  {
-    id: "connectionNeeds",
-    answerPath: "connections.needs",
-    prompt: "Are any of these connection needs important to you? Select all that apply.",
-    type: "checkbox",
-    required: false,
-    rankingUse: "unavailable-with-current-catalogue",
-    options: [
-      option("hdmi-without-adapter", "HDMI without an adapter"),
-      option("sd-card-without-reader", "SD card without a reader"),
-      option("usb-a-without-adapter", "USB-A without an adapter"),
-      option("high-speed-dock-or-storage", "A high-speed dock or external storage"),
-      option("no-specific-need", "No specific need"),
-      option("unsure", "I’m not sure"),
+    id: "maximumWeight",
+    prompt: "Set your weight limit",
+    visibility: { path: "essentialRequirements", operator: "includes", value: "maximum-weight" },
+    controls: [
+      control(
+        "maximumWeight",
+        "essentialDetails.maximumWeight",
+        "What’s your strict weight limit?",
+        "radio",
+        [
+          option("up-to-1.25kg", "1.25 kg"),
+          option("up-to-1.55kg", "1.55 kg"),
+          option("up-to-1.75kg", "1.75 kg"),
+          option("up-to-2.05kg", "2.05 kg"),
+        ],
+        { required: true },
+      ),
     ],
   },
   {
-    id: "connectionImportance",
-    answerPath: "connections.importance",
-    prompt: "Are those connections a preference or a must-have?",
-    type: "radio",
-    required: true,
-    rankingUse: "unavailable-with-current-catalogue",
-    visibility: {
-      path: "connections.needs",
-      operator: "includes-any",
-      values: [
-        "hdmi-without-adapter",
-        "sd-card-without-reader",
-        "usb-a-without-adapter",
-        "high-speed-dock-or-storage",
-      ],
-    },
-    options: [option("preference", "Preference"), option("must-have", "Must-have")],
-  },
-  {
-    id: "ownershipPeriod",
-    answerPath: "ownership.period",
-    prompt: "How long do you expect to keep this MacBook?",
-    type: "radio",
-    required: true,
-    options: [
-      option("up-to-2", "Up to 2 years"),
-      option("3-to-4", "3–4 years"),
-      option("5-to-6", "5–6 years"),
-      option("7-plus", "7 years or more"),
-      option("unsure", "I’m not sure"),
-    ],
-  },
-  {
-    id: "ownershipRequirementMode",
-    answerPath: "ownership.requirementMode",
-    prompt: "How should Northstar treat long-term headroom?",
-    type: "radio",
-    required: true,
-    visibility: { path: "ownership.period", operator: "not-in", values: ["", "unsure"] },
-    options: [
-      option("preference", "Use Northstar’s headroom assessment for ranking"),
-      option("essential-headroom", "Exclude configurations below Northstar’s assessed minimum"),
+    id: "externalDisplayCount",
+    prompt: "Set your monitor requirement",
+    visibility: { path: "essentialRequirements", operator: "includes", value: "external-displays" },
+    controls: [
+      control(
+        "externalDisplayCount",
+        "essentialDetails.externalDisplayCount",
+        "How many external monitors do you need to use at once?",
+        "radio",
+        [
+          option("one", "One"),
+          option("two", "Two"),
+          option("three", "Three"),
+          option("four-plus", "Four or more"),
+        ],
+        {
+          required: true,
+          help: "This means external monitors used at the same time as the MacBook’s built-in screen.",
+        },
+      ),
     ],
   },
 ]);
@@ -417,26 +394,33 @@ export const QUESTION_ORDER = deepFreeze(QUESTION_DEFINITIONS.map(({ id }) => id
 export const QUESTION_DEPENDENCIES = deepFreeze({
   budgetTarget: ["budgetMode", "absoluteBudget"],
   budgetMode: ["absoluteBudget"],
-  primaryUses: [
-    "studyProductivityDetail",
-    "softwareDevelopmentDetail",
-    "cybersecurityVmDetail",
-    "photoEditingDetail",
-    "videoEditingDetail",
-    "musicProductionDetail",
-    "threeDEngineeringDetail",
-    "sustainedDuration",
-    "workloadRequirementMode",
-  ],
-  weightTarget: ["weightRequirementMode"],
-  screenSize: ["screenRequirementMode"],
-  externalDisplays: ["externalDisplayRequirementMode"],
-  connectionNeeds: ["connectionImportance"],
-  ownershipPeriod: ["ownershipRequirementMode"],
+  primaryUses: ["activities"],
+  screenSize: ["essentialRequirements"],
+  essentialRequirements: ["maximumWeight", "externalDisplayCount"],
 });
 
 const QUESTIONS_BY_ID = new Map(QUESTION_DEFINITIONS.map((definition) => [definition.id, definition]));
+const CONTROLS_BY_ID = new Map();
+const STEPS_BY_CONTROL_ID = new Map();
+QUESTION_DEFINITIONS.forEach((definition) => {
+  definition.controls.forEach((questionControl) => {
+    CONTROLS_BY_ID.set(questionControl.id, questionControl);
+    STEPS_BY_CONTROL_ID.set(questionControl.id, definition);
+  });
+});
 
 export function getQuestionDefinition(questionId) {
   return QUESTIONS_BY_ID.get(questionId) ?? null;
+}
+
+export function getQuestionControl(controlId) {
+  return CONTROLS_BY_ID.get(controlId) ?? null;
+}
+
+export function getQuestionStepForControl(controlId) {
+  return STEPS_BY_CONTROL_ID.get(controlId) ?? null;
+}
+
+export function getAllQuestionControls() {
+  return [...CONTROLS_BY_ID.values()];
 }

@@ -567,6 +567,12 @@ html:not(.js) .results-section {
   border: 0;
 }
 
+.questionnaire-step fieldset + fieldset {
+  margin-top: 2.25rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--colour-line);
+}
+
 .questionnaire-step legend,
 .select-question > label {
   display: block;
@@ -592,6 +598,18 @@ html:not(.js) .results-section {
 
 .option-grid-single {
   grid-template-columns: 1fr;
+}
+
+.option-subgroup + .option-subgroup {
+  margin-top: 1.5rem;
+}
+
+.option-subgroup-title {
+  margin: 0 0 0.7rem;
+  color: var(--colour-violet);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .option-card {
@@ -775,7 +793,6 @@ html:not(.js) .results-section {
 }
 
 .confidence-panel,
-.unassessed-panel,
 .classification-summary,
 .answer-review {
   margin-bottom: 2rem;
@@ -786,6 +803,45 @@ html:not(.js) .results-section {
   box-shadow: var(--shadow-soft);
 }
 
+.results-method-details {
+  margin-bottom: 3rem;
+  border: 1px solid var(--colour-line);
+  border-radius: var(--radius-medium);
+  background: var(--colour-surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.results-method-summary {
+  padding: 1rem 1.25rem;
+  color: var(--colour-accent);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.results-method-summary:hover {
+  color: var(--colour-ink);
+}
+
+.results-method-summary:focus-visible {
+  border-radius: var(--radius-medium);
+  outline: 3px solid var(--colour-focus);
+  outline-offset: 3px;
+}
+
+.results-method-content {
+  padding: 0 1rem 1rem;
+}
+
+.results-method-content .confidence-panel,
+.results-method-content .classification-summary {
+  margin-bottom: 1rem;
+  box-shadow: none;
+}
+
+.results-method-content .classification-summary:last-child {
+  margin-bottom: 0;
+}
+
 .confidence-panel {
   border-color: rgba(104, 224, 193, 0.35);
   background:
@@ -794,7 +850,6 @@ html:not(.js) .results-section {
 }
 
 .confidence-panel h3,
-.unassessed-panel h3,
 .classification-summary h3,
 .answer-review > h3 {
   margin: 0.9rem 0 0.65rem;
@@ -802,7 +857,6 @@ html:not(.js) .results-section {
 }
 
 .confidence-panel > p:not(.stage-label),
-.unassessed-panel > p,
 .answer-review-intro {
   color: var(--colour-muted);
 }
@@ -817,18 +871,12 @@ html:not(.js) .results-section {
 }
 
 .confidence-reasons,
-.unassessed-panel ul,
 .budget-alternative-list {
   display: grid;
   gap: 0.45rem;
   margin-bottom: 0;
   padding-left: 1.25rem;
   color: var(--colour-muted);
-}
-
-.unassessed-panel {
-  border-color: rgba(246, 200, 95, 0.38);
-  background: rgba(246, 200, 95, 0.075);
 }
 
 .classification-list {
@@ -896,6 +944,18 @@ html:not(.js) .results-section {
   gap: 1rem;
 }
 
+.primary-results .recommendation-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.primary-results .recommendation-card:first-child {
+  grid-column: 1 / -1;
+  border-color: rgba(104, 224, 193, 0.52);
+  background:
+    linear-gradient(145deg, rgba(104, 224, 193, 0.14), transparent 44%),
+    var(--colour-surface);
+}
+
 .recommendation-card,
 .results-message {
   border: 1px solid var(--colour-line);
@@ -938,13 +998,6 @@ html:not(.js) .results-section {
   margin: 0.75rem 0 0;
   color: var(--colour-ink);
   font-weight: 800;
-}
-
-.recommendation-score {
-  margin: 0.25rem 0 0;
-  color: var(--colour-violet);
-  font-size: 0.88rem;
-  font-weight: 750;
 }
 
 .match-classification {
@@ -1052,8 +1105,21 @@ html:not(.js) .results-section {
   background: rgba(158, 140, 255, 0.075);
 }
 
-.ranking-explanation h4 {
-  margin-top: 0;
+.ranking-explanation summary {
+  color: var(--colour-violet);
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ranking-explanation summary:focus-visible {
+  border-radius: 0.2rem;
+  outline: 3px solid var(--colour-focus);
+  outline-offset: 3px;
+}
+
+.ranking-explanation-content {
+  margin-top: 0.75rem;
 }
 
 .ranking-explanation ul {
@@ -1093,7 +1159,14 @@ html:not(.js) .results-section {
 }
 
 .answer-review-group + .answer-review-group {
-  margin-top: 1.75rem;
+  margin-top: 0.75rem;
+}
+
+.answer-review-group {
+  padding: 1rem;
+  border: 1px solid var(--colour-line);
+  border-radius: var(--radius-small);
+  background: rgba(8, 16, 29, 0.5);
 }
 
 .answer-review-group h4 {
@@ -1104,38 +1177,6 @@ html:not(.js) .results-section {
   text-transform: uppercase;
 }
 
-.answer-review-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.answer-review-row {
-  display: flex;
-  min-width: 0;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem;
-  border: 1px solid var(--colour-line);
-  border-radius: var(--radius-small);
-  background: rgba(8, 16, 29, 0.5);
-}
-
-.answer-review-content {
-  min-width: 0;
-}
-
-.answer-review-prompt {
-  margin: 0;
-  color: var(--colour-muted);
-  font-size: 0.8rem;
-  line-height: 1.35;
-}
-
 .answer-review-value {
   margin: 0.35rem 0;
   color: var(--colour-ink);
@@ -1143,11 +1184,11 @@ html:not(.js) .results-section {
   overflow-wrap: anywhere;
 }
 
-.answer-requirement {
-  color: var(--colour-violet);
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-transform: uppercase;
+.answer-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 .answer-edit-button {
@@ -1374,8 +1415,11 @@ html:not(.js) .results-section {
     grid-template-columns: 1fr;
   }
 
-  .classification-list,
-  .answer-review-list {
+  .primary-results .recommendation-list {
+    grid-template-columns: 1fr;
+  }
+
+  .classification-list {
     grid-template-columns: 1fr;
   }
 }
@@ -1424,7 +1468,6 @@ html:not(.js) .results-section {
     width: 100%;
   }
 
-  .answer-review-row,
   .comparison-dialog-header {
     align-items: stretch;
     flex-direction: column;
@@ -1433,6 +1476,11 @@ html:not(.js) .results-section {
   .answer-edit-button,
   .comparison-dialog-header .button {
     width: 100%;
+  }
+
+  .answer-review-actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .comparison-dialog {

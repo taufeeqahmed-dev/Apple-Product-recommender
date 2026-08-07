@@ -17,8 +17,8 @@ Verified Apple facts remain separate from Northstar's internal suitability judge
 - Current branch: `feature/adaptive-questionnaire-v1.1`.
 - v1.0.0 remains tagged, released and deployed from the unchanged v1.0 main history.
 - v1.1 Phases 1–4 were reviewed, committed and pushed.
-- Phase 5 testing, release-readiness and documentation changes are implemented locally and await
-  review. They are not committed, pushed, merged, tagged or deployed.
+- A focused post-Phase-5 usability revision is implemented locally and awaits review. It shortens
+  the questionnaire before release work resumes and is not committed, pushed, merged, tagged or deployed.
 - Optional Phase 6 shareable results have not begun.
 
 ## Independent version metadata
@@ -26,24 +26,29 @@ Verified Apple facts remain separate from Northstar's internal suitability judge
 | Concern | Version |
 | --- | --- |
 | Application/package | `1.1.0` |
-| Questionnaire schema | `2` |
-| Recommendation rules | `2.0.0` |
+| Questionnaire schema | `3` |
+| Recommendation rules | `2.1.0` |
 | Verified catalogue | Unchanged 31 July 2026 snapshot |
 
-## v1.1 implementation complete through Phase 4
+## Focused questionnaire usability revision
 
-- Declarative adaptive questionnaire with stable IDs and explicit dependencies.
-- Workload follow-ups for study/productivity, software development, cybersecurity/VMs, photography,
-  video, music production, 3D/engineering and sustained work.
-- Multitasking, flexible/stretch budgets and explicit preference-versus-requirement choices.
-- More precise portability, weight, screen, storage and verified external-display requirements.
+- Seven core steps and at most two conditional essential-detail steps.
+- Budget amount/flexibility and portability/screen controls are combined into logical screens.
+- Per-use radio follow-ups are replaced by one tailored multi-select activity step.
+- One multitasking question derives a concurrent-memory signal without a separate duration question.
+- A final Essential requirements step replaces repeated treatment-mode questions.
+- Battery, connection and ownership questions are removed from the main questionnaire.
 - Immediate clearing and accessible announcement of newly irrelevant dependent answers.
-- Compatibility helpers and deliberately migrated v1.0 fixtures.
+- Deliberate v1 and v2 compatibility migration into questionnaire schema 3.
 - Pure deterministic engine output with exact, closest, stretch-budget, budget-limited and genuine
   no-match distinctions.
-- Rich reasons, compromises, lower-rank explanations and documented confidence.
-- Disclosures for collected battery/connection answers that cannot be ranked safely.
-- Grouped answer review, individual editing and accessible top-three comparison.
+- Confidence uses evaluated dimensions only and appears only when an eligible recommendation exists;
+  terminal outcomes explain blocking requirements instead of showing a confidence panel.
+- Compact grouped answer summaries, targeted editing and accessible top-three comparison.
+- A final plain-language pass keeps technical terms only where they name real activities or verified
+  product facts, moves selection guidance into associated help and places score detail in disclosures.
+- Calm visible progress labels avoid repeatedly foregrounding adaptive total changes while exact step
+  counts remain available to assistive technology.
 
 ## Phase 5 review candidate
 
@@ -60,9 +65,9 @@ Verified Apple facts remain separate from Northstar's internal suitability judge
 
 | Check | Result |
 | --- | --- |
-| Full `node --test` suite | 59 passed, 0 failed |
-| v1.0 migration scenarios within the suite | 4 passed, 0 failed |
-| Recommendation-quality scenarios within the suite | 9 passed, 0 failed |
+| Full `node --test` suite | 67 passed, 0 failed |
+| Legacy migration scenarios within the suite | 5 passed, 0 failed |
+| Recommendation-quality scenarios within the suite | 11 passed, 0 failed |
 | JavaScript syntax | 30 files passed, 0 failed |
 | Playwright browser suite | 9 passed, 0 failed |
 | Local Lighthouse mobile | 100 / 100 / 100 / 100 |
@@ -79,14 +84,15 @@ Production Lighthouse is intentionally unclaimed until a reviewed deployment exi
 - `sources/` is unchanged and remains read-only.
 - Verified Apple facts are unchanged.
 - Production code has no framework or runtime dependency.
-- Recommendation weights and rules are unchanged during Phase 5.
+- Verified product facts and capability/fit matrices are unchanged. Rules 2.1 removes ownership
+  from active scoring and removes unsupported confidence caps; remaining numeric weights are unchanged.
 
 ## Remaining release work
 
-Phase 5 must be reviewed before any commit or push. After approval, the release checklist still
-requires the approved commit/merge/tag/deployment sequence, production smoke tests and production
-Lighthouse. Safari, VoiceOver, representative Windows screen-reader and physical-device checks are
-manual environment-dependent verification rather than claims made from emulation.
+The focused usability revision must be reviewed before any commit or push. Release preparation is
+paused; earlier local Lighthouse measurements predate this revision and must not be treated as its
+release evidence. Safari, VoiceOver, representative Windows screen-reader and physical-device checks
+remain manual environment-dependent verification.
 
 No Phase 6 work is authorized before the core v1.1 release is complete, stable and separately
 reviewed.

@@ -1,4 +1,8 @@
-import { QUESTION_ORDER, getQuestionDefinition } from "./questionnaire-definition.js";
+import {
+  QUESTION_ORDER,
+  getQuestionControl,
+  getQuestionDefinition,
+} from "./questionnaire-definition.js";
 import {
   createInitialAnswers,
   deepFreeze,
@@ -39,6 +43,12 @@ function requireKnownQuestion(questionId) {
   const definition = getQuestionDefinition(questionId);
   if (!definition) throw new Error(`Unknown questionnaire question: ${questionId}`);
   return definition;
+}
+
+function requireKnownControl(controlId) {
+  const control = getQuestionControl(controlId);
+  if (!control) throw new Error(`Unknown questionnaire control: ${controlId}`);
+  return control;
 }
 
 function ensureCurrentQuestionIsVisible(nextState) {
@@ -87,17 +97,18 @@ export function markQuestionAttempted(questionId) {
   return snapshot();
 }
 
-export function requestAnswerChange(questionId, value) {
-  requireKnownQuestion(questionId);
-  const preview = previewQuestionnaireAnswerChange(state.answers, questionId, value);
+export function requestAnswerChange(controlId, value) {
+  requireKnownControl(controlId);
+  const preview = previewQuestionnaireAnswerChange(state.answers, controlId, value);
 
   if (preview.clearedQuestionIds.length > 0) {
     state = {
       ...state,
       pendingChange: {
-        questionId,
+        controlId,
         value: structuredClone(value),
         clearedQuestionIds: [...preview.clearedQuestionIds],
+        clearedAnswers: structuredClone(preview.clearedAnswers),
       },
     };
     return snapshot();
@@ -108,8 +119,8 @@ export function requestAnswerChange(questionId, value) {
 
 export function confirmPendingAnswerChange() {
   if (!state.pendingChange) return snapshot();
-  const { questionId, value } = state.pendingChange;
-  return applyPreview(previewQuestionnaireAnswerChange(state.answers, questionId, value));
+  const { controlId, value } = state.pendingChange;
+  return applyPreview(previewQuestionnaireAnswerChange(state.answers, controlId, value));
 }
 
 export function cancelPendingAnswerChange() {

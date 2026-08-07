@@ -16,23 +16,17 @@ import {
   everydayPortableAnswers,
 } from "./fixtures/questionnaire-scenarios.js";
 
-test("answer review groups only currently visible questionnaire answers", () => {
+test("answer review exposes five compact grouped summaries with targeted edit actions", () => {
   const groups = buildAnswerReview(everydayPortableAnswers);
-  const rows = groups.flatMap((group) => group.answers);
-  const questionIds = rows.map(({ questionId }) => questionId);
-
   assert.deepEqual(
     groups.map(({ id }) => id),
-    ["budget", "workload", "mobility", "display-storage", "connections-ownership"],
+    ["budget", "workload", "device", "storage", "essentials"],
   );
-  assert.ok(questionIds.includes("studyProductivityDetail"));
-  assert.equal(questionIds.includes("softwareDevelopmentDetail"), false);
-  assert.equal(questionIds.includes("absoluteBudget"), false);
-  assert.equal(questionIds.includes("connectionImportance"), false);
-  assert.equal(
-    rows.find(({ questionId }) => questionId === "batteryImportance").answer,
-    "Not answered (optional)",
-  );
+  assert.ok(groups[0].summary.includes("Up to £1,500"));
+  assert.ok(groups[1].summary.includes("Documents, notes, email and video calls"));
+  assert.equal(groups[1].editActions.length, 3);
+  assert.equal(groups[3].summary, "At least 256 GB");
+  assert.equal(groups[4].summary, "No additional must-haves");
 });
 
 test("result classifications and confidence labels expose their documented meaning", () => {
@@ -45,8 +39,9 @@ test("result classifications and confidence labels expose their documented meani
       getConfidenceDetails({ label: "high", points: 84 }).range,
       getConfidenceDetails({ label: "moderate", points: 67 }).range,
       getConfidenceDetails({ label: "low", points: 30 }).range,
+      getConfidenceDetails({ label: "not-applicable", points: null }).label,
     ],
-    ["80–100", "55–79", "0–54"],
+    ["80–100", "55–79", "0–54", "Not applicable"],
   );
 });
 
@@ -102,16 +97,13 @@ test("lower-ranked products expose deciding factors, deficits and advantages", (
   }
 });
 
-test("unassessed battery and connection answers remain available for results disclosures", () => {
+test("terminal engine confidence remains non-numeric for the results renderer to suppress", () => {
   const answers = cloneAnswers();
-  answers.mobility.batteryImportance = "long-travel-day";
-  answers.connections.needs = ["hdmi-without-adapter"];
-  answers.connections.importance = "must-have";
+  answers.budget.target = "up-to-1000";
+  answers.budget.mode = "strict";
+  answers.minimumStorage = "2tb-plus";
   const output = recommendMacBooks({ catalogue: productCatalogue, answers });
-
-  assert.deepEqual(
-    output.unassessedAnswers.map(({ code }) => code),
-    ["battery-runtime-unverified", "connections-unverified"],
-  );
-  assert.equal(getConfidenceDetails(output.confidence).label, "Low");
+  assert.notEqual(output.status, "ok");
+  assert.equal(getConfidenceDetails(output.confidence).label, "Not applicable");
+  assert.equal(getConfidenceDetails(output.confidence).points, null);
 });

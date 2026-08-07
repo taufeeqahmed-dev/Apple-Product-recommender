@@ -1,10 +1,5 @@
 import { deepFreeze as freezeCatalogueOutput, validateProductCatalogue } from "./product-schema.js";
-import { getQuestionDefinition } from "./questionnaire-definition.js";
-import {
-  deriveQuestionnaireProfile,
-  getAnswerValue,
-  validateQuestionnaireAnswers,
-} from "./questionnaire-profile.js";
+import { deriveQuestionnaireProfile, validateQuestionnaireAnswers } from "./questionnaire-profile.js";
 import {
   CAPABILITY_BANDS,
   COMPONENT_LABELS,
@@ -12,8 +7,6 @@ import {
   EXACT_MATCH_COMPONENT_THRESHOLD,
   MAXIMUM_SCORE,
   MEMORY_FIT_SCORES,
-  OWNERSHIP_MINIMUM_BANDS,
-  OWNERSHIP_SCORES,
   PORTABILITY_PERFORMANCE_BLEND,
   PRIMARY_USE_SCORES,
   RULES_VERSION,
@@ -22,23 +15,11 @@ import {
   STRONG_COMPONENT_THRESHOLD,
   WORKLOAD_FIT_SCORES,
   getExternalDisplayFit,
-  getHeadroomBand,
   getMemoryBand,
   getPortabilityBand,
   getScreenSizeFit,
   getWeightPreferenceFit,
 } from "./recommendation-rules.js";
-
-const OPTIONAL_SCORING_FOLLOW_UPS = Object.freeze([
-  "studyProductivityDetail",
-  "softwareDevelopmentDetail",
-  "cybersecurityVmDetail",
-  "photoEditingDetail",
-  "videoEditingDetail",
-  "musicProductionDetail",
-  "threeDEngineeringDetail",
-  "sustainedDuration",
-]);
 
 function deepFreeze(value) {
   return freezeCatalogueOutput(value);
@@ -96,7 +77,6 @@ function createTerminalOutput(status, catalogue, answers, validationErrors, conf
     exclusions: [],
     ties: [],
     confidence,
-    unassessedAnswers: [],
     diagnostics: baseDiagnostics(catalogue, validationErrors),
   });
 }
@@ -205,19 +185,6 @@ function applyHardFilters(product, profile, { ignoreBudget = false } = {}) {
       { minimumCount: hard.externalDisplayMinimum, actualCount: actualDisplays },
     );
   }
-  if (hard.ownershipPeriod !== null) {
-    const minimumBand = OWNERSHIP_MINIMUM_BANDS[hard.ownershipPeriod];
-    const actualBand = getHeadroomBand(product);
-    if (actualBand < minimumBand) {
-      addFailure(
-        "ownership-headroom",
-        "Northstar’s headroom band is below the explicitly essential ownership target.",
-        { minimumBand, actualBand },
-        "northstar-assessment",
-      );
-    }
-  }
-
   return failures;
 }
 
@@ -231,7 +198,6 @@ function getAppliedFilterCodes(profile) {
   if (hard.weightMaximumKg !== null) codes.push("weight");
   if (hard.exactScreenSizeInches !== null) codes.push("screen-size");
   if (hard.externalDisplayMinimum !== null) codes.push("external-displays");
-  if (hard.ownershipPeriod !== null) codes.push("ownership-headroom");
   return codes;
 }
 
@@ -248,22 +214,23 @@ function scoreProduct(product, profile) {
     ) / answers.primaryUses.length;
   const memoryValue = MEMORY_FIT_SCORES[workload.memoryGb][memoryBand - 1];
 
-  const blend = PORTABILITY_PERFORMANCE_BLEND[answers.mobility.portabilityPerformance];
-  const portabilityPerformance =
-    (portabilityBand / 5) * 100 * blend.portability +
-    (capabilityBand / 4) * 100 * blend.performance;
+  const blend = PORTABILITY_PERFORMANCE_BLEND[answers.devicePreferences.portabilityPerformance];
+  const portabilityPerformance = blend
+    ? (portabilityBand / 5) * 100 * blend.portability +
+      (capabilityBand / 4) * 100 * blend.performance
+    : null;
   const weightFit = getWeightPreferenceFit(product.facts.weightKg, preferences.weightTargetKg);
   const portabilityWeight =
-    weightFit === null ? portabilityPerformance : portabilityPerformance * 0.7 + weightFit * 0.3;
+    portabilityPerformance === null
+      ? weightFit
+      : weightFit === null
+        ? portabilityPerformance
+        : portabilityPerformance * 0.7 + weightFit * 0.3;
 
   const screenSize = getScreenSizeFit(
     product.facts.marketedScreenSizeInches,
     preferences.screenSizeInches,
   );
-  const ownershipPeriod =
-    preferences.ownershipPeriod === null
-      ? null
-      : OWNERSHIP_SCORES[preferences.ownershipPeriod][getHeadroomBand(product) - 1];
   const externalDisplays = getExternalDisplayFit(
     product.facts.externalDisplaySupport.maxCountWithBuiltInDisplayActive,
     preferences.externalDisplayCount,
@@ -275,7 +242,6 @@ function scoreProduct(product, profile) {
     multitaskingMemory: memoryValue,
     portabilityWeight,
     screenSize,
-    ownershipPeriod,
     externalDisplays,
   };
   let applicableWeight = 0;
@@ -341,7 +307,7 @@ function buildReasons(product, profile, score) {
     );
   }
   if (hardRequirements.externalDisplayMinimum !== null) {
-    hard("meets-external-displays", "It meets your mandatory external-display count.", {
+    hard("meets-external-displays", "It supports the number of external monitors you need.", {
       actualCount: product.facts.externalDisplaySupport.maxCountWithBuiltInDisplayActive,
       minimumCount: hardRequirements.externalDisplayMinimum,
     });
@@ -349,7 +315,7 @@ function buildReasons(product, profile, score) {
   if (hardRequirements.workloadCapabilityBand !== null) {
     hard(
       "meets-workload-minimum",
-      "It meets Northstar’s mandatory workload capability target.",
+      "It meets the performance level Northstar derives from your selected activities.",
       {
         capabilityBand: CAPABILITY_BANDS[product.facts.chip.id],
         minimumBand: hardRequirements.workloadCapabilityBand,
@@ -426,7 +392,7 @@ function buildCompromises(product, profile, score) {
   if (storageMinimum !== null && product.facts.storageGb === storageMinimum) {
     add(
       "storage-at-minimum",
-      "Its storage meets your minimum without additional built-in headroom.",
+      "Its storage meets your minimum without extra built-in space.",
       0,
       { storageGb: product.facts.storageGb },
       "minor",
@@ -457,12 +423,7 @@ function classifyMatch(product, profile, score, compromises) {
     ({ applied, value }) => applied && value < EXACT_MATCH_COMPONENT_THRESHOLD,
   );
   const hasMajorCompromise = compromises.some(({ severity }) => severity === "major");
-  const unassessedMustHaveConnection =
-    profile.unusedForRanking.connectionNeeds.length > 0 &&
-    profile.unusedForRanking.connectionImportance === "must-have";
-  return hasWeakComponent || hasMajorCompromise || unassessedMustHaveConnection
-    ? "closest"
-    : "exact";
+  return hasWeakComponent || hasMajorCompromise ? "closest" : "exact";
 }
 
 function componentSortValue(match, key) {
@@ -479,7 +440,6 @@ function compareMatches(a, b) {
     componentSortValue(b, "multitaskingMemory") - componentSortValue(a, "multitaskingMemory") ||
     componentSortValue(b, "portabilityWeight") - componentSortValue(a, "portabilityWeight") ||
     componentSortValue(b, "screenSize") - componentSortValue(a, "screenSize") ||
-    componentSortValue(b, "ownershipPeriod") - componentSortValue(a, "ownershipPeriod") ||
     componentSortValue(b, "externalDisplays") - componentSortValue(a, "externalDisplays") ||
     a.compromises.length - b.compromises.length ||
     a.priceMinor - b.priceMinor ||
@@ -519,7 +479,6 @@ function decidingFactor(higher, lower) {
     "multitaskingMemory",
     "portabilityWeight",
     "screenSize",
-    "ownershipPeriod",
     "externalDisplays",
   ];
   for (const key of componentOrder) {
@@ -615,37 +574,17 @@ function countBlockers(exclusions) {
   return Object.fromEntries(Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)));
 }
 
-function buildUnassessedAnswers(profile) {
-  const unassessed = [];
-  const battery = profile.unusedForRanking.batteryImportance;
-  if (battery && battery !== "unsure") {
-    unassessed.push({
-      code: "battery-runtime-unverified",
-      answerId: battery,
-      message: "Battery importance was not used because model-specific runtime is not verified in the catalogue.",
-    });
-  }
-  if (profile.unusedForRanking.connectionNeeds.length > 0) {
-    unassessed.push({
-      code: "connections-unverified",
-      answerIds: [...profile.unusedForRanking.connectionNeeds],
-      importance: profile.unusedForRanking.connectionImportance,
-      message: "Connection needs were not used because a verified port inventory is not present in the catalogue.",
-    });
-  }
-  return unassessed;
-}
-
 function detailCoverage(profile) {
-  const visible = new Set(profile.visibleQuestionIds);
-  const applicable = OPTIONAL_SCORING_FOLLOW_UPS.filter((questionId) => visible.has(questionId));
-  if (applicable.length === 0) return 1;
-  const answered = applicable.filter((questionId) => {
-    const definition = getQuestionDefinition(questionId);
-    const value = getAnswerValue(profile.answers, definition.answerPath);
-    return value !== null && value !== "" && value !== "unsure";
-  });
-  return answered.length / applicable.length;
+  const answers = profile.answers;
+  const dimensions = [
+    answers.activities.some((activityId) => activityId !== "unsure") ? 1 : 0,
+    answers.multitasking !== "varies-unsure" ? 1 : 0,
+    answers.budget.target !== "no-fixed-target" ? 1 : 0.5,
+    answers.devicePreferences.screenSize !== "no-preference" ? 1 : 0.5,
+    answers.minimumStorage !== "unsure" ? 1 : 0.5,
+    answers.devicePreferences.portabilityPerformance !== "let-northstar-decide" ? 1 : 0.5,
+  ];
+  return dimensions.reduce((total, value) => total + value, 0) / dimensions.length;
 }
 
 function calculateConfidence(profile, primaryMatches, stretchMatches, status) {
@@ -679,7 +618,19 @@ function calculateConfidence(profile, primaryMatches, stretchMatches, status) {
         ? 6
         : 2
     : 0;
-  const uncappedPoints = status === "ok" ? coveragePoints + fitPoints + separationPoints + alignmentPoints : 0;
+  const uncappedPoints = status === "ok" ? coveragePoints + fitPoints + separationPoints + alignmentPoints : null;
+  if (status !== "ok") {
+    return {
+      label: "not-applicable",
+      points: null,
+      uncappedPoints: null,
+      detailCoverage: Math.round(coverage * 100) / 100,
+      topScore: null,
+      topLead: null,
+      cap: null,
+      reasons: [{ code: status, message: "Confidence applies only when an eligible ranked recommendation is available." }],
+    };
+  }
   let points = uncappedPoints;
   let cap = null;
   const reasons = [];
@@ -695,31 +646,6 @@ function calculateConfidence(profile, primaryMatches, stretchMatches, status) {
   if (top?.matchType === "stretch") {
     reasons.push({ code: "stretch-leading", message: "The leading match is above the preferred budget target." });
   }
-  if (status !== "ok") {
-    reasons.push({ code: status, message: "No eligible ranked recommendation is available." });
-  }
-
-  const battery = profile.unusedForRanking.batteryImportance;
-  if (["full-work-or-study-day", "long-travel-day"].includes(battery)) {
-    points = Math.min(points, 79);
-    cap = "moderate-unverified-battery";
-    reasons.push({
-      code: "unverified-battery",
-      message: "Confidence is capped because the stated battery need could not be evaluated.",
-    });
-  }
-  if (
-    profile.unusedForRanking.connectionNeeds.length > 0 &&
-    profile.unusedForRanking.connectionImportance === "must-have"
-  ) {
-    points = Math.min(points, 54);
-    cap = "low-unverified-connections";
-    reasons.push({
-      code: "unverified-must-have-connection",
-      message: "Confidence is capped because a must-have connection could not be evaluated.",
-    });
-  }
-
   const label = points >= 80 ? "high" : points >= 55 ? "moderate" : "low";
   return {
     label,
@@ -830,7 +756,6 @@ export function recommendMacBooks({ catalogue, answers }) {
     (product) => product.availability.status === "available",
   ).length;
   const confidence = calculateConfidence(profile, matches, stretchMatches, status);
-  const unassessedAnswers = buildUnassessedAnswers(profile);
   const blockerCounts = countBlockers(exclusions);
 
   return deepFreeze({
@@ -850,7 +775,6 @@ export function recommendMacBooks({ catalogue, answers }) {
     exclusions,
     ties: collectTies(matches),
     confidence,
-    unassessedAnswers,
     diagnostics: {
       counts: {
         catalogue: catalogue.products.length,

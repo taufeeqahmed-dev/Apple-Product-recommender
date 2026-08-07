@@ -8,14 +8,14 @@ into a deterministic shortlist using validated official facts and explainable pr
 ## The problem
 
 Laptop buying guides often begin with specifications, while buyers begin with a budget, daily work,
-multitasking, portability and practical constraints. A fixed eight-question flow could ask the same
-generic workload question of everyone, but it could not distinguish a student spreadsheet workload
-from local virtual machines, sustained video work or large software builds.
+multitasking, portability and practical constraints. The first adaptive v1.1 design distinguished
+those workloads, but manual testing showed that repeated follow-ups and treatment-mode questions
+could exceed 18 screens.
 
-Version 1.1 reframes the questionnaire as an adaptive decision interview. It asks relevant detail,
-lets users decide which preferences are truly mandatory and explains exact matches, closest options,
-stretch alternatives and genuine no-match outcomes without presenting Northstar judgements as Apple
-claims.
+The revised v1.1 design uses seven core steps and no more than two essential-detail follow-ups. A
+tailored activity multi-select captures local databases, containers, virtual machines, media and
+professional work in one screen; one final Essentials step controls every non-budget/storage hard
+requirement.
 
 ## Constraints
 
@@ -41,7 +41,7 @@ The application uses explicit boundaries:
 - a pure engine that validates, filters, scores, classifies and sorts; and
 - accessible results rendering with review, editing and comparison.
 
-Application version `1.1.0`, questionnaire schema `2` and rules `2.0.0` are versioned independently.
+Application version `1.1.0`, questionnaire schema `3` and rules `2.1.0` are versioned independently.
 This makes compatibility decisions explicit instead of treating every interface change as an
 algorithm change.
 
@@ -50,35 +50,41 @@ algorithm change.
 ### Preferences do not silently become filters
 
 Storage and strict/absolute budget remain hard requirements. Workload/memory, weight, exact screen
-size, external displays and ownership headroom become hard only through an explicit mandatory
-answer. Screen, weight and ownership otherwise shape rank and compromises, reducing unnecessary
-no-match outcomes.
+size and external displays become hard only through the final Essential requirements multi-select.
+Portability balance and ordinary screen size remain preferences.
 
 ### Unknown facts remain unknown
 
-Battery importance and connection needs are collected because they matter to people, but the current
-catalogue cannot evaluate them safely. Results disclose that limitation and confidence can be capped;
-rank does not change. Verified Apple facts and Northstar assessments are labelled separately in both
-cards and comparison.
+Battery, port/connection and ownership-period questions were removed after manual testing because the
+current catalogue cannot use them meaningfully enough to justify questionnaire time. Legacy values do
+not affect rank or confidence. Verified Apple facts and Northstar assessments remain labelled
+separately in cards and comparison.
 
 ### Adaptivity includes deletion
 
-Changing a triggering answer immediately identifies and clears only dependants that are no longer
-visible. The live region names what was cleared and announces the new total. Hidden state is rejected
-by profile validation, so navigation order cannot leak obsolete answers into the engine.
+Changing a triggering answer identifies and clears only activity option IDs or essential details that
+are no longer relevant. The live region names the cleared selections. Essential detail count changes
+are announced once on Continue rather than after every checkbox toggle.
 
 ### Results remain revisable
 
-The results page groups visible answers and lets users edit one answer at a time. New required
-follow-ups are completed before refreshing. Focus moves deliberately between the edit control,
-question heading and refreshed results, and cancel restores the complete pre-edit snapshot.
+The results page presents five compact summaries for budget, workload, device, storage and
+essentials. Targeted edit actions open the relevant compound step. New required details are completed
+before refreshing; focus moves deliberately between edit control, step heading and refreshed results.
 
 ## Explainability
 
 The engine distinguishes exact, closest and stretch-budget matches. Each card includes verified
 facts, Northstar reasons, compromises and a lower-rank explanation based on the deterministic sort.
-Confidence combines answer detail, leading fit, separation and match alignment, with visible High,
-Moderate or Low thresholds and caps for important unassessed needs.
+Confidence combines evaluated answer coverage, leading fit, separation and match alignment, with
+documented High, Moderate or Low thresholds behind a secondary methodology disclosure. Terminal
+budget/no-match outcomes do not display confidence; they explain the hard requirements that blocked
+eligible recommendations instead of presenting a misleading numeric zero.
+
+The leading recommendation is visually dominant. Comparison remains readily available, while
+classification counts and confidence diagnostics no longer appear before the recommendation itself.
+Each card keeps its numeric score and deterministic ranking explanation available in a native
+disclosure, so technical evidence remains inspectable without dominating the initial result.
 
 The top-three comparison is a semantic table with verified facts and Northstar assessments in
 separate row groups. Its dialog is keyboard operable, restores focus and contains horizontal scrolling
@@ -94,18 +100,22 @@ The v1.1 Phase 4 pre-commit review found that an edit could leave completed prog
 intermediate question and that comparison row groups used incorrect table scope. Both were fixed and
 regression-tested before the phase was committed.
 
+Manual v1.1 usability testing then found an 18-plus-step path and a misleading zero-confidence
+no-match presentation. That evidence led to schema 3, rules 2.1 and new seven-to-nine-step bounds.
+
 These examples show why recommendation quality needs scenario tests, while accessible stateful UI
 needs rendered keyboard and focus tests.
 
 ## Verification evidence
 
-- 59 dependency-free Node tests, including all migrated v1.0 fixtures and nine recommendation-quality
+- 67 dependency-free Node tests, including v1/v2 migration and 11 recommendation-quality
   scenarios.
 - 30 JavaScript files passing `node --check`.
 - Nine Playwright tests across 1440×900, 768×1024 and 390×844 viewports.
 - Automated adaptive branching, dependency clearing, edit, focus, classification, confidence and
   comparison coverage.
-- Local Lighthouse 13.4.1 scores of 100/100/100/100 on mobile and desktop in Edge 151.
+- Earlier Phase 5 Lighthouse scores were 100/100/100/100 locally; they predate schema 3 and are not
+  claimed as release evidence for this revision.
 - Frozen development lockfile and a Pages workflow gated by unit, syntax and browser tests.
 
 Safari, VoiceOver, representative Windows screen-reader, physical-device and deployed-production
@@ -125,7 +135,7 @@ Use the release wording only after v1.1 has been reviewed and deployed.
 
 - Built Northstar, a framework-free accessible MacBook recommender using an adaptive questionnaire,
   validated Apple UK facts and deterministic explainable ranking; covered 10 exact configurations
-  with 59 Node tests and nine cross-viewport Playwright tests.
+  with 67 Node tests and nine cross-viewport Playwright tests.
 
 ### Two-bullet version
 
@@ -133,16 +143,15 @@ Use the release wording only after v1.1 has been reviewed and deployed.
   separates verified facts from project-authored assessments, applies only explicit hard
   requirements and explains exact, closest, stretch and no-match outcomes.
 - Added schema migration, dependency-safe state, confidence labels, editable results, accessible
-  top-three comparison, 59 unit/quality tests, nine browser tests and local 100/100/100/100
-  Lighthouse verification.
+  top-three comparison, 67 unit/quality tests and nine browser tests across desktop, tablet and mobile.
 
 ### Interview summary
 
 “I treated the recommender as a small decision system rather than a product-card filter. The
-questionnaire adapts to selected work, clears hidden dependants, and asks whether a preference is
-actually mandatory. The engine validates and freezes the dataset, filters before scoring and returns
-enough diagnostics to explain rank and confidence. I kept unavailable battery and port evidence out
-of scoring, then added browser tests for the state transitions that unit tests cannot prove.”
+questionnaire uses a tailored activity multi-select, clears hidden dependants, and centralises hard
+requirements in one final step. Manual testing exposed an 18-step path, so I simplified it to seven
+core and at most nine total steps, then added browser tests for the state transitions that unit tests
+cannot prove.”
 
 ## Future opportunities
 

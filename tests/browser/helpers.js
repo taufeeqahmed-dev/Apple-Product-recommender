@@ -33,44 +33,26 @@ export async function continueQuestionnaire(page) {
 }
 
 export async function completeBaselineJourney(page) {
-  await choose(page, "radio", "I do not have a fixed target yet");
+  await choose(page, "radio", "I’m not sure yet");
   await continueQuestionnaire(page);
   await choose(page, "checkbox", "University, studying and general productivity");
   await continueQuestionnaire(page);
-  await choose(page, "radio", "Research, larger spreadsheets and many browser tabs");
+  await choose(page, "checkbox", "Research, large spreadsheets and many browser tabs");
   await continueQuestionnaire(page);
-  await choose(page, "radio", "4–7 applications and around 11–30 tabs");
+  await choose(page, "radio", "Moderate — several apps and lots of tabs");
   await continueQuestionnaire(page);
-  await choose(page, "radio", "Use it as a preference and explain weaker matches");
-  await continueQuestionnaire(page);
-  await choose(page, "radio", "Carry it regularly; balance weight and performance");
-  await continueQuestionnaire(page);
-  await choose(page, "radio", "No weight preference");
-  await continueQuestionnaire(page);
-  await choose(page, "radio", "A full work or study day");
-  await continueQuestionnaire(page);
+  await choose(page, "radio", "A balance of both");
   await choose(page, "radio", "No preference");
   await continueQuestionnaire(page);
   await choose(page, "radio", "512 GB");
   await continueQuestionnaire(page);
-  await choose(page, "radio", "One");
-  await continueQuestionnaire(page);
-  await choose(page, "radio", "Preference");
-  await continueQuestionnaire(page);
-  await choose(page, "checkbox", "HDMI without an adapter");
-  await continueQuestionnaire(page);
-  await choose(page, "radio", "Must-have");
-  await continueQuestionnaire(page);
-  await choose(page, "radio", "I’m not sure");
+  await choose(page, "checkbox", "None — find the best overall balance");
   await choose(page, "button", "See recommendations");
   await expect(page.locator("#results-title")).toBeFocused();
 }
 
-export async function editAnswer(page, prompt) {
-  const button = page.getByRole("button", {
-    name: `Edit answer for: ${prompt}`,
-    exact: true,
-  });
+export async function editAnswer(page, buttonLabel) {
+  const button = page.getByRole("button", { name: buttonLabel, exact: true });
   await expect(button).toHaveCount(1);
   await button.click();
   return button;

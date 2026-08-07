@@ -1,5 +1,5 @@
-import { getQuestionDefinition } from "./questionnaire-definition.js";
-import { getAnswerValue, getVisibleQuestionIds } from "./questionnaire-profile.js";
+import { getQuestionControl } from "./questionnaire-definition.js";
+import { getAnswerValue } from "./questionnaire-profile.js";
 
 const priceFormatter = new Intl.NumberFormat("en-GB", {
   style: "currency",
@@ -12,74 +12,18 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
   timeZone: "UTC",
 });
 
-const ANSWER_GROUPS = Object.freeze([
-  Object.freeze({
-    id: "budget",
-    title: "Budget",
-    questionIds: Object.freeze(["budgetTarget", "budgetMode", "absoluteBudget"]),
-  }),
-  Object.freeze({
-    id: "workload",
-    title: "Uses, workload and multitasking",
-    questionIds: Object.freeze([
-      "primaryUses",
-      "studyProductivityDetail",
-      "softwareDevelopmentDetail",
-      "cybersecurityVmDetail",
-      "photoEditingDetail",
-      "videoEditingDetail",
-      "musicProductionDetail",
-      "threeDEngineeringDetail",
-      "sustainedDuration",
-      "multitasking",
-      "workloadRequirementMode",
-    ]),
-  }),
-  Object.freeze({
-    id: "mobility",
-    title: "Portability and battery",
-    questionIds: Object.freeze([
-      "portabilityPerformance",
-      "weightTarget",
-      "weightRequirementMode",
-      "batteryImportance",
-    ]),
-  }),
-  Object.freeze({
-    id: "display-storage",
-    title: "Screen, storage and external displays",
-    questionIds: Object.freeze([
-      "screenSize",
-      "screenRequirementMode",
-      "minimumStorage",
-      "externalDisplays",
-      "externalDisplayRequirementMode",
-    ]),
-  }),
-  Object.freeze({
-    id: "connections-ownership",
-    title: "Connections and ownership",
-    questionIds: Object.freeze([
-      "connectionNeeds",
-      "connectionImportance",
-      "ownershipPeriod",
-      "ownershipRequirementMode",
-    ]),
-  }),
-]);
-
 const MATCH_TYPE_DETAILS = Object.freeze({
   exact: Object.freeze({
     label: "Exact match",
-    description: "Passed every hard requirement without a major scored compromise.",
+    description: "Meets every must-have with no major preference trade-off.",
   }),
   closest: Object.freeze({
     label: "Closest match",
-    description: "Passed every hard requirement, with one or more preference compromises to review.",
+    description: "Meets every must-have, with one or more preference trade-offs to review.",
   }),
   stretch: Object.freeze({
     label: "Stretch-budget match",
-    description: "Passed the applicable hard requirements but is above the preferred budget target.",
+    description: "Meets every must-have but costs more than your preferred budget.",
   }),
 });
 
@@ -92,27 +36,31 @@ const CONFIDENCE_DETAILS = Object.freeze({
   moderate: Object.freeze({
     label: "Moderate",
     range: "55–79",
-    description: "The result is useful, but missing detail, close scores or an unassessed need limits certainty.",
+    description: "The result is useful, but limited detail or close scores reduce certainty.",
   }),
   low: Object.freeze({
     label: "Low",
     range: "0–54",
-    description: "The result has limited support or an important requirement could not be evaluated.",
+    description: "Limited answer detail, a lower leading fit or close rankings reduce support for the result.",
+  }),
+  "not-applicable": Object.freeze({
+    label: "Not applicable",
+    range: null,
+    description: "Confidence is calculated only when an eligible ranked recommendation exists.",
   }),
 });
 
 const BLOCKER_LABELS = Object.freeze({
   availability: "current availability",
   market: "UK market data",
-  "incomplete-data": "complete verified data",
+  "incomplete-data": "complete verified comparison data",
   budget: "maximum budget",
   storage: "minimum storage",
-  "external-displays": "external displays",
-  "workload-capability": "expected workload",
-  "workload-memory": "workload memory",
+  "external-displays": "external monitors",
+  "workload-capability": "performance needed for selected activities",
+  "workload-memory": "memory needed for selected activities",
   weight: "maximum weight",
   "screen-size": "exact screen size",
-  "ownership-headroom": "Northstar ownership headroom",
 });
 
 let comparisonReturnTarget = null;
@@ -141,37 +89,80 @@ function productById(catalogue, productId) {
   return catalogue.products.find((product) => product.id === productId);
 }
 
-function answerLabel(definition, value) {
-  const labels = new Map(definition.options.map((option) => [option.id, option.label]));
+function answerLabel(controlId, value) {
+  const control = getQuestionControl(controlId);
+  const labels = new Map(control.options.map((option) => [option.id, option.label]));
   if (Array.isArray(value)) {
     return value.length > 0
       ? value.map((answerId) => labels.get(answerId) ?? answerId).join(", ")
-      : "Not answered (optional)";
+      : "Not answered";
   }
   if (value === null || value === "" || value === undefined) {
-    return definition.required ? "Not answered" : "Not answered (optional)";
+    return control.required ? "Not answered" : "No absolute maximum";
   }
   return labels.get(value) ?? String(value);
 }
 
 export function buildAnswerReview(answers) {
-  const visible = new Set(getVisibleQuestionIds(answers));
-  return ANSWER_GROUPS.map((group) => ({
-    id: group.id,
-    title: group.title,
-    answers: group.questionIds
-      .filter((questionId) => visible.has(questionId))
-      .map((questionId) => {
-        const definition = getQuestionDefinition(questionId);
-        return {
-          questionId,
-          prompt: definition.prompt,
-          answer: answerLabel(definition, getAnswerValue(answers, definition.answerPath)),
-          required: definition.required,
-          rankingUse: definition.rankingUse ?? "available",
-        };
-      }),
-  })).filter((group) => group.answers.length > 0);
+  const value = (controlId) => {
+    const control = getQuestionControl(controlId);
+    return answerLabel(controlId, getAnswerValue(answers, control.answerPath));
+  };
+  const budgetParts = [value("budgetTarget")];
+  if (answers.budget.mode) budgetParts.push(value("budgetMode"));
+  if (answers.budget.absoluteMaximum) budgetParts.push(`Absolute maximum: ${value("absoluteBudget")}`);
+
+  const workloadParts = [value("primaryUses"), value("activities"), value("multitasking")];
+  const deviceParts = [value("portabilityPerformance"), value("screenSize")];
+  const essentials = answers.essentialRequirements.includes("none")
+    ? ["No additional must-haves"]
+    : [value("essentialRequirements")];
+  if (answers.essentialDetails.maximumWeight) {
+    essentials.push(`Weight limit: ${value("maximumWeight")}`);
+  }
+  if (answers.essentialDetails.externalDisplayCount) {
+    essentials.push(`External monitors: ${value("externalDisplayCount")}`);
+  }
+
+  return [
+    {
+      id: "budget",
+      title: "Budget",
+      summary: budgetParts.join(" · "),
+      editActions: [{ questionId: "budget", label: "Edit budget" }],
+    },
+    {
+      id: "workload",
+      title: "Uses and activities",
+      summary: workloadParts.join(" · "),
+      editActions: [
+        { questionId: "primaryUses", label: "Edit uses" },
+        { questionId: "activities", label: "Edit activities" },
+        { questionId: "multitasking", label: "Edit multitasking" },
+      ],
+    },
+    {
+      id: "device",
+      title: "Preferences",
+      summary: deviceParts.join(" · "),
+      editActions: [{ questionId: "devicePreferences", label: "Edit device preferences" }],
+    },
+    {
+      id: "storage",
+      title: "Storage",
+      summary:
+        answers.minimumStorage === "unsure"
+          ? value("minimumStorage")
+          : `At least ${value("minimumStorage")}`,
+      editActions: [{ questionId: "minimumStorage", label: "Edit storage" }],
+    },
+    {
+      id: "essentials",
+      title: "Must-haves",
+      summary: essentials.join(" · "),
+      editActions: [{ questionId: "essentialRequirements", label: "Edit must-haves" }],
+    },
+  ];
 }
 
 export function getMatchTypeDetails(matchType) {
@@ -182,7 +173,7 @@ export function getConfidenceDetails(confidence) {
   const detail = CONFIDENCE_DETAILS[confidence?.label] ?? CONFIDENCE_DETAILS.low;
   return {
     ...detail,
-    points: confidence?.points ?? 0,
+    points: confidence?.points ?? null,
     detailCoverage: confidence?.detailCoverage ?? 0,
     topScore: confidence?.topScore ?? null,
     topLead: confidence?.topLead ?? null,
@@ -351,16 +342,22 @@ function createClassificationBadge(matchType) {
 }
 
 function createRankingExplanation(match) {
-  const panel = element("div", "ranking-explanation");
-  panel.append(element("h4", "", "Why it ranked here"));
+  const panel = element("details", "ranking-explanation");
+  panel.append(element("summary", "", "Score and ranking details"));
+  const content = element("div", "ranking-explanation-content");
   const messages = formatRankingExplanation(match);
   if (messages.length === 0) {
-    panel.append(element("p", "", "No ranking explanation is available."));
+    content.append(element("p", "", "No ranking explanation is available."));
+    panel.append(content);
     return panel;
   }
   const list = element("ul");
+  list.append(
+    element("li", "", `Northstar fit score: ${match.score.percent.toFixed(2)} out of 100.`),
+  );
   messages.forEach((message) => list.append(element("li", "", message)));
-  panel.append(list);
+  content.append(list);
+  panel.append(content);
   return panel;
 }
 
@@ -379,12 +376,7 @@ function createResultCard(match, product, { labelPrefix = "Recommendation" } = {
     "recommendation-price",
     `${formatPrice(product.price.amountMinor)} verified on ${formatSnapshotDate(product.price.snapshotDate)}`,
   );
-  const score = element(
-    "p",
-    "recommendation-score",
-    `Northstar fit score: ${match.score.percent.toFixed(2)} out of 100`,
-  );
-  header.append(rank, title, price, score, createClassificationBadge(match.matchType));
+  header.append(rank, title, price, createClassificationBadge(match.matchType));
 
   const configuration = element("p", "recommendation-configuration", product.configurationName);
   configuration.id = `recommendation-configuration-${stableId}`;
@@ -410,13 +402,13 @@ function createResultCard(match, product, { labelPrefix = "Recommendation" } = {
       : element(
           "p",
           "recommendation-no-compromises",
-          "No significant compromise was identified by the applied Northstar rules.",
+          "No significant trade-off was identified for your answers.",
         );
 
   const source = element(
     "a",
     "recommendation-source",
-    "View this verified configuration on Apple UK",
+    "View this MacBook option on Apple UK",
   );
   source.href = product.price.sourceUrl;
   source.target = "_blank";
@@ -450,37 +442,24 @@ function createConfidencePanel(confidence) {
     element("h3", "", `Recommendation confidence: ${details.label}`),
   );
   panel.querySelector("h3").id = "confidence-title";
-  panel.append(
-    element("p", "confidence-score", `${details.points} out of 100 confidence points.`),
-    element("p", "", details.description),
-    element(
-      "p",
-      "confidence-thresholds",
-      "Documented labels: High 80–100; Moderate 55–79; Low 0–54.",
-    ),
-  );
+  if (details.points === null) {
+    panel.append(element("p", "", details.description));
+  } else {
+    panel.append(
+      element("p", "confidence-score", `${details.points} out of 100 confidence points.`),
+      element("p", "", details.description),
+      element(
+        "p",
+        "confidence-thresholds",
+        "Documented labels: High 80–100; Moderate 55–79; Low 0–54.",
+      ),
+    );
+  }
   if (details.reasons.length > 0) {
     const list = element("ul", "confidence-reasons");
     details.reasons.forEach(({ message }) => list.append(element("li", "", message)));
     panel.append(list);
   }
-  return panel;
-}
-
-function createUnassessedPanel(unassessedAnswers) {
-  if (unassessedAnswers.length === 0) return null;
-  const panel = element("section", "unassessed-panel");
-  panel.setAttribute("aria-labelledby", "unassessed-title");
-  const title = element("h3", "", "Answers not used in ranking");
-  title.id = "unassessed-title";
-  const intro = element(
-    "p",
-    "",
-    "Northstar recorded these answers but did not infer capabilities missing from the verified catalogue.",
-  );
-  const list = element("ul");
-  unassessedAnswers.forEach(({ message }) => list.append(element("li", "", message)));
-  panel.append(title, intro, list);
   return panel;
 }
 
@@ -495,7 +474,7 @@ function createAnswerReview(answers, onEditAnswer) {
     element(
       "p",
       "answer-review-intro",
-      "Edit one answer at a time. If an edit makes another answer irrelevant, Northstar clears and announces only that dependent answer.",
+      "Edit any group below. Answers that no longer apply will be cleared automatically.",
     ),
   );
 
@@ -504,27 +483,16 @@ function createAnswerReview(answers, onEditAnswer) {
     const groupTitle = element("h4", "", group.title);
     groupTitle.id = `answer-group-${group.id}`;
     groupSection.setAttribute("aria-labelledby", groupTitle.id);
-    const list = element("ul", "answer-review-list");
-    group.answers.forEach((answer) => {
-      const row = element("li", "answer-review-row");
-      const content = element("div", "answer-review-content");
-      const prompt = element("p", "answer-review-prompt", answer.prompt);
-      const value = element("p", "answer-review-value", answer.answer);
-      const requirement = element(
-        "span",
-        "answer-requirement",
-        answer.required ? "Required" : "Optional",
-      );
-      content.append(prompt, value, requirement);
-      const button = element("button", "button button-secondary answer-edit-button", "Edit answer");
+    const summary = element("p", "answer-review-value", group.summary);
+    const actions = element("div", "answer-review-actions");
+    group.editActions.forEach((action) => {
+      const button = element("button", "button button-secondary answer-edit-button", action.label);
       button.type = "button";
-      button.dataset.editQuestionId = answer.questionId;
-      button.setAttribute("aria-label", `Edit answer for: ${answer.prompt}`);
-      button.addEventListener("click", () => onEditAnswer?.(answer.questionId, button));
-      row.append(content, button);
-      list.append(row);
+      button.dataset.editQuestionId = action.questionId;
+      button.addEventListener("click", () => onEditAnswer?.(action.questionId, button));
+      actions.append(button);
     });
-    groupSection.append(groupTitle, list);
+    groupSection.append(groupTitle, summary, actions);
     section.append(groupSection);
   });
   return section;
@@ -551,14 +519,23 @@ function createClassificationSummary(output) {
   return panel;
 }
 
+function createMethodDisclosure(output) {
+  const disclosure = element("details", "results-method-details");
+  const summary = element("summary", "results-method-summary", "How Northstar reached this result");
+  const content = element("div", "results-method-content");
+  content.append(createConfidencePanel(output.confidence), createClassificationSummary(output));
+  disclosure.append(summary, content);
+  return disclosure;
+}
+
 function createNoMatch(output) {
   const panel = element("div", "results-message results-message-warning");
   panel.append(
-    element("h3", "", "No suitable configuration found"),
+    element("h3", "", "Why no exact match was found"),
     element(
       "p",
       "",
-      "Every verified configuration missed at least one hard requirement. Northstar has not silently relaxed those requirements.",
+      "No MacBook in Northstar’s verified list meets all of your must-have requirements. Nothing was relaxed automatically.",
     ),
   );
   const blockers = Object.entries(output.diagnostics.blockerCounts);
@@ -568,7 +545,7 @@ function createNoMatch(output) {
     blockers.forEach(([code, count]) => {
       const label = BLOCKER_LABELS[code] ?? code;
       list.append(
-        element("li", "", `${label}: ${count} configuration${count === 1 ? "" : "s"}`),
+        element("li", "", `${label}: ${count} MacBook option${count === 1 ? "" : "s"}`),
       );
     });
     panel.append(list);
@@ -579,11 +556,11 @@ function createNoMatch(output) {
 function createBudgetLimited(output, catalogue) {
   const panel = element("div", "results-message results-message-warning");
   panel.append(
-    element("h3", "", "No configuration fits the permitted budget"),
+    element("h3", "", "No MacBook fits your maximum budget"),
     element(
       "p",
       "",
-      "These configurations met the other hard requirements but were excluded by the verified price limit. They are shown for context, not ranked as recommendations.",
+      "These MacBooks meet your other must-haves but cost more than your maximum budget. They are shown for context, not as recommendations.",
     ),
   );
   if (output.budgetLimitedAlternatives.length > 0) {
@@ -614,7 +591,7 @@ function createDataError(output) {
       "",
       isInputError
         ? "One or more answer IDs were invalid or incomplete. Restart the questionnaire and try again."
-        : "The catalogue did not pass validation, so no recommendations were calculated.",
+        : "The verified product information did not pass validation, so no recommendations were calculated.",
     ),
   );
   return panel;
@@ -759,12 +736,6 @@ export function renderRecommendationResults(
   container.replaceChildren();
   restartButton?.removeAttribute("hidden");
 
-  if (output.profile) {
-    container.append(createConfidencePanel(output.confidence));
-    const unassessedPanel = createUnassessedPanel(output.unassessedAnswers);
-    if (unassessedPanel) container.append(unassessedPanel);
-  }
-
   if (output.status === "ok") {
     const primaryMatches = output.matches.slice(0, 3).map((match, index) =>
       normaliseMatch(match, index + 1, "primary"),
@@ -774,38 +745,38 @@ export function renderRecommendationResults(
     );
     const mainMatches = primaryMatches.length > 0 ? primaryMatches : stretchMatches;
     stageLabel.textContent = isRefresh ? "Recommendations refreshed" : "Your recommendations";
-    summary.textContent = `${mainMatches.length} leading verified configuration${
+    summary.textContent = `${mainMatches.length} recommended MacBook option${
       mainMatches.length === 1 ? "" : "s"
-    } shown with Northstar classifications and ranking explanations.`;
-    container.append(createClassificationSummary(output));
+    } shown with clear reasons and trade-offs.`;
     const comparisonCandidates = getComparisonCandidates(output);
     const comparisonButton = createComparisonButton(comparisonCandidates, catalogue);
-    if (comparisonButton) container.append(comparisonButton);
     container.append(
       createRecommendationGroup(mainMatches, catalogue, {
         stretch: primaryMatches.length === 0,
       }),
     );
+    if (comparisonButton) container.append(comparisonButton);
     if (primaryMatches.length > 0 && stretchMatches.length > 0) {
       container.append(createRecommendationGroup(stretchMatches, catalogue, { stretch: true }));
     }
+    container.append(createMethodDisclosure(output));
     announcement.textContent = isRefresh
       ? `${mainMatches.length} recommendation${mainMatches.length === 1 ? " was" : "s were"} refreshed after your edit. Focus moved to the results heading.`
       : `${mainMatches.length} recommendation${mainMatches.length === 1 ? " is" : "s are"} ready. Focus moved to the results heading.`;
   } else if (output.status === "no-match") {
-    stageLabel.textContent = isRefresh ? "Edited answers produced no match" : "No suitable match";
-    summary.textContent = "No verified configuration passed every hard requirement.";
+    stageLabel.textContent = isRefresh ? "Edited answers produced no exact match" : "No exact match";
+    summary.textContent = "No MacBook in Northstar’s verified list meets all of your must-haves.";
     container.append(createNoMatch(output));
     announcement.textContent = isRefresh
-      ? "Recommendations were refreshed after your edit, but no suitable configuration was found. Focus moved to the results heading."
-      : "No suitable configuration was found. Focus moved to the results heading.";
+      ? "Recommendations were refreshed after your edit, but no exact match was found. Focus moved to the results heading."
+      : "No exact match was found. Focus moved to the results heading.";
   } else if (output.status === "budget-limited") {
     stageLabel.textContent = "No match within budget";
-    summary.textContent = "Matching verified configurations were above the permitted maximum budget.";
+    summary.textContent = "MacBooks that meet your other must-haves cost more than your maximum budget.";
     container.append(createBudgetLimited(output, catalogue));
     announcement.textContent = isRefresh
-      ? "Recommendations were refreshed after your edit, but no configuration fit the permitted budget. Focus moved to the results heading."
-      : "No configuration fit the permitted budget. Focus moved to the results heading.";
+      ? "Recommendations were refreshed after your edit, but no MacBook fit the maximum budget. Focus moved to the results heading."
+      : "No MacBook fit the maximum budget. Focus moved to the results heading.";
   } else {
     stageLabel.textContent = "Recommendation unavailable";
     summary.textContent = "Northstar stopped safely instead of calculating from invalid information.";

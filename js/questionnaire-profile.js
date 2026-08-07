@@ -1,7 +1,10 @@
 import {
   QUESTION_DEFINITIONS,
   QUESTION_ORDER,
+  getAllQuestionControls,
+  getQuestionControl,
   getQuestionDefinition,
+  getQuestionStepForControl,
 } from "./questionnaire-definition.js";
 
 const BUDGET_VALUES_MINOR = Object.freeze({
@@ -35,14 +38,7 @@ const SCREEN_VALUES_INCHES = Object.freeze({
   "16-inch": 16,
 });
 
-const DISPLAY_VALUES = Object.freeze({
-  none: 0,
-  one: 1,
-  two: 2,
-  three: 3,
-  "four-plus": 4,
-  unsure: null,
-});
+const DISPLAY_VALUES = Object.freeze({ one: 1, two: 2, three: 3, "four-plus": 4 });
 
 const BASE_WORKLOAD = Object.freeze({
   "study-productivity": Object.freeze({ capabilityBand: 1, memoryGb: 8 }),
@@ -54,48 +50,35 @@ const BASE_WORKLOAD = Object.freeze({
   "3d-engineering": Object.freeze({ capabilityBand: 3, memoryGb: 16 }),
 });
 
-const WORKLOAD_SIGNALS = Object.freeze({
-  studyProductivity: Object.freeze({
-    "documents-browsing-calls": Object.freeze([1, 8]),
-    "research-spreadsheets-tabs": Object.freeze([2, 16]),
-    "statistics-analysis-local-tools": Object.freeze([3, 24]),
-  }),
-  softwareDevelopment: Object.freeze({
-    "learning-scripts-small-sites": Object.freeze([2, 8]),
-    "web-mobile-local-services": Object.freeze([2, 16]),
-    "containers-large-builds": Object.freeze([3, 24]),
-    "native-ml-heavy-builds": Object.freeze([4, 36]),
-  }),
-  cybersecurityVms: Object.freeze({
-    "no-local-vms": Object.freeze([2, 16]),
-    "one-vm": Object.freeze([3, 16]),
-    "two-vms": Object.freeze([3, 24]),
-    "three-plus-vms": Object.freeze([4, 36]),
-  }),
-  photoEditing: Object.freeze({
-    "jpeg-light-edits": Object.freeze([2, 16]),
-    "regular-raw-editing": Object.freeze([3, 16]),
-    "large-raw-batches-panoramas": Object.freeze([3, 24]),
-    "professional-sustained-photo": Object.freeze([4, 36]),
-  }),
-  videoEditing: Object.freeze({
-    "1080p-light": Object.freeze([2, 16]),
-    "4k-single-stream": Object.freeze([3, 16]),
-    "4k-multicam-effects": Object.freeze([4, 24]),
-    "6k-8k-sustained": Object.freeze([4, 36]),
-  }),
-  musicProduction: Object.freeze({
-    "small-projects-few-plugins": Object.freeze([2, 16]),
-    "medium-projects": Object.freeze([3, 16]),
-    "large-sample-libraries-many-plugins": Object.freeze([3, 24]),
-    "professional-low-latency": Object.freeze([4, 36]),
-  }),
-  threeDEngineering: Object.freeze({
-    "2d-light-models": Object.freeze([2, 16]),
-    "moderate-3d-models": Object.freeze([3, 24]),
-    "complex-cad-simulation": Object.freeze([4, 36]),
-    "sustained-rendering-simulation": Object.freeze([4, 36]),
-  }),
+const ACTIVITY_SIGNALS = Object.freeze({
+  "documents-browsing-calls": Object.freeze([1, 8]),
+  "research-spreadsheets-tabs": Object.freeze([2, 16]),
+  "statistics-analysis-local-tools": Object.freeze([3, 24]),
+  "general-programming": Object.freeze([2, 16]),
+  "web-mobile-development": Object.freeze([2, 16]),
+  "local-development-servers": Object.freeze([2, 16]),
+  "local-databases": Object.freeze([2, 16]),
+  "docker-containers": Object.freeze([3, 24]),
+  "one-virtual-machine": Object.freeze([3, 16]),
+  "two-virtual-machines": Object.freeze([3, 24]),
+  "three-plus-virtual-machines": Object.freeze([4, 36]),
+  "larger-local-ai-models": Object.freeze([4, 36]),
+  "jpeg-light-edits": Object.freeze([2, 16]),
+  "regular-raw-editing": Object.freeze([3, 16]),
+  "large-raw-batches-panoramas": Object.freeze([3, 24]),
+  "professional-sustained-photo": Object.freeze([4, 36]),
+  "1080p-light": Object.freeze([2, 16]),
+  "4k-single-stream": Object.freeze([3, 16]),
+  "4k-multicam-effects": Object.freeze([4, 24]),
+  "6k-8k-sustained": Object.freeze([4, 36]),
+  "small-projects-few-plugins": Object.freeze([2, 16]),
+  "medium-music-projects": Object.freeze([3, 16]),
+  "large-sample-libraries-many-plugins": Object.freeze([3, 24]),
+  "professional-low-latency": Object.freeze([4, 36]),
+  "2d-light-models": Object.freeze([2, 16]),
+  "moderate-3d-models": Object.freeze([3, 16]),
+  "complex-cad-simulation": Object.freeze([4, 24]),
+  "sustained-rendering-simulation": Object.freeze([4, 36]),
 });
 
 const MULTITASKING_SIGNALS = Object.freeze({
@@ -107,21 +90,52 @@ const MULTITASKING_SIGNALS = Object.freeze({
 
 const V1_PRIMARY_USE_MAP = Object.freeze({
   "everyday-study": "study-productivity",
-  "office-business": "study-productivity",
   coding: "software-development",
-  "photo-design": "photo-editing",
-  "audio-music": "music-production",
+  "office-business": "study-productivity",
+  photography: "photo-editing",
+  "music-audio": "music-production",
 });
 
-function clone(value) {
-  return structuredClone(value);
-}
+const V2_ACTIVITY_MAP = Object.freeze({
+  "documents-browsing-calls": "documents-browsing-calls",
+  "research-spreadsheets-tabs": "research-spreadsheets-tabs",
+  "statistics-analysis-local-tools": "statistics-analysis-local-tools",
+  "learning-scripts-small-sites": "general-programming",
+  "web-mobile-local-services": "web-mobile-development",
+  "containers-large-builds": "docker-containers",
+  "native-ml-heavy-builds": "larger-local-ai-models",
+  "one-vm": "one-virtual-machine",
+  "two-vms": "two-virtual-machines",
+  "three-plus-vms": "three-plus-virtual-machines",
+  "jpeg-light-edits": "jpeg-light-edits",
+  "regular-raw-editing": "regular-raw-editing",
+  "large-raw-batches-panoramas": "large-raw-batches-panoramas",
+  "professional-sustained-photo": "professional-sustained-photo",
+  "1080p-light": "1080p-light",
+  "4k-single-stream": "4k-single-stream",
+  "4k-multicam-effects": "4k-multicam-effects",
+  "6k-8k-sustained": "6k-8k-sustained",
+  "small-projects-few-plugins": "small-projects-few-plugins",
+  "medium-projects": "medium-music-projects",
+  "large-sample-libraries-many-plugins": "large-sample-libraries-many-plugins",
+  "professional-low-latency": "professional-low-latency",
+  "2d-light-models": "2d-light-models",
+  "moderate-3d-models": "moderate-3d-models",
+  "complex-cad-simulation": "complex-cad-simulation",
+  "sustained-rendering-simulation": "sustained-rendering-simulation",
+});
 
 export function deepFreeze(value) {
   if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
   Object.values(value).forEach(deepFreeze);
   return Object.freeze(value);
 }
+
+const clone = (value) => structuredClone(value);
+const isAnswered = (value) =>
+  Array.isArray(value)
+    ? value.length > 0
+    : value !== null && value !== "" && value !== undefined;
 
 export function getAnswerValue(answers, path) {
   return path.split(".").reduce((value, key) => value?.[key], answers);
@@ -138,66 +152,21 @@ export function setAnswerValue(answers, path, value) {
 
 export function createInitialAnswers() {
   return {
-    budget: {
-      target: "",
-      mode: null,
-      absoluteMaximum: null,
-    },
+    budget: { target: "", mode: null, absoluteMaximum: null },
     primaryUses: [],
-    workloadDetails: {
-      studyProductivity: null,
-      softwareDevelopment: null,
-      cybersecurityVms: null,
-      photoEditing: null,
-      videoEditing: null,
-      musicProduction: null,
-      threeDEngineering: null,
-      sustainedDuration: null,
-    },
+    activities: [],
     multitasking: "",
-    workloadRequirementMode: "",
-    mobility: {
-      portabilityPerformance: "",
-      weightTarget: null,
-      weightRequirementMode: null,
-      batteryImportance: null,
-    },
-    screen: {
-      size: "",
-      requirementMode: null,
-    },
+    devicePreferences: { portabilityPerformance: "", screenSize: "" },
     minimumStorage: "",
-    externalDisplays: {
-      count: "",
-      requirementMode: null,
-    },
-    connections: {
-      needs: [],
-      importance: null,
-    },
-    ownership: {
-      period: "",
-      requirementMode: null,
-    },
+    essentialRequirements: [],
+    essentialDetails: { maximumWeight: null, externalDisplayCount: null },
   };
-}
-
-function mergeKnownAnswers(input) {
-  const answers = createInitialAnswers();
-  if (!input || typeof input !== "object" || Array.isArray(input)) return answers;
-
-  QUESTION_DEFINITIONS.forEach(({ answerPath }) => {
-    const value = getAnswerValue(input, answerPath);
-    if (value !== undefined) setAnswerValue(answers, answerPath, value);
-  });
-  return answers;
 }
 
 function conditionMatches(condition, answers) {
   if (!condition) return true;
   if (condition.all) return condition.all.every((item) => conditionMatches(item, answers));
   if (condition.any) return condition.any.some((item) => conditionMatches(item, answers));
-
   const value = getAnswerValue(answers, condition.path);
   switch (condition.operator) {
     case "in":
@@ -206,162 +175,209 @@ function conditionMatches(condition, answers) {
       return !condition.values.includes(value);
     case "includes":
       return Array.isArray(value) && value.includes(condition.value);
-    case "includes-any":
-      return Array.isArray(value) && condition.values.some((item) => value.includes(item));
-    case "minimum-length":
-      return Array.isArray(value) && value.length >= condition.value;
     default:
-      throw new Error(`Unsupported questionnaire visibility operator: ${condition.operator}`);
+      return false;
   }
 }
 
-export function getVisibleQuestionIds(answers) {
-  return QUESTION_DEFINITIONS
-    .filter(({ visibility }) => conditionMatches(visibility, answers))
-    .map(({ id }) => id);
-}
-
-export function getAvailableAbsoluteBudgetIds(targetId) {
-  const target = BUDGET_VALUES_MINOR[targetId];
-  if (!target) return [];
-  return [
-    ...Object.entries(BUDGET_VALUES_MINOR)
-      .filter(([, amount]) => amount > target)
-      .sort(([, a], [, b]) => a - b)
-      .map(([id]) => id),
-    "no-absolute-limit",
-  ];
-}
-
-function answersEqual(a, b) {
-  return JSON.stringify(a) === JSON.stringify(b);
-}
-
-export function reconcileQuestionnaireAnswers(input) {
-  let answers = mergeKnownAnswers(input);
-  const defaults = createInitialAnswers();
-
-  for (let pass = 0; pass < QUESTION_DEFINITIONS.length; pass += 1) {
-    const previous = clone(answers);
-    const visible = new Set(getVisibleQuestionIds(answers));
-
-    QUESTION_DEFINITIONS.forEach(({ id, answerPath }) => {
-      if (!visible.has(id)) {
-        setAnswerValue(answers, answerPath, getAnswerValue(defaults, answerPath));
-      }
-    });
-
-    const allowedAbsoluteBudgets = getAvailableAbsoluteBudgetIds(answers.budget.target);
-    if (
-      answers.budget.absoluteMaximum !== null &&
-      !allowedAbsoluteBudgets.includes(answers.budget.absoluteMaximum)
-    ) {
-      answers.budget.absoluteMaximum = null;
-    }
-
-    if (answersEqual(previous, answers)) break;
-  }
-
+function mergeKnownAnswers(input) {
+  const answers = createInitialAnswers();
+  if (!input || typeof input !== "object" || Array.isArray(input)) return answers;
+  getAllQuestionControls().forEach(({ answerPath }) => {
+    const value = getAnswerValue(input, answerPath);
+    if (value !== undefined) setAnswerValue(answers, answerPath, value);
+  });
   return answers;
 }
 
-function isAnswered(value) {
-  if (Array.isArray(value)) return value.length > 0;
-  return value !== null && value !== "" && value !== undefined;
+export function getAvailableAbsoluteBudgetIds(targetId) {
+  const targets = Object.keys(BUDGET_VALUES_MINOR);
+  const index = targets.indexOf(targetId);
+  return index < 0 ? ["no-absolute-limit"] : [...targets.slice(index + 1), "no-absolute-limit"];
 }
 
-export function previewQuestionnaireAnswerChange(input, questionId, value) {
-  const definition = getQuestionDefinition(questionId);
-  if (!definition) throw new Error(`Unknown questionnaire question: ${questionId}`);
+export function getAvailableControlOptions(control, answers) {
+  if (!control) return [];
+  if (control.id === "absoluteBudget") {
+    const allowed = new Set(getAvailableAbsoluteBudgetIds(answers.budget.target));
+    return control.options.filter(({ id }) => allowed.has(id));
+  }
+  if (control.id === "activities") {
+    return control.options.filter(
+      ({ relevantUses }) =>
+        !relevantUses || relevantUses.some((useId) => answers.primaryUses.includes(useId)),
+    );
+  }
+  return control.options.filter(({ visibility }) => conditionMatches(visibility, answers));
+}
 
+export function getVisibleQuestionIds(answersInput) {
+  const answers = mergeKnownAnswers(answersInput);
+  return QUESTION_ORDER.filter((questionId) =>
+    conditionMatches(getQuestionDefinition(questionId).visibility, answers),
+  );
+}
+
+export function getVisibleControls(question, answersInput) {
+  const answers = mergeKnownAnswers(answersInput);
+  return question.controls.filter((questionControl) =>
+    conditionMatches(questionControl.visibility, answers),
+  );
+}
+
+function retainUnknownAndRelevantIds(value, availableOptions, allOptions) {
+  if (!Array.isArray(value)) return value;
+  const known = new Set(allOptions.map(({ id }) => id));
+  const available = new Set(availableOptions.map(({ id }) => id));
+  return value.filter((id) => !known.has(id) || available.has(id));
+}
+
+export function reconcileQuestionnaireAnswers(input) {
+  const answers = mergeKnownAnswers(input);
+
+  if (answers.budget.target === "no-fixed-target" || answers.budget.target === "") {
+    answers.budget.mode = null;
+    answers.budget.absoluteMaximum = null;
+  } else if (!(["flexible", "stretch"].includes(answers.budget.mode))) {
+    answers.budget.absoluteMaximum = null;
+  } else if (answers.budget.absoluteMaximum) {
+    const absoluteControl = getQuestionControl("absoluteBudget");
+    const knownIds = new Set(absoluteControl.options.map(({ id }) => id));
+    const availableIds = new Set(getAvailableAbsoluteBudgetIds(answers.budget.target));
+    if (
+      knownIds.has(answers.budget.absoluteMaximum) &&
+      !availableIds.has(answers.budget.absoluteMaximum)
+    ) {
+      answers.budget.absoluteMaximum = null;
+    }
+  }
+
+  const activitiesControl = getQuestionControl("activities");
+  answers.activities = retainUnknownAndRelevantIds(
+    answers.activities,
+    getAvailableControlOptions(activitiesControl, answers),
+    activitiesControl.options,
+  );
+
+  const essentialControl = getQuestionControl("essentialRequirements");
+  answers.essentialRequirements = retainUnknownAndRelevantIds(
+    answers.essentialRequirements,
+    getAvailableControlOptions(essentialControl, answers),
+    essentialControl.options,
+  );
+
+  if (!answers.essentialRequirements.includes("maximum-weight")) {
+    answers.essentialDetails.maximumWeight = null;
+  }
+  if (!answers.essentialRequirements.includes("external-displays")) {
+    answers.essentialDetails.externalDisplayCount = null;
+  }
+  return answers;
+}
+
+function optionLabels(control, values) {
+  const labels = new Map(control.options.map(({ id, label }) => [id, label]));
+  return values.map((value) => labels.get(value) ?? value);
+}
+
+export function previewQuestionnaireAnswerChange(input, controlId, value) {
+  const control = getQuestionControl(controlId);
+  if (!control) throw new Error(`Unknown questionnaire control: ${controlId}`);
   const currentAnswers = reconcileQuestionnaireAnswers(input);
   const changedAnswers = clone(currentAnswers);
-  setAnswerValue(changedAnswers, definition.answerPath, value);
+  setAnswerValue(changedAnswers, control.answerPath, value);
   const nextAnswers = reconcileQuestionnaireAnswers(changedAnswers);
-  const clearedQuestionIds = QUESTION_ORDER.filter((candidateId) => {
-    if (candidateId === questionId) return false;
-    const candidate = getQuestionDefinition(candidateId);
+  const clearedAnswers = [];
+
+  getAllQuestionControls().forEach((candidate) => {
+    if (candidate.id === controlId) return;
     const before = getAnswerValue(currentAnswers, candidate.answerPath);
     const after = getAnswerValue(nextAnswers, candidate.answerPath);
-    return isAnswered(before) && !isAnswered(after);
+    if (Array.isArray(before)) {
+      const afterIds = new Set(Array.isArray(after) ? after : []);
+      const removed = before.filter((id) => !afterIds.has(id));
+      if (removed.length > 0) {
+        clearedAnswers.push({
+          controlId: candidate.id,
+          prompt: candidate.prompt,
+          labels: optionLabels(candidate, removed),
+        });
+      }
+    } else if (isAnswered(before) && before !== after) {
+      clearedAnswers.push({
+        controlId: candidate.id,
+        prompt: candidate.prompt,
+        labels: optionLabels(candidate, [before]),
+      });
+    }
   });
 
   return deepFreeze({
-    questionId,
-    value: clone(value),
-    clearedQuestionIds,
     nextAnswers,
+    clearedQuestionIds: [...new Set(clearedAnswers.map(({ controlId: id }) => id))],
+    clearedAnswers,
   });
 }
 
-function validateOptionValue(definition, value, errors) {
-  const allowed = new Set(definition.options.map(({ id }) => id));
-  if (definition.type === "checkbox") {
-    if (!Array.isArray(value)) {
-      errors.push(`${definition.id} must be an array.`);
-      return;
-    }
-    if (new Set(value).size !== value.length) {
-      errors.push(`${definition.id} cannot contain duplicate answer IDs.`);
-    }
-    value.forEach((item) => {
-      if (!allowed.has(item)) errors.push(`Invalid answer ID for ${definition.id}: ${String(item)}.`);
-    });
-    if (definition.minimumSelections && value.length < definition.minimumSelections) {
-      errors.push(`${definition.id} requires at least ${definition.minimumSelections} answer.`);
-    }
-    if (definition.maximumSelections && value.length > definition.maximumSelections) {
-      errors.push(`${definition.id} allows no more than ${definition.maximumSelections} answers.`);
-    }
+function validateControlValue(control, value, answers, errors) {
+  const availableOptions = getAvailableControlOptions(control, answers);
+  const allowed = new Set(availableOptions.map(({ id }) => id));
+  const values = Array.isArray(value) ? value : [value];
+  if (control.required && !isAnswered(value)) {
+    errors.push(`Required answer missing for ${control.id}.`);
     return;
   }
-
-  if (!allowed.has(value)) errors.push(`Invalid answer ID for ${definition.id}: ${String(value)}.`);
+  if (!isAnswered(value)) return;
+  if (control.type === "checkbox" && !Array.isArray(value)) {
+    errors.push(`${control.id} must be an array.`);
+    return;
+  }
+  values.forEach((id) => {
+    if (!allowed.has(id)) errors.push(`Invalid or hidden answer for ${control.id}: ${id}.`);
+  });
+  if (control.minimumSelections && values.length < control.minimumSelections) {
+    errors.push(`${control.id} needs at least ${control.minimumSelections} answer.`);
+  }
+  if (control.maximumSelections && values.length > control.maximumSelections) {
+    errors.push(`${control.id} allows no more than ${control.maximumSelections} answers.`);
+  }
+  const exclusiveIds = new Set(availableOptions.filter(({ exclusive }) => exclusive).map(({ id }) => id));
+  if (values.length > 1 && values.some((id) => exclusiveIds.has(id))) {
+    errors.push(`${control.id} contains an exclusive answer with another selection.`);
+  }
 }
 
 export function validateQuestionnaireAnswers(input) {
-  const errors = [];
   if (!input || typeof input !== "object" || Array.isArray(input)) {
     return deepFreeze({ valid: false, errors: ["Questionnaire answers must be an object."] });
   }
+  const rawAnswers = mergeKnownAnswers(input);
+  const reconciled = reconcileQuestionnaireAnswers(rawAnswers);
+  const errors = [];
 
-  const answers = mergeKnownAnswers(input);
-  const reconciled = reconcileQuestionnaireAnswers(answers);
-  const visible = new Set(getVisibleQuestionIds(reconciled));
-
-  QUESTION_DEFINITIONS.forEach((definition) => {
-    const rawValue = getAnswerValue(answers, definition.answerPath);
-    const value = getAnswerValue(reconciled, definition.answerPath);
-
-    if (!visible.has(definition.id)) {
-      if (isAnswered(rawValue)) errors.push(`Hidden answer retained for ${definition.id}.`);
-      return;
-    }
-
-    if (!isAnswered(value)) {
-      if (definition.required) errors.push(`Missing answer: ${definition.id}.`);
-      return;
-    }
-    validateOptionValue(definition, value, errors);
+  QUESTION_DEFINITIONS.forEach((question) => {
+    const questionVisible = conditionMatches(question.visibility, rawAnswers);
+    question.controls.forEach((questionControl) => {
+      const value = getAnswerValue(rawAnswers, questionControl.answerPath);
+      const visible = questionVisible && conditionMatches(questionControl.visibility, rawAnswers);
+      if (!visible) {
+        if (isAnswered(value)) errors.push(`Hidden answer retained for ${questionControl.id}.`);
+        return;
+      }
+      validateControlValue(questionControl, value, rawAnswers, errors);
+    });
   });
 
-  const specificConnections = reconciled.connections.needs.filter(
-    (id) => id !== "no-specific-need" && id !== "unsure",
-  );
-  if (
-    specificConnections.length > 0 &&
-    reconciled.connections.needs.some((id) => id === "no-specific-need" || id === "unsure")
-  ) {
-    errors.push("Specific connection needs cannot be combined with no-specific-need or unsure.");
+  if (JSON.stringify(rawAnswers.activities) !== JSON.stringify(reconciled.activities)) {
+    errors.push("Hidden activity answer retained.");
   }
   if (
-    reconciled.connections.needs.includes("no-specific-need") &&
-    reconciled.connections.needs.includes("unsure")
+    JSON.stringify(rawAnswers.essentialRequirements) !==
+    JSON.stringify(reconciled.essentialRequirements)
   ) {
-    errors.push("no-specific-need and unsure cannot be selected together.");
+    errors.push("Hidden essential requirement retained.");
   }
-
-  return deepFreeze({ valid: errors.length === 0, errors });
+  return deepFreeze({ valid: errors.length === 0, errors: [...new Set(errors)] });
 }
 
 export function deriveWorkloadProfile(input) {
@@ -369,7 +385,6 @@ export function deriveWorkloadProfile(input) {
   let capabilityBand = null;
   let memoryGb = null;
   const evidence = [];
-
   const applySignal = (source, signal) => {
     if (!signal) return;
     const [nextCapability, nextMemory] = signal;
@@ -382,25 +397,17 @@ export function deriveWorkloadProfile(input) {
     const baseline = BASE_WORKLOAD[useId];
     if (baseline) applySignal(`primaryUses.${useId}`, [baseline.capabilityBand, baseline.memoryGb]);
   });
-
-  Object.entries(WORKLOAD_SIGNALS).forEach(([key, signals]) => {
-    const answer = answers.workloadDetails[key];
-    applySignal(`workloadDetails.${key}`, signals[answer]);
-  });
+  answers.activities.forEach((activityId) =>
+    applySignal(`activities.${activityId}`, ACTIVITY_SIGNALS[activityId]),
+  );
   applySignal("multitasking", MULTITASKING_SIGNALS[answers.multitasking]);
-
-  if (answers.workloadDetails.sustainedDuration === "15-to-60-minutes") {
-    capabilityBand = Math.max(capabilityBand ?? 0, 3);
-    evidence.push({ source: "workloadDetails.sustainedDuration", capabilityBand: 3, memoryGb: null });
-  } else if (answers.workloadDetails.sustainedDuration === "hours-most-days") {
-    capabilityBand = Math.max(capabilityBand ?? 0, 4);
-    evidence.push({ source: "workloadDetails.sustainedDuration", capabilityBand: 4, memoryGb: null });
-  }
 
   return deepFreeze({
     capabilityBand,
     memoryGb,
-    requirementMode: answers.workloadRequirementMode || null,
+    requirementMode: answers.essentialRequirements.includes("workload")
+      ? "mandatory"
+      : "preference",
     evidence,
   });
 }
@@ -414,9 +421,9 @@ export function deriveQuestionnaireProfile(input) {
     answers.budget.mode === "strict"
       ? budgetTargetMinor
       : BUDGET_VALUES_MINOR[answers.budget.absoluteMaximum] ?? null;
-  const connectionNeeds = answers.connections.needs.filter(
-    (id) => id !== "no-specific-need" && id !== "unsure",
-  );
+  const workloadEssential = answers.essentialRequirements.includes("workload");
+  const weightEssential = answers.essentialRequirements.includes("maximum-weight");
+  const displayEssential = answers.essentialRequirements.includes("external-displays");
 
   return deepFreeze({
     answers,
@@ -426,53 +433,139 @@ export function deriveQuestionnaireProfile(input) {
     hardRequirements: {
       budgetMaximumMinor: absoluteBudgetMinor,
       storageMinimumGb: STORAGE_VALUES_GB[answers.minimumStorage] ?? null,
-      workloadCapabilityBand:
-        answers.workloadRequirementMode === "mandatory" ? workload.capabilityBand : null,
-      memoryMinimumGb: answers.workloadRequirementMode === "mandatory" ? workload.memoryGb : null,
-      weightMaximumKg:
-        answers.mobility.weightRequirementMode === "must-not-exceed"
-          ? WEIGHT_VALUES_KG[answers.mobility.weightTarget] ?? null
-          : null,
-      exactScreenSizeInches:
-        answers.screen.requirementMode === "exact-size-required"
-          ? SCREEN_VALUES_INCHES[answers.screen.size] ?? null
-          : null,
-      externalDisplayMinimum:
-        answers.externalDisplays.requirementMode === "must-support"
-          ? DISPLAY_VALUES[answers.externalDisplays.count]
-          : null,
-      ownershipPeriod:
-        answers.ownership.requirementMode === "essential-headroom"
-          ? answers.ownership.period
-          : null,
+      workloadCapabilityBand: workloadEssential ? workload.capabilityBand : null,
+      memoryMinimumGb: workloadEssential ? workload.memoryGb : null,
+      weightMaximumKg: weightEssential
+        ? WEIGHT_VALUES_KG[answers.essentialDetails.maximumWeight] ?? null
+        : null,
+      exactScreenSizeInches: answers.essentialRequirements.includes("exact-screen")
+        ? SCREEN_VALUES_INCHES[answers.devicePreferences.screenSize] ?? null
+        : null,
+      externalDisplayMinimum: displayEssential
+        ? DISPLAY_VALUES[answers.essentialDetails.externalDisplayCount] ?? null
+        : null,
     },
     preferences: {
       budgetTargetMinor,
       primaryUses: [...answers.primaryUses],
       workloadCapabilityBand: workload.capabilityBand,
       memoryGb: workload.memoryGb,
-      portabilityPerformance: answers.mobility.portabilityPerformance,
-      weightTargetKg: WEIGHT_VALUES_KG[answers.mobility.weightTarget] ?? null,
-      screenSizeInches: SCREEN_VALUES_INCHES[answers.screen.size] ?? null,
-      externalDisplayCount: DISPLAY_VALUES[answers.externalDisplays.count],
-      ownershipPeriod: answers.ownership.period === "unsure" ? null : answers.ownership.period,
+      portabilityPerformance: answers.devicePreferences.portabilityPerformance,
+      weightTargetKg: weightEssential
+        ? WEIGHT_VALUES_KG[answers.essentialDetails.maximumWeight] ?? null
+        : null,
+      screenSizeInches: SCREEN_VALUES_INCHES[answers.devicePreferences.screenSize] ?? null,
+      externalDisplayCount: displayEssential
+        ? DISPLAY_VALUES[answers.essentialDetails.externalDisplayCount] ?? null
+        : null,
     },
-    unusedForRanking: {
-      batteryImportance: answers.mobility.batteryImportance,
-      connectionNeeds,
-      connectionImportance: answers.connections.importance,
-    },
+  });
+}
+
+function migrationIssue(field, code, message) {
+  return { field, code, message };
+}
+
+export function migrateV2Answers(v2Answers) {
+  const answers = createInitialAnswers();
+  const issues = [];
+  if (!v2Answers || typeof v2Answers !== "object" || Array.isArray(v2Answers)) {
+    return deepFreeze({
+      answers,
+      issues: [migrationIssue("answers", "invalid-v2-input", "V2 answers must be an object.")],
+      requiresReview: true,
+    });
+  }
+
+  answers.budget.target = v2Answers.budget?.target ?? "";
+  answers.budget.mode = v2Answers.budget?.mode ?? null;
+  answers.budget.absoluteMaximum = v2Answers.budget?.absoluteMaximum ?? null;
+  answers.primaryUses = Array.isArray(v2Answers.primaryUses) ? [...v2Answers.primaryUses] : [];
+  answers.multitasking = v2Answers.multitasking ?? "";
+  answers.devicePreferences.portabilityPerformance =
+    v2Answers.mobility?.portabilityPerformance ?? "";
+  answers.devicePreferences.screenSize = v2Answers.screen?.size ?? "";
+  answers.minimumStorage = v2Answers.minimumStorage ?? "";
+
+  Object.entries(v2Answers.workloadDetails ?? {}).forEach(([key, value]) => {
+    if (!value || value === "unsure") return;
+    if (key === "sustainedDuration" || value === "no-local-vms") {
+      issues.push(
+        migrationIssue(
+          `workloadDetails.${key}`,
+          "workload-detail-review",
+          "This former workload answer has no exact activity equivalent and must be reviewed.",
+        ),
+      );
+      return;
+    }
+    const mapped = V2_ACTIVITY_MAP[value];
+    if (mapped && !answers.activities.includes(mapped)) answers.activities.push(mapped);
+  });
+  if (answers.activities.length === 0 && answers.primaryUses.length > 0) answers.activities = ["unsure"];
+
+  if (v2Answers.workloadRequirementMode === "mandatory") {
+    answers.essentialRequirements.push("workload");
+  }
+  if (v2Answers.screen?.requirementMode === "exact-size-required") {
+    answers.essentialRequirements.push("exact-screen");
+  }
+  if (v2Answers.mobility?.weightRequirementMode === "must-not-exceed") {
+    answers.essentialRequirements.push("maximum-weight");
+    answers.essentialDetails.maximumWeight = v2Answers.mobility.weightTarget ?? null;
+  } else if (
+    v2Answers.mobility?.weightTarget &&
+    !["no-weight-preference", "unsure"].includes(v2Answers.mobility.weightTarget)
+  ) {
+    issues.push(
+      migrationIssue(
+        "mobility.weightTarget",
+        "soft-weight-removed",
+        "The former soft numeric weight preference is replaced by the portability balance.",
+      ),
+    );
+  }
+  if (v2Answers.externalDisplays?.requirementMode === "must-support") {
+    answers.essentialRequirements.push("external-displays");
+    answers.essentialDetails.externalDisplayCount = v2Answers.externalDisplays.count ?? null;
+  } else if (
+    v2Answers.externalDisplays?.count &&
+    !["none", "unsure"].includes(v2Answers.externalDisplays.count)
+  ) {
+    issues.push(
+      migrationIssue(
+        "externalDisplays.count",
+        "soft-display-preference-removed",
+        "External-display counts are now collected only when explicitly essential.",
+      ),
+    );
+  }
+  if (answers.essentialRequirements.length === 0) answers.essentialRequirements = ["none"];
+
+  if (v2Answers.mobility?.batteryImportance && v2Answers.mobility.batteryImportance !== "unsure") {
+    issues.push(migrationIssue("mobility.batteryImportance", "battery-removed", "Battery is no longer asked because it cannot be evaluated from verified data."));
+  }
+  if (Array.isArray(v2Answers.connections?.needs) && v2Answers.connections.needs.length > 0) {
+    issues.push(migrationIssue("connections", "connections-removed", "Connection questions are no longer asked because the verified catalogue cannot rank them."));
+  }
+  if (v2Answers.ownership?.period && v2Answers.ownership.period !== "unsure") {
+    issues.push(migrationIssue("ownership", "ownership-removed", "Ownership headroom was removed from the main questionnaire and active scoring."));
+  }
+
+  return deepFreeze({
+    answers: reconcileQuestionnaireAnswers(answers),
+    issues,
+    requiresReview: issues.length > 0,
   });
 }
 
 export function migrateV1Answers(v1Answers) {
   const answers = createInitialAnswers();
   const issues = [];
-
   if (!v1Answers || typeof v1Answers !== "object" || Array.isArray(v1Answers)) {
     return deepFreeze({
       answers,
-      issues: [{ field: "answers", code: "invalid-v1-input", message: "V1 answers must be an object." }],
+      issues: [migrationIssue("answers", "invalid-v1-input", "V1 answers must be an object.")],
       requiresReview: true,
     });
   }
@@ -483,61 +576,42 @@ export function migrateV1Answers(v1Answers) {
   } else if (["over-2500", "flexible"].includes(v1Answers.maximumBudget)) {
     answers.budget.target = "no-fixed-target";
   }
-
   if (Array.isArray(v1Answers.primaryUses)) {
     v1Answers.primaryUses.forEach((useId) => {
       if (useId === "video-3d") {
-        issues.push({
-          field: "primaryUses",
-          code: "ambiguous-video-3d",
-          message: "The former video/3D answer must be reviewed because v1.1 separates those uses.",
-        });
+        issues.push(migrationIssue("primaryUses", "ambiguous-video-3d", "The former video/3D answer must be reviewed because the uses are now separate."));
         return;
       }
       const mapped = V1_PRIMARY_USE_MAP[useId];
       if (mapped && !answers.primaryUses.includes(mapped)) answers.primaryUses.push(mapped);
     });
   }
-
+  answers.activities = answers.primaryUses.length > 0 ? ["unsure"] : [];
   if (v1Answers.screenSize === "no-preference") {
-    answers.screen.size = "no-preference";
+    answers.devicePreferences.screenSize = "no-preference";
   } else if (["compact", "large"].includes(v1Answers.screenSize)) {
-    issues.push({
-      field: "screenSize",
-      code: "ambiguous-screen-group",
-      message: "The former screen-size group must be reviewed because v1.1 asks for an exact size.",
-    });
+    issues.push(migrationIssue("screenSize", "ambiguous-screen-group", "The former screen-size group must be reviewed because the questionnaire asks for an exact preferred size."));
   }
-
-  if (getQuestionDefinition("portabilityPerformance").options.some(({ id }) => id === v1Answers.portabilityPerformance)) {
-    answers.mobility.portabilityPerformance = v1Answers.portabilityPerformance;
+  const portabilityIds = new Set(
+    getQuestionControl("portabilityPerformance").options.map(({ id }) => id),
+  );
+  if (portabilityIds.has(v1Answers.portabilityPerformance)) {
+    answers.devicePreferences.portabilityPerformance = v1Answers.portabilityPerformance;
   }
-
   if (v1Answers.workloadIntensity) {
-    issues.push({
-      field: "workloadIntensity",
-      code: "adaptive-workload-review",
-      message: "The former global workload answer must be reviewed against the adaptive workload questions.",
-    });
+    issues.push(migrationIssue("workloadIntensity", "activity-review", "The former global workload answer must be reviewed against the new activity selections."));
   }
-  if (answers.primaryUses.length > 0) answers.workloadRequirementMode = "preference";
-
   if (Object.hasOwn(STORAGE_VALUES_GB, v1Answers.minimumStorage)) {
     answers.minimumStorage = v1Answers.minimumStorage;
   }
-
-  const displayMap = { none: "none", one: "one", two: "two", "three-plus": "three", unsure: "unsure" };
+  const displayMap = { one: "one", two: "two", "three-plus": "three" };
   if (displayMap[v1Answers.externalDisplays]) {
-    answers.externalDisplays.count = displayMap[v1Answers.externalDisplays];
-    if (["one", "two", "three-plus"].includes(v1Answers.externalDisplays)) {
-      answers.externalDisplays.requirementMode = "must-support";
-    }
+    answers.essentialRequirements.push("external-displays");
+    answers.essentialDetails.externalDisplayCount = displayMap[v1Answers.externalDisplays];
   }
-
-  const ownershipOptions = getQuestionDefinition("ownershipPeriod").options.map(({ id }) => id);
-  if (ownershipOptions.includes(v1Answers.ownershipPeriod)) {
-    answers.ownership.period = v1Answers.ownershipPeriod;
-    if (v1Answers.ownershipPeriod !== "unsure") answers.ownership.requirementMode = "preference";
+  if (answers.essentialRequirements.length === 0) answers.essentialRequirements = ["none"];
+  if (v1Answers.ownershipPeriod && v1Answers.ownershipPeriod !== "unsure") {
+    issues.push(migrationIssue("ownershipPeriod", "ownership-removed", "Ownership headroom is no longer part of the main questionnaire."));
   }
 
   return deepFreeze({

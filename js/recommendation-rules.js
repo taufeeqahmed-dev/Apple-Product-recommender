@@ -6,7 +6,6 @@ export const SCORING_WEIGHTS = Object.freeze({
   multitaskingMemory: 15,
   portabilityWeight: 15,
   screenSize: 10,
-  ownershipPeriod: 10,
   externalDisplays: 5,
 });
 
@@ -55,27 +54,12 @@ export const PORTABILITY_PERFORMANCE_BLEND = Object.freeze({
   "performance-first": Object.freeze({ portability: 0, performance: 1 }),
 });
 
-export const OWNERSHIP_SCORES = Object.freeze({
-  "up-to-2": Object.freeze([100, 100, 100, 100]),
-  "3-to-4": Object.freeze([60, 100, 100, 100]),
-  "5-to-6": Object.freeze([20, 65, 100, 100]),
-  "7-plus": Object.freeze([0, 30, 70, 100]),
-});
-
-export const OWNERSHIP_MINIMUM_BANDS = Object.freeze({
-  "up-to-2": 1,
-  "3-to-4": 2,
-  "5-to-6": 3,
-  "7-plus": 4,
-});
-
 export const COMPONENT_LABELS = Object.freeze({
   workload: "expected workload",
   primaryUses: "main uses",
   multitaskingMemory: "multitasking and memory needs",
   portabilityWeight: "portability and weight preferences",
   screenSize: "preferred screen size",
-  ownershipPeriod: "planned ownership period",
   externalDisplays: "external-display preference",
 });
 
@@ -92,21 +76,6 @@ export function getMemoryBand(memoryGb) {
   if (memoryGb < 24) return 2;
   if (memoryGb < 36) return 3;
   return 4;
-}
-
-export function getStorageBand(storageGb) {
-  if (storageGb < 512) return 1;
-  if (storageGb < 1000) return 2;
-  if (storageGb < 2000) return 3;
-  return 4;
-}
-
-export function getHeadroomBand(product) {
-  return Math.min(
-    CAPABILITY_BANDS[product.facts.chip.id],
-    getMemoryBand(product.facts.unifiedMemoryGb),
-    getStorageBand(product.facts.storageGb),
-  );
 }
 
 export function getWeightPreferenceFit(actualKg, targetKg) {

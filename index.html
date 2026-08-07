@@ -138,8 +138,9 @@
           <p class="stage-label">Adaptive questionnaire</p>
           <h2 id="questionnaire-title">Tell us what matters to you.</h2>
           <p>
-            Northstar asks follow-up questions based on your answers. Optional questions can be
-            skipped, and your answers stay available as you move Back and Continue.
+            Seven focused steps cover your budget, activities and preferences. Only essential
+            weight-limit or external-monitor details add a follow-up, and your answers stay available as
+            you move Back and Continue.
           </p>
         </div>
 
@@ -149,15 +150,18 @@
         </p>
 
         <div class="questionnaire-progress-wrap">
-          <p id="questionnaire-progress-text" aria-live="polite">
-            Question 1 of 11 based on your answers
+          <p id="questionnaire-progress-text">
+            Getting to know your needs
           </p>
+          <p class="visually-hidden" id="questionnaire-progress-detail">Step 1 of 7</p>
           <progress
             id="questionnaire-progress"
             value="1"
-            max="11"
+            max="7"
             aria-labelledby="questionnaire-progress-text"
-          >1 of 11</progress>
+            aria-describedby="questionnaire-progress-detail"
+            aria-valuetext="Step 1 of 7"
+          >1 of 7</progress>
         </div>
         <p
           class="questionnaire-change-summary"
@@ -174,14 +178,6 @@
           <div class="questionnaire-actions">
             <button class="button button-secondary" id="questionnaire-back" type="button" hidden>
               Back
-            </button>
-            <button
-              class="text-button"
-              id="questionnaire-clear-answer"
-              type="button"
-              hidden
-            >
-              Clear this optional answer
             </button>
             <div class="questionnaire-actions-end">
               <button

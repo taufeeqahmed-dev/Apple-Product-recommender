@@ -29,6 +29,37 @@ test("the migrated demanding development profile leads with the eligible 14-inch
   assert.equal(output.profile.hardRequirements.workloadCapabilityBand, 3);
 });
 
+test("a flexible-budget cybersecurity and virtual-machine path returns useful matches", () => {
+  const answers = cloneAnswers(demandingCodingAnswers);
+  answers.budget.mode = "flexible";
+  answers.budget.absoluteMaximum = "up-to-3000";
+  answers.primaryUses = ["software-development", "cybersecurity-vms"];
+  answers.activities = ["docker-containers", "local-databases", "two-virtual-machines"];
+  answers.devicePreferences.screenSize = "no-preference";
+  const output = recommend(answers);
+
+  assert.equal(output.status, "ok");
+  assert.ok(output.matches.length > 0);
+  assert.equal(output.profile.hardRequirements.memoryMinimumGb, 24);
+  assert.ok(output.matches.every(({ matchType }) => ["exact", "closest"].includes(matchType)));
+});
+
+test("a creative photo-and-video path returns recommendations without unsupported constraints", () => {
+  const answers = cloneAnswers(demandingCodingAnswers);
+  answers.budget.target = "up-to-4500";
+  answers.budget.mode = "strict";
+  answers.primaryUses = ["photo-editing", "video-editing"];
+  answers.activities = ["regular-raw-editing", "4k-single-stream"];
+  answers.devicePreferences.screenSize = "16-inch";
+  answers.essentialRequirements = ["workload"];
+  answers.essentialDetails.externalDisplayCount = null;
+  const output = recommend(answers);
+
+  assert.equal(output.status, "ok");
+  assert.ok(output.matches.length > 0);
+  assert.equal(output.diagnostics.appliedFilterCodes.includes("external-displays"), false);
+});
+
 test("primary reasons describe scored preferences as Northstar assessments", () => {
   const output = recommend(everydayPortableAnswers);
   const assessmentReasons = output.matches[0].reasons.filter(
@@ -56,12 +87,11 @@ test("harder mandatory storage and display requirements cannot expand eligibilit
   const answers = cloneAnswers(demandingCodingAnswers);
   answers.budget.target = "no-fixed-target";
   answers.budget.mode = null;
-  answers.externalDisplays.requirementMode = "must-support";
 
   const eligibleFor = (minimumStorage, displayCount) => {
     const scenario = cloneAnswers(answers);
     scenario.minimumStorage = minimumStorage;
-    scenario.externalDisplays.count = displayCount;
+    scenario.essentialDetails.externalDisplayCount = displayCount;
     return new Set(recommend(scenario).matches.map(({ productId }) => productId));
   };
 
@@ -76,12 +106,9 @@ test("preference-only constraints create closest matches rather than unnecessary
   const answers = cloneAnswers(everydayPortableAnswers);
   answers.budget.target = "no-fixed-target";
   answers.budget.mode = null;
-  answers.mobility.weightTarget = "up-to-1.25kg";
-  answers.mobility.weightRequirementMode = "preference";
-  answers.screen.size = "16-inch";
-  answers.screen.requirementMode = "preference-only";
-  answers.externalDisplays.count = "four-plus";
-  answers.externalDisplays.requirementMode = "preference";
+  answers.devicePreferences.portabilityPerformance = "portability-first";
+  answers.devicePreferences.screenSize = "16-inch";
+  answers.essentialRequirements = ["none"];
 
   const output = recommend(answers);
   assert.equal(output.status, "ok");
@@ -100,7 +127,8 @@ test("representative impossible requirements remain a genuine no-match", () => {
 test("confidence improves with complete detail and a well-separated exact leader", () => {
   const detailed = recommend(everydayPortableAnswers);
   const sparseAnswers = cloneAnswers(everydayPortableAnswers);
-  sparseAnswers.workloadDetails.studyProductivity = "unsure";
+  sparseAnswers.activities = ["unsure"];
+  sparseAnswers.multitasking = "varies-unsure";
   const sparse = recommend(sparseAnswers);
 
   assert.ok(detailed.confidence.detailCoverage > sparse.confidence.detailCoverage);
@@ -109,5 +137,6 @@ test("confidence improves with complete detail and a well-separated exact leader
 
 test("representative exact and no-match scenarios receive documented confidence labels", () => {
   assert.equal(recommend(everydayPortableAnswers).confidence.label, "high");
-  assert.equal(recommend(noMatchAnswers).confidence.label, "low");
+  assert.equal(recommend(noMatchAnswers).confidence.label, "not-applicable");
+  assert.equal(recommend(noMatchAnswers).confidence.points, null);
 });

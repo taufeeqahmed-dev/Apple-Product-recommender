@@ -4,7 +4,8 @@ Date: 7 August 2026
 
 Branch: `feature/adaptive-questionnaire-v1.1`
 
-Status: local Phase 5 review candidate; not committed, pushed, merged, tagged or deployed
+Status: focused questionnaire-simplification review candidate; not committed, pushed, merged,
+tagged or deployed; release preparation paused
 
 ## Acceptance targets
 
@@ -15,6 +16,8 @@ Status: local Phase 5 review candidate; not committed, pushed, merged, tagged or
 - Reach at least 90 Performance and 95 Accessibility, Best Practices and SEO in valid local
   Lighthouse runs.
 - Keep `js/products.js`, verified Apple facts and `sources/` unchanged.
+- Prove every schema-3 journey contains seven to nine steps and unsupported legacy answers cannot
+  affect ranking or confidence.
 
 Automation does not substitute for physical-device and assistive-technology testing. Those checks
 remain explicit rather than being marked complete from emulation.
@@ -37,26 +40,29 @@ job. The production Pages artifact still contains only static site files.
 
 | Check | Result |
 | --- | --- |
-| Full `node --test` suite | 59 passed, 0 failed, 0 skipped, 0 cancelled |
-| v1.0 compatibility/migration tests within the suite | 4 passed, 0 failed |
-| Recommendation-quality tests within the suite | 9 passed, 0 failed |
+| Full `node --test` suite | 67 passed, 0 failed, 0 skipped, 0 cancelled |
+| v1/v2 compatibility and migration tests within the suite | 5 passed, 0 failed |
+| Recommendation-quality tests within the suite | 11 passed, 0 failed |
 | JavaScript `node --check` scan | 30 files passed, 0 failed |
 | Playwright browser suite | 9 passed, 0 failed |
 | Protected product/schema paths | Unmodified |
 | Read-only `sources/` directory | Unmodified |
 
-The 59-test suite covers:
+The 67-test suite covers:
 
 - exact product IDs, dated prices, facts, official sources, schema validation and immutability;
 - independent application, questionnaire-schema and rules versions;
 - declarative visibility, reconciliation, hidden-answer rejection and adaptive state;
-- deliberate migration of all existing v1.0 fixtures, including ambiguous concepts;
+- deliberate migration of v1 fixtures and the former schema-2 state, including dropped concepts;
+- seven core steps, nine-step maximum and tailored one/two-use activity options;
+- granular activity and essential-detail dependency clearing;
 - strict/flexible/stretch budget boundaries and budget-limited outcomes;
-- explicit mandatory workload, memory, weight, screen, display and ownership behavior;
-- battery and connection non-ranking behavior;
+- essentials-only workload, memory, weight, screen and verified-display filtering;
+- removal and non-influence of legacy battery, connection and ownership answers;
 - deterministic ranking, ties, classifications, confidence and explanations;
 - representative exact, closest, stretch, budget-limited and genuine no-match cases; and
-- right-sized everyday, demanding development and monotonic hard-requirement scenarios.
+- right-sized university, programming, cybersecurity/virtual-machine, photo/video and demanding
+  development scenarios, plus monotonic hard-requirement behavior.
 
 ## Playwright browser coverage
 
@@ -70,32 +76,36 @@ per test and runs the same three tests in every viewport project.
 | Mobile | 390×844 | 3 | Passed |
 | **Total** | — | **9** | **9 passed, 0 failed** |
 
-### Adaptive branching test
+### Streamlined branching and no-match test
 
-- Initial `Question 1 of 11 based on your answers` state.
+- Initial “Getting to know your needs” state with an associated `Step 1 of 7` accessible detail.
 - Required-answer alert, `aria-invalid` behavior and focus on the first invalid radio.
-- Study follow-up changing the total to 13 with an accessible announcement.
-- Back navigation and preserved selected answers.
-- Adding programming, removing study and clearing only the obsolete study detail.
-- Updated total and focus on the newly applicable programming follow-up.
+- One tailored activity step with programming/cybersecurity shared options shown once.
+- Back navigation and preserved multi-select activity answers.
+- Removing study clears only its obsolete activity while preserving programming selections.
+- Calm stage labels with exact seven-to-nine-step values retained for assistive technology.
+- One contextual message after leaving Essentials without repeatedly announcing changing totals.
+- A genuine conflicting weight/display path explains its blockers and renders no confidence panel.
 - No console or uncaught page errors.
 
 ### Results editing test
 
 - Completion focus on the results heading.
-- Individual primary-use editing and heading focus.
-- Clearing/announcing a newly irrelevant study answer.
-- Refreshed recommendations and completed adaptive progress.
-- Hidden study detail absent from answer review; new programming follow-ups visible as optional.
-- Repeated 512GB → 1TB → 512GB storage edits without stale selection state.
-- Clearing a connection trigger and its importance answer.
-- Connection disclosure removed while the still-unassessed battery disclosure remains.
+- Grouped primary-use editing and heading focus.
+- Clearing/announcing a newly irrelevant activity selection.
+- Required activity completion after an edited use invalidates the previous activity.
+- Compact refreshed answer summaries without stale state.
+- Storage editing and essential maximum-weight addition/removal.
+- Dependent weight detail clearing when Essentials returns to “None”.
 - No console or uncaught page errors.
 
 ### Results and comparison test
 
-- High/Moderate/Low threshold documentation and Low confidence disclosure for the chosen profile.
+- High/Moderate/Low threshold documentation for eligible rankings.
 - Exact, closest and stretch-budget classification explanations.
+- A visually dominant first recommendation with responsive single-column reflow.
+- Confidence and classification diagnostics inside a closed-by-default native disclosure.
+- Per-product score and ranking detail inside native closed-by-default disclosures.
 - Three semantic recommendation articles and lower-rank explanations.
 - Keyboard-only Tab/Enter opening, Escape closing and close-button operation.
 - Focus on dialog title when opened and comparison trigger when closed.
@@ -131,6 +141,9 @@ Accepted report locations outside the repository:
 - `northstar-v1.1-lighthouse-desktop.json`
 
 Production scores are intentionally unclaimed until the reviewed branch is merged and Pages deploys.
+These local Lighthouse results predate the schema-3 simplification and are retained only as prior
+Phase 5 evidence. Lighthouse has not yet been rerun for this focused revision because release
+preparation is paused.
 
 ## Accessibility review
 
@@ -138,13 +151,18 @@ Automated and rendered checks confirm:
 
 - one main landmark, logical headings, fieldsets, legends and native controls;
 - associated help/error text and polite adaptive/result status regions;
-- accurate `Question X of Y based on your answers` progress;
+- plain-language control labels with selection rules and requirement clarifications associated through
+  `aria-describedby`;
+- calm visible progress stages with accurate seven-to-nine-step values exposed to assistive technology;
+- native grouped checkboxes for tailored activities and Essential requirements;
+- one contextual essential-detail announcement after leaving Essentials rather than repeated total-change announcements;
 - deliberate focus on questions, invalid controls, results and dialog title;
 - focus restoration after comparison closes;
 - no positive `tabindex` values;
 - keyboard-operable dialog and horizontally scrollable comparison region;
 - verified facts separated from Northstar assessments;
-- visible classification, confidence and unused-ranking disclosures;
+- evaluated-evidence confidence and classifications behind a secondary disclosure for eligible results;
+- no confidence panel for terminal outcomes, which explain blocking requirements instead;
 - responsive containment and no page-level horizontal overflow; and
 - reduced-motion and visible-focus CSS retained.
 
@@ -175,8 +193,9 @@ Record browser/device versions, date, result and any accepted limitation in
 - Product facts/prices remain a dated snapshot and were not re-verified in Phase 5.
 - Optional shareable URLs are outside Phase 5 and untested because they are not implemented.
 
-## Phase 5 conclusion
+## Focused revision conclusion
 
-All automated release-candidate gates available in this environment pass. No production code,
-verified product fact, scoring weight or recommendation rule changed during Phase 5. The branch must
-still be reviewed before commit, merge, tag or deployment.
+All updated unit, syntax and browser checks available in this environment pass. Verified product
+facts, product schema and suitability matrices remain unchanged. Questionnaire schema 3 and rules
+2.1 are deliberate behavior changes described in `docs/algorithm.md`. Release preparation remains
+paused, and the revision must be reviewed before any commit or push.

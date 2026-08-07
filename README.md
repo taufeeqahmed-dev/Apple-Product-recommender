@@ -12,27 +12,30 @@ explicit hard-requirement choices and transparent ranking explanations to produc
 
 The completed v1.0 site remains live at
 [`taufeeqahmed-dev.github.io/apple-product-recommender`](https://taufeeqahmed-dev.github.io/apple-product-recommender/).
-The v1.1 release candidate is on `feature/adaptive-questionnaire-v1.1` and is not deployed yet.
+The v1.1 usability revision is on `feature/adaptive-questionnaire-v1.1` and is not deployed yet.
+Release preparation is paused while the shortened questionnaire is reviewed.
 
 ## Why this project exists
 
 MacBook ranges are usually described through specifications. Northstar starts with the visitor's
-budget, work, multitasking, portability, screen, storage, display and ownership needs. It keeps
+budget, local activities, multitasking, portability, screen, storage and genuinely essential needs. It keeps
 verified facts separate from project-authored assessments and explains why a result ranked well,
 where it compromises and when no verified configuration meets every hard requirement.
 
 ## Version 1.1 features
 
-- Adaptive follow-up questions for study, programming, cybersecurity labs, photo/video editing,
-  music production, 3D/engineering work and sustained workloads.
+- Seven core questionnaire steps, with no more than two essential-detail follow-ups.
+- A tailored multi-select activity step for study, programming, cybersecurity labs, photo/video
+  editing, music production and 3D/engineering work.
 - Multitasking assessment based on concurrent applications and browser tabs.
 - Strict, flexible and stretch budget handling, with an optional absolute maximum.
-- Preferences become hard requirements only when the visitor explicitly marks them mandatory.
-- Precise portability, weight, screen-size, storage and verified external-display questions.
-- Battery and connection needs are disclosed but do not affect ranking while model-specific facts
-  are absent from the verified catalogue.
+- Ordinary preferences remain soft; only final Essential requirements selections activate workload,
+  exact screen, exact weight or verified display filters.
+- Combined portability/performance and screen controls, plus a clear minimum-storage step.
+- Battery, connection and ownership-period questions are removed because they do not materially
+  improve ranking with the current verified dataset.
 - Exact, closest and stretch-budget classifications plus High, Moderate or Low confidence.
-- Grouped answer review and individual-answer editing from the results page.
+- Compact grouped answer summaries and targeted editing from the results page.
 - Dependent answers are cleared and announced as soon as they are no longer relevant.
 - Rich reasons, compromises and lower-ranked-product explanations.
 - Keyboard-accessible, responsive comparison of the top three recommendations.
@@ -55,8 +58,7 @@ The configurable Northstar scoring weights are:
 | Multitasking and memory | 15 |
 | Portability and weight | 15 |
 | Screen-size preference | 10 |
-| Ownership-period headroom | 10 |
-| External-display preference | 5 |
+| External-display requirement | 5 |
 
 Optional or inapplicable components are omitted and the score is normalized over the applied
 weight. Ties resolve deterministically through ranking score, total fit, component order, number of
@@ -101,9 +103,13 @@ judgements. Phase 5 does not change the catalogue or any verified fact.
 
 ## Accessibility
 
-The interface uses semantic landmarks, headings, native controls and dialogs; associated help and
-errors; numeric adaptive progress; polite change/result announcements; deliberate focus placement;
-visible focus states; keyboard-operable comparison; responsive reflow; and reduced-motion support.
+The interface uses semantic landmarks, headings, native controls and dialogs; concise prompts with
+associated help and errors; calm stage-based progress with exact counts available to assistive technology; polite
+change/result announcements; deliberate focus placement; visible focus states; keyboard-operable
+comparison; responsive reflow; and reduced-motion support. Recommendations appear before secondary
+confidence and classification diagnostics. Per-product scores and ranking details are also available
+through native disclosures instead of competing with the recommendation. Terminal no-match outcomes
+do not display confidence.
 
 Playwright verifies key focus, keyboard and responsive behavior, but automation does not replace
 assistive-technology testing. Safari/iPhone, VoiceOver, Narrator, physical-device and deployed-site
@@ -121,7 +127,7 @@ pnpm check:syntax
 pnpm test:browser
 ```
 
-- `pnpm test` remains exactly `node --test` and currently runs 59 unit, data, migration, engine and
+- `pnpm test` remains exactly `node --test` and currently runs 67 unit, data, migration, engine and
   recommendation-quality tests.
 - `pnpm check:syntax` runs `node --check` over project JavaScript.
 - `pnpm test:browser` runs nine Playwright tests across 1440×900 desktop, 768×1024 tablet and
@@ -152,7 +158,8 @@ Release gates and post-deployment verification are in [the v1.1 release checklis
 - Product facts and prices are dated snapshots and require future re-verification.
 - Only 10 approved exact configurations are compared; upgrades are outside scope.
 - Questionnaire state is memory-only and resets on reload.
-- Battery and connection answers cannot affect ranking without verified model-specific data.
+- Battery and connection needs are outside the main questionnaire until verified model-specific data
+  can use them meaningfully.
 - Shareable result URLs are optional Phase 6 work and are not implemented.
 - There is no backend, persistence, analytics or user account.
 - Safari, VoiceOver, representative Windows screen-reader and physical-device checks require the
@@ -166,6 +173,7 @@ The implementation narrative and CV-ready wording are in
 
 ## Current status
 
-Phases 1–4 of v1.1 were reviewed, committed and pushed. Phase 5 is implemented on
-`feature/adaptive-questionnaire-v1.1` and is awaiting review; it has not been committed, merged,
-tagged or deployed. The optional shareable-results phase has not begun.
+Phases 1–4 of v1.1 were reviewed, committed and pushed. The Phase 5 candidate was followed by a
+focused, uncommitted usability revision that reduces the questionnaire to seven core and at most
+nine total steps. It is awaiting review and has not been committed, merged, tagged or deployed.
+Release preparation and the optional shareable-results phase remain paused.
