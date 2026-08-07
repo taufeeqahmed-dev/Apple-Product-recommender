@@ -29,6 +29,7 @@ function createInitialState() {
 }
 
 let state = createInitialState();
+let answersBeforeEditing = null;
 
 function snapshot() {
   return deepFreeze(structuredClone(state));
@@ -117,7 +118,11 @@ export function cancelPendingAnswerChange() {
 }
 
 export function beginEditing(questionId, { returnToResults = true } = {}) {
+  if (state.status !== "complete") {
+    throw new Error("Questionnaire answers can only be edited after completion.");
+  }
   setCurrentQuestion(questionId);
+  answersBeforeEditing = structuredClone(state.answers);
   state = {
     ...state,
     status: "editing",
@@ -131,15 +136,38 @@ export function beginEditing(questionId, { returnToResults = true } = {}) {
 }
 
 export function finishEditing() {
+  if (!state.editing.active) return snapshot();
+  const visibleQuestionIds = getVisibleQuestionIds(state.answers);
+  answersBeforeEditing = null;
   state = {
     ...state,
-    status: "in-progress",
+    status: "complete",
+    currentQuestionId:
+      visibleQuestionIds[visibleQuestionIds.length - 1] ?? state.currentQuestionId,
     editing: {
       active: false,
       originQuestionId: null,
       returnToResults: false,
     },
   };
+  return snapshot();
+}
+
+export function cancelEditing() {
+  if (!state.editing.active) return snapshot();
+  state = {
+    ...state,
+    status: "complete",
+    answers: structuredClone(answersBeforeEditing ?? state.answers),
+    editing: {
+      active: false,
+      originQuestionId: null,
+      returnToResults: false,
+    },
+    pendingChange: null,
+  };
+  answersBeforeEditing = null;
+  ensureCurrentQuestionIsVisible(state);
   return snapshot();
 }
 
@@ -154,5 +182,6 @@ export function completeQuestionnaire() {
 
 export function resetQuestionnaire() {
   state = createInitialState();
+  answersBeforeEditing = null;
   return snapshot();
 }

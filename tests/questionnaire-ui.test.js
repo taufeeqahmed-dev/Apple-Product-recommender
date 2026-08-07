@@ -7,6 +7,7 @@ import {
   getAdaptiveChangeMessage,
   getNextCheckboxValue,
   getQuestionProgress,
+  getUnansweredRequiredQuestionIds,
   validateQuestionValue,
 } from "../js/questionnaire.js";
 
@@ -105,4 +106,16 @@ test("adaptive change announcements name cleared answers and changed totals", ()
   );
 
   assert.equal(getAdaptiveChangeMessage([], 12, 12), "");
+});
+
+test("editing a trigger identifies newly visible required follow-up questions", () => {
+  const answers = createInitialAnswers();
+  answers.budget.target = "up-to-1500";
+
+  const unanswered = getUnansweredRequiredQuestionIds(answers);
+  assert.ok(unanswered.includes("budgetMode"));
+  assert.equal(unanswered.includes("absoluteBudget"), false);
+
+  answers.budget.mode = "flexible";
+  assert.ok(getUnansweredRequiredQuestionIds(answers).includes("absoluteBudget"));
 });

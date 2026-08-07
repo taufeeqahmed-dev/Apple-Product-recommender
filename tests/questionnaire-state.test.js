@@ -2,14 +2,39 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  beginEditing,
+  cancelEditing,
   cancelPendingAnswerChange,
+  completeQuestionnaire,
   confirmPendingAnswerChange,
+  finishEditing,
   getState,
   markQuestionAttempted,
   requestAnswerChange,
   resetQuestionnaire,
   setCurrentQuestion,
 } from "../js/questionnaire-state.js";
+import { getQuestionDefinition } from "../js/questionnaire-definition.js";
+import { getAnswerValue, getVisibleQuestionIds } from "../js/questionnaire-profile.js";
+import {
+  cloneAnswers,
+  everydayPortableAnswers,
+} from "./fixtures/questionnaire-scenarios.js";
+
+function completeWithAnswers(answers) {
+  resetQuestionnaire();
+  getVisibleQuestionIds(answers).forEach((questionId) => {
+    const definition = getQuestionDefinition(questionId);
+    const value = getAnswerValue(answers, definition.answerPath);
+    const answered = Array.isArray(value)
+      ? value.length > 0
+      : value !== null && value !== "" && value !== undefined;
+    if (!answered) return;
+    const next = requestAnswerChange(questionId, value);
+    if (next.pendingChange) confirmPendingAnswerChange();
+  });
+  completeQuestionnaire();
+}
 
 test("questionnaire state uses question IDs and returns deeply immutable snapshots", () => {
   resetQuestionnaire();
@@ -71,4 +96,35 @@ test("changing to an unrelated use identifies every dependent answer that will c
     "cybersecurityVmDetail",
     "sustainedDuration",
   ]);
+});
+
+test("cancelling an individual-answer edit restores the complete answer snapshot", () => {
+  completeWithAnswers(everydayPortableAnswers);
+  beginEditing("budgetTarget");
+  const pending = requestAnswerChange("budgetTarget", "no-fixed-target");
+  assert.deepEqual(pending.pendingChange.clearedQuestionIds, ["budgetMode"]);
+  confirmPendingAnswerChange();
+
+  const cancelled = cancelEditing();
+  assert.equal(cancelled.status, "complete");
+  assert.equal(cancelled.editing.active, false);
+  assert.deepEqual(cancelled.answers, everydayPortableAnswers);
+});
+
+test("finishing an individual-answer edit keeps the changed answers complete", () => {
+  const expected = cloneAnswers();
+  expected.screen.size = "15-inch";
+  completeWithAnswers(everydayPortableAnswers);
+  beginEditing("screenSize");
+  requestAnswerChange("screenSize", "15-inch");
+  completeQuestionnaire();
+  const finished = finishEditing();
+
+  assert.equal(finished.status, "complete");
+  assert.equal(finished.editing.active, false);
+  assert.equal(
+    finished.currentQuestionId,
+    getVisibleQuestionIds(expected)[getVisibleQuestionIds(expected).length - 1],
+  );
+  assert.deepEqual(finished.answers, expected);
 });

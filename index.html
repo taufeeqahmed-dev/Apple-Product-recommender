@@ -175,6 +175,14 @@
             <button class="button button-secondary" id="questionnaire-back" type="button" hidden>
               Back
             </button>
+            <button
+              class="text-button"
+              id="questionnaire-clear-answer"
+              type="button"
+              hidden
+            >
+              Clear this optional answer
+            </button>
             <div class="questionnaire-actions-end">
               <button
                 class="text-button"
@@ -256,6 +264,32 @@
           Apple claims. Prices are dated UK snapshots and may change.
         </p>
       </section>
+
+      <dialog
+        class="comparison-dialog"
+        id="comparison-dialog"
+        aria-labelledby="comparison-title"
+        aria-describedby="comparison-description"
+      >
+        <div class="comparison-dialog-header">
+          <div>
+            <p class="stage-label">Side-by-side view</p>
+            <h2 id="comparison-title" tabindex="-1">Compare recommendations</h2>
+          </div>
+          <button
+            class="button button-secondary"
+            id="comparison-close"
+            type="button"
+          >
+            Close comparison
+          </button>
+        </div>
+        <p id="comparison-description">
+          Verified Apple facts and Northstar assessments are separated below. On smaller screens,
+          the table can be scrolled horizontally without moving the page.
+        </p>
+        <div id="comparison-content"></div>
+      </dialog>
 
       <aside class="disclaimer layout" aria-labelledby="disclaimer-title">
         <div class="disclaimer-icon" aria-hidden="true">i</div>

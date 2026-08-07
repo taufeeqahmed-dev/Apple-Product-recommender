@@ -7,10 +7,21 @@ import { initialiseNavigation } from "./ui.js";
 document.documentElement.classList.add("js");
 
 initialiseNavigation();
-initialiseQuestionnaire({
-  onComplete(answers) {
-    const output = recommendMacBooks({ catalogue: productCatalogue, answers });
-    return renderRecommendationResults(output, productCatalogue);
+let questionnaireController = null;
+
+const renderResults = (answers, { isEdit = false } = {}) => {
+  const output = recommendMacBooks({ catalogue: productCatalogue, answers });
+  return renderRecommendationResults(output, productCatalogue, {
+    isRefresh: isEdit,
+    onEditAnswer(questionId, returnTarget) {
+      questionnaireController?.editQuestion(questionId, { returnTarget });
+    },
+  });
+};
+
+questionnaireController = initialiseQuestionnaire({
+  onComplete(answers, { isEdit = false } = {}) {
+    return renderResults(answers, { isEdit });
   },
   onRestart: clearRecommendationResults,
 });

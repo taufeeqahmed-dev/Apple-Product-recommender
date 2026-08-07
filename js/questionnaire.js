@@ -5,8 +5,11 @@ import {
   getVisibleQuestionIds,
 } from "./questionnaire-profile.js";
 import {
+  beginEditing,
+  cancelEditing,
   completeQuestionnaire,
   confirmPendingAnswerChange,
+  finishEditing,
   getState,
   markQuestionAttempted,
   requestAnswerChange,
@@ -68,6 +71,17 @@ export function getQuestionProgress(answers, currentQuestionId) {
     questionNumber: currentIndex + 1,
     totalQuestions: visibleQuestionIds.length,
   };
+}
+
+export function getUnansweredRequiredQuestionIds(answers) {
+  return getVisibleQuestionIds(answers).filter((questionId) => {
+    const definition = getQuestionDefinition(questionId);
+    if (!definition.required) return false;
+    return !validateQuestionValue(
+      definition,
+      getAnswerValue(answers, definition.answerPath),
+    ).valid;
+  });
 }
 
 export function getAdaptiveChangeMessage(clearedQuestionIds, beforeTotal, afterTotal) {
@@ -212,13 +226,18 @@ function setLiveText(element, message) {
   });
 }
 
-export function initialiseQuestionnaire({ onComplete = null, onRestart = null } = {}) {
+export function initialiseQuestionnaire({
+  onComplete = null,
+  onRestart = null,
+  onEditCancelled = null,
+} = {}) {
   const form = document.querySelector("#questionnaire-form");
   const questionContainer = document.querySelector("#questionnaire-question");
   const progress = document.querySelector("#questionnaire-progress");
   const progressText = document.querySelector("#questionnaire-progress-text");
   const changeSummary = document.querySelector("#questionnaire-change-summary");
   const backButton = document.querySelector("#questionnaire-back");
+  const clearAnswerButton = document.querySelector("#questionnaire-clear-answer");
   const submitButton = document.querySelector("#questionnaire-continue");
   const completionPanel = document.querySelector("#questionnaire-complete");
   const restartConfirmation = document.querySelector("#restart-confirmation");
@@ -227,6 +246,7 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
   const cancelRestartButton = document.querySelector("#cancel-restart");
   const restartButtons = [...document.querySelectorAll("[data-restart-questionnaire]")];
   let restartReturnTarget = null;
+  let editingReturnTarget = null;
 
   if (
     !form ||
@@ -235,6 +255,7 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
     !progressText ||
     !changeSummary ||
     !backButton ||
+    !clearAnswerButton ||
     !submitButton ||
     !completionPanel ||
     !restartConfirmation ||
@@ -255,9 +276,20 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
     progress.setAttribute("max", String(current.totalQuestions));
     progress.textContent = `${current.questionNumber} of ${current.totalQuestions}`;
     progressText.textContent = label;
-    backButton.hidden = current.currentIndex <= 0;
-    submitButton.textContent =
-      current.currentIndex === current.totalQuestions - 1 ? "See recommendations" : "Continue";
+    const definition = getQuestionDefinition(state.currentQuestionId);
+    const value = getAnswerValue(state.answers, definition.answerPath);
+    if (state.editing.active) {
+      backButton.hidden = false;
+      backButton.textContent = "Cancel edit";
+      clearAnswerButton.hidden = definition.required || !isAnswered(value);
+      submitButton.textContent = "Save answer";
+    } else {
+      backButton.hidden = current.currentIndex <= 0;
+      backButton.textContent = "Back";
+      clearAnswerButton.hidden = true;
+      submitButton.textContent =
+        current.currentIndex === current.totalQuestions - 1 ? "See recommendations" : "Continue";
+    }
     return current;
   };
 
@@ -363,6 +395,39 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
     }
     clearError();
 
+    if (state.editing.active) {
+      const unansweredRequired = getUnansweredRequiredQuestionIds(getState().answers);
+      if (unansweredRequired.length > 0) {
+        setCurrentQuestion(unansweredRequired[0]);
+        renderCurrentQuestion();
+        setLiveText(
+          changeSummary,
+          "Your edit made another related answer required before recommendations can be refreshed.",
+        );
+        return;
+      }
+
+      try {
+        completeQuestionnaire();
+        finishEditing();
+        updateProgress();
+      } catch {
+        announceError(
+          "Some required answers are incomplete. Complete the related question before saving.",
+          { focusInvalid: true },
+        );
+        return;
+      }
+      form.hidden = true;
+      completionPanel.hidden = false;
+      const completionHandled = onComplete?.(getState().answers, { isEdit: true }) === true;
+      editingReturnTarget = null;
+      if (!completionHandled) {
+        completionPanel.querySelector(".questionnaire-step-heading")?.focus();
+      }
+      return;
+    }
+
     const current = getQuestionProgress(state.answers, state.currentQuestionId);
     if (current.currentIndex === current.totalQuestions - 1) {
       try {
@@ -376,7 +441,7 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
       }
       form.hidden = true;
       completionPanel.hidden = false;
-      const completionHandled = onComplete?.(getState().answers) === true;
+      const completionHandled = onComplete?.(getState().answers, { isEdit: false }) === true;
       if (!completionHandled) {
         completionPanel.querySelector(".questionnaire-step-heading")?.focus();
       }
@@ -389,10 +454,42 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
 
   backButton.addEventListener("click", () => {
     const state = getState();
+    if (state.editing.active) {
+      cancelEditing();
+      form.hidden = true;
+      completionPanel.hidden = false;
+      changeSummary.hidden = true;
+      changeSummary.textContent = "";
+      const returnTarget = editingReturnTarget;
+      editingReturnTarget = null;
+      onEditCancelled?.();
+      returnTarget?.focus();
+      return;
+    }
     const current = getQuestionProgress(state.answers, state.currentQuestionId);
     if (current.currentIndex <= 0) return;
     setCurrentQuestion(current.visibleQuestionIds[current.currentIndex - 1]);
     renderCurrentQuestion();
+  });
+
+  clearAnswerButton.addEventListener("click", () => {
+    const before = getState();
+    if (!before.editing.active) return;
+    const definition = getQuestionDefinition(before.currentQuestionId);
+    if (definition.required) return;
+    const beforeProgress = getQuestionProgress(before.answers, before.currentQuestionId);
+    const clearedValue = definition.type === "checkbox" ? [] : null;
+    const requested = requestAnswerChange(definition.id, clearedValue);
+    const clearedQuestionIds = requested.pendingChange?.clearedQuestionIds ?? [];
+    if (requested.pendingChange) confirmPendingAnswerChange();
+    syncCurrentControls();
+    clearError();
+    const afterProgress = updateProgress();
+    announceAdaptiveChange(
+      clearedQuestionIds,
+      beforeProgress.totalQuestions,
+      afterProgress.totalQuestions,
+    );
   });
 
   const hideRestartConfirmation = ({ restoreFocus = false } = {}) => {
@@ -421,6 +518,7 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
 
   confirmRestartButton.addEventListener("click", () => {
     resetQuestionnaire();
+    editingReturnTarget = null;
     onRestart?.();
     hideRestartConfirmation();
     completionPanel.hidden = true;
@@ -431,4 +529,15 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
   });
 
   renderCurrentQuestion({ moveFocus: false });
+  return {
+    editQuestion(questionId, { returnTarget = null } = {}) {
+      beginEditing(questionId);
+      editingReturnTarget = returnTarget;
+      completionPanel.hidden = true;
+      form.hidden = false;
+      changeSummary.hidden = true;
+      changeSummary.textContent = "";
+      renderCurrentQuestion();
+    },
+  };
 }
