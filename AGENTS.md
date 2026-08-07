@@ -1,16 +1,17 @@
 # Repository guidance
 
-This repository contains Northstar, an unofficial student portfolio project that helps people choose a MacBook based on their needs.
+This repository contains Northstar, an unofficial student portfolio project that helps people
+choose a MacBook based on their needs.
 
 ## Current scope and stage
 
-- Version one covers MacBook recommendations only.
-- Stages 1, 2, 3 and 4 are complete, reviewed and merged into `main`.
-- The GitHub Pages build and deployment succeeded.
-- The public site is live at `https://taufeeqahmed-dev.github.io/apple-product-recommender/`.
-- Any remaining Safari, VoiceOver, physical-device or production Lighthouse checks are optional
-  post-launch verification.
-- Do not modify the project further without a newly approved scope.
+- Version 1.0.0 is complete, tagged and deployed from `main`.
+- Version 1.1 is being prepared on `feature/adaptive-questionnaire-v1.1`.
+- v1.1 Phases 1–4 are reviewed, committed and pushed.
+- Phase 5 testing, release-readiness and documentation changes are a local review candidate; do not
+  describe them as committed, merged, released or deployed until that happens.
+- Optional Phase 6 shareable results are not approved to begin.
+- Do not modify the project beyond an explicitly approved phase.
 - Read `PROJECT_STATUS.md` before making changes.
 
 ## Architecture boundaries
@@ -18,9 +19,13 @@ This repository contains Northstar, an unofficial student portfolio project that
 - Keep verified Apple facts in `js/products.js` and schema validation in `js/product-schema.js`.
 - Keep hard thresholds and project suitability matrices in `js/recommendation-rules.js`.
 - Keep the recommendation engine pure and deterministic in `js/recommendation-engine.js`.
-- Keep result rendering in `js/results.js` and questionnaire state private to `js/questionnaire-state.js`.
+- Keep result rendering in `js/results.js` and questionnaire state private to
+  `js/questionnaire-state.js`.
 - Validate the entire catalogue before calculating recommendations.
-- Treat all suitability bands, fit scores, reasons and compromises as independent project judgements, never Apple claims.
+- Reconcile hidden answers before validation or scoring; hidden answers must never affect results.
+- Clear only dependent answers that become irrelevant and announce the change accessibly.
+- Treat all suitability bands, fit scores, confidence, reasons and compromises as independent
+  project judgements, never Apple claims.
 
 ## Product-data rules
 
@@ -30,13 +35,19 @@ This repository contains Northstar, an unofficial student portfolio project that
 - Use `null` for genuinely unavailable information and do not infer missing facts.
 - Prices are dated snapshots that may later change.
 - Do not add configurable upgrades outside an explicitly approved dataset.
+- Battery, port and connection capabilities may not be inferred.
 
 ## Working rules
 
-- Use semantic HTML, responsive CSS and JavaScript modules without external frameworks or libraries.
+- Use semantic HTML, responsive CSS and JavaScript modules without production frameworks or
+  libraries.
+- Playwright is development-only and must not be shipped in the Pages artifact.
 - Preserve keyboard access, visible focus states, readable contrast and reduced-motion support.
 - Maintain an original visual identity; do not copy Apple's website or imply affiliation with Apple.
-- Treat `sources/` as read-only local reference material. Do not edit, rename, move or delete its contents.
+- Treat `sources/` as read-only local reference material. Do not edit, rename, move or delete it.
 - Keep `.agents/`, `.codex/` and `sources/` out of version control.
-- Run the dependency-free test suite with `node --test` and perform proportionate browser/accessibility checks.
-- Do not begin further changes without a newly approved scope; update documentation whenever an approved scope changes behaviour.
+- Run `node --test`, `node scripts/check-javascript-syntax.mjs` and the relevant Playwright projects
+  for approved changes.
+- Document local versus production measurements precisely; automation does not replace physical
+  device or assistive-technology testing.
+- Do not commit, push, merge, tag, deploy or begin another phase without user approval.

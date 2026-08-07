@@ -2,110 +2,152 @@
 
 ## One-line summary
 
-Northstar is a dependency-free, accessible MacBook recommender that validates dated official
-product facts, applies explainable project-authored rules and returns a deterministic shortlist.
+Northstar is a framework-free, accessible MacBook recommender that turns an adaptive needs interview
+into a deterministic shortlist using validated official facts and explainable project-authored rules.
 
 ## The problem
 
-Laptop buying guides often begin with specifications, while many buyers begin with a budget, daily
-tasks, portability and the number of displays they need. The project goal was to translate those
-plain-language needs into a small, defensible shortlist without presenting internal suitability
-judgements as manufacturer claims.
+Laptop buying guides often begin with specifications, while buyers begin with a budget, daily work,
+multitasking, portability and practical constraints. A fixed eight-question flow could ask the same
+generic workload question of everyone, but it could not distinguish a student spreadsheet workload
+from local virtual machines, sustained video work or large software builds.
+
+Version 1.1 reframes the questionnaire as an adaptive decision interview. It asks relevant detail,
+lets users decide which preferences are truly mandatory and explains exact matches, closest options,
+stretch alternatives and genuine no-match outcomes without presenting Northstar judgements as Apple
+claims.
 
 ## Constraints
 
-- Version one is MacBook-only and uses 10 approved exact base configurations.
+- MacBook-only, using 10 approved exact base configurations.
 - Facts must come from official Apple UK product, buying, specification or support pages.
-- Exact prices are dated snapshots; missing facts cannot be inferred.
-- The recommendation engine must remain pure, deterministic and separate from rendering.
-- The site must work without a framework, runtime dependency, backend or build step.
-- Accessibility and transparent failure states are part of the implementation, not afterthoughts.
+- Prices are dated snapshots and missing facts cannot be inferred.
+- Battery and port needs cannot affect rank without verified model-specific data.
+- Hidden answers must be cleared and must never affect recommendation logic.
+- The engine must remain pure, deterministic and separate from rendering.
+- The production site must remain framework-free with no backend, account, analytics or runtime
+  dependency.
+- Accessibility, transparent compromises and safe failure states are core behavior.
 
-## Approach
+## Architecture and approach
 
-I split the application into explicit boundaries:
+The application uses explicit boundaries:
 
-- a validated and deeply frozen product catalogue;
-- separate Northstar rules and suitability matrices;
-- a pure engine that validates, filters, scores and sorts;
-- private questionnaire state and DOM behaviour; and
-- accessible result rendering.
+- a declarative question schema with stable IDs and dependencies;
+- private state that returns immutable snapshots and reconciles hidden answers;
+- a profile layer that derives the strongest applicable workload and memory signals;
+- a validated, deeply frozen product catalogue;
+- separate Northstar rule matrices and hard thresholds;
+- a pure engine that validates, filters, scores, classifies and sorts; and
+- accessible results rendering with review, editing and comparison.
 
-Hard requirements run before scoring. This prevents a high soft score from hiding a missed budget,
-storage, display or workload minimum. Optional preferences are omitted and normalized rather than
-assigned invented values. The engine returns matches, exclusions, tie groups and diagnostics so the
-interface can explain both success and no-match outcomes.
+Application version `1.1.0`, questionnaire schema `2` and rules `2.0.0` are versioned independently.
+This makes compatibility decisions explicit instead of treating every interface change as an
+algorithm change.
 
-## Accessibility decisions
+## Key product decisions
 
-The questionnaire uses native radios, checkboxes and selects inside fieldsets. Errors are associated
-with their questions, exposed as alerts and reflected through `aria-invalid`. Focus moves to step
-headings, invalid controls and the results heading at deliberate moments. Result cards are semantic
-articles with configuration-specific accessible names, and a polite status message announces when
-results are ready. Reduced motion and responsive reflow are built into the CSS.
+### Preferences do not silently become filters
 
-## A quality issue found during release testing
+Storage and strict/absolute budget remain hard requirements. Workload/memory, weight, exact screen
+size, external displays and ownership headroom become hard only through an explicit mandatory
+answer. Screen, weight and ownership otherwise shape rank and compromises, reducing unnecessary
+no-match outcomes.
 
-A scenario audit revealed that an everyday user with flexible budget and balanced preferences could
-receive a £4,099 M5 Max as the first recommendation. The underlying light/moderate workload matrix
-treated all higher capability bands as equally perfect, so a small performance-component advantage
-rewarded excessive headroom.
+### Unknown facts remain unknown
 
-I first added a failing regression test, then revised only the light/moderate project-judgement
-scores. A balanced everyday user now receives a right-sized 13-inch Air, while explicitly choosing
-performance-first can still rank maximum capability first. Product facts did not change. This is a
-useful example of why recommendation correctness needs scenario review as well as unit tests.
+Battery importance and connection needs are collected because they matter to people, but the current
+catalogue cannot evaluate them safely. Results disclose that limitation and confidence can be capped;
+rank does not change. Verified Apple facts and Northstar assessments are labelled separately in both
+cards and comparison.
+
+### Adaptivity includes deletion
+
+Changing a triggering answer immediately identifies and clears only dependants that are no longer
+visible. The live region names what was cleared and announces the new total. Hidden state is rejected
+by profile validation, so navigation order cannot leak obsolete answers into the engine.
+
+### Results remain revisable
+
+The results page groups visible answers and lets users edit one answer at a time. New required
+follow-ups are completed before refreshing. Focus moves deliberately between the edit control,
+question heading and refreshed results, and cancel restores the complete pre-edit snapshot.
+
+## Explainability
+
+The engine distinguishes exact, closest and stretch-budget matches. Each card includes verified
+facts, Northstar reasons, compromises and a lower-rank explanation based on the deterministic sort.
+Confidence combines answer detail, leading fit, separation and match alignment, with visible High,
+Moderate or Low thresholds and caps for important unassessed needs.
+
+The top-three comparison is a semantic table with verified facts and Northstar assessments in
+separate row groups. Its dialog is keyboard operable, restores focus and contains horizontal scrolling
+within the table at smaller widths.
+
+## Quality issues found through testing
+
+The v1.0 scenario audit found that everyday flexible-budget input could over-reward maximum
+capability. A failing recommendation-quality test led to a project-rule correction without changing
+product facts.
+
+The v1.1 Phase 4 pre-commit review found that an edit could leave completed progress at an
+intermediate question and that comparison row groups used incorrect table scope. Both were fixed and
+regression-tested before the phase was committed.
+
+These examples show why recommendation quality needs scenario tests, while accessible stateful UI
+needs rendered keyboard and focus tests.
 
 ## Verification evidence
 
-- 22 dependency-free Node tests after Stage 4 additions.
-- Syntax checks across all project JavaScript.
-- Complete questionnaire-to-results browser journey.
-- Exact 390×844, 768×1024 and 1440×900 responsive checks without horizontal overflow.
-- Local Lighthouse baseline of 100 Performance, 100 Accessibility, 96 Best Practices and 100 SEO on
-  both mobile and desktop.
-- Eighteen official source links and the GitHub Pages repository subpath checked.
+- 59 dependency-free Node tests, including all migrated v1.0 fixtures and nine recommendation-quality
+  scenarios.
+- 30 JavaScript files passing `node --check`.
+- Nine Playwright tests across 1440×900, 768×1024 and 390×844 viewports.
+- Automated adaptive branching, dependency clearing, edit, focus, classification, confidence and
+  comparison coverage.
+- Local Lighthouse 13.4.1 scores of 100/100/100/100 on mobile and desktop in Edge 151.
+- Frozen development lockfile and a Pages workflow gated by unit, syntax and browser tests.
 
-Final production Lighthouse and the user-assisted Safari, physical-device, screen-reader and
-physical-keyboard checks remain release gates until the branch is approved and deployed.
+Safari, VoiceOver, representative Windows screen-reader, physical-device and deployed-production
+verification remain explicit manual release checks rather than automated claims.
 
 ## Outcome
 
-Northstar demonstrates data modelling, schema validation, deterministic algorithms, accessible
-stateful interfaces, defensive error handling, responsive design, automated testing and deployment
-planning in a small project whose decisions remain inspectable.
+Northstar demonstrates data modelling, schema evolution, deterministic algorithms, accessible
+state management, responsive rendering, defensive handling of missing evidence, automated browser
+testing and release planning in a project whose decisions remain inspectable.
 
 ## CV-ready wording
 
-Use measured wording only after the final release checks are complete.
+Use the release wording only after v1.1 has been reviewed and deployed.
 
 ### Compact bullet
 
-- Built Northstar, a dependency-free accessible MacBook recommender using validated Apple UK data,
-  deterministic hard filtering and explainable weighted scoring; covered 10 exact configurations
-  with 22 Node tests and a GitHub Pages deployment workflow.
+- Built Northstar, a framework-free accessible MacBook recommender using an adaptive questionnaire,
+  validated Apple UK facts and deterministic explainable ranking; covered 10 exact configurations
+  with 59 Node tests and nine cross-viewport Playwright tests.
 
 ### Two-bullet version
 
-- Designed an eight-step responsive questionnaire and pure JavaScript recommendation engine that
-  separates verified product facts from project-authored suitability rules and explains up to three
-  ranked matches, compromises or a no-match result.
-- Added schema validation, deterministic tie-breaking, accessibility-focused focus/error handling,
-  22 dependency-free tests, scenario-quality regression coverage and release checks across three
-  target viewports.
+- Designed an adaptive responsive questionnaire and pure JavaScript recommendation engine that
+  separates verified facts from project-authored assessments, applies only explicit hard
+  requirements and explains exact, closest, stretch and no-match outcomes.
+- Added schema migration, dependency-safe state, confidence labels, editable results, accessible
+  top-three comparison, 59 unit/quality tests, nine browser tests and local 100/100/100/100
+  Lighthouse verification.
 
 ### Interview summary
 
-“I wanted to show more than a polished landing page, so I treated the recommender as a small decision
-system. I validate and freeze the full dataset, apply non-negotiable requirements before scoring,
-normalize only applicable preferences, and return enough diagnostics to explain a no-match. During
-scenario testing I found an overpowered recommendation that unit tests had missed, wrote a failing
-quality test, and corrected the right-sizing matrix without touching verified product facts.”
+“I treated the recommender as a small decision system rather than a product-card filter. The
+questionnaire adapts to selected work, clears hidden dependants, and asks whether a preference is
+actually mandatory. The engine validates and freezes the dataset, filters before scoring and returns
+enough diagnostics to explain rank and confidence. I kept unavailable battery and port evidence out
+of scoring, then added browser tests for the state transitions that unit tests cannot prove.”
 
 ## Future opportunities
 
+- Optional Phase 6 shareable results using non-sensitive option IDs after separate approval.
 - A scheduled, evidence-reviewed product-data refresh process.
-- An explicitly designed value-for-money preference rather than inferring one from budget.
 - More approved configurations or other Apple product categories.
-- Optional answer persistence with clear privacy boundaries.
-- Repeatable browser automation if development dependencies are later approved.
+- Additional verified battery/connection fields before those answers can affect ranking.
+- Continued physical-device and assistive-technology verification.
