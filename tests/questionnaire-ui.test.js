@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { getQuestionDefinition } from "../js/questionnaire-definition.js";
 import { createInitialAnswers } from "../js/questionnaire-profile.js";
 import {
+  getAdaptiveChangeMessage,
   getNextCheckboxValue,
   getQuestionProgress,
   validateQuestionValue,
@@ -82,4 +83,26 @@ test("connection checkbox choices remain mutually exclusive without affecting ot
     ),
     ["study-productivity", "software-development"],
   );
+});
+
+test("adaptive change announcements name cleared answers and changed totals", () => {
+  assert.equal(
+    getAdaptiveChangeMessage(["softwareDevelopmentDetail"], 15, 13),
+    "One answer was cleared because it is no longer relevant: What kind of development work do you expect? " +
+      "The questionnaire now has 13 questions based on your answers, previously 15.",
+  );
+
+  assert.equal(
+    getAdaptiveChangeMessage(
+      ["cybersecurityVmDetail", "sustainedDuration"],
+      15,
+      12,
+    ),
+    "2 answers were cleared because they are no longer relevant: " +
+      "How many local lab virtual machines might you run at once?; " +
+      "How long will demanding tasks usually run? " +
+      "The questionnaire now has 12 questions based on your answers, previously 15.",
+  );
+
+  assert.equal(getAdaptiveChangeMessage([], 12, 12), "");
 });

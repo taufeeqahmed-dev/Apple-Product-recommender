@@ -715,9 +715,19 @@ html:not(.js) .results-section {
 }
 
 .restart-confirmation {
-  margin-top: 1rem;
+  width: min(calc(100% - 2rem), 48rem);
+  max-height: calc(100vh - 2rem);
+  margin: auto;
+  color: var(--colour-ink);
   border-color: rgba(246, 200, 95, 0.4);
-  background: rgba(246, 200, 95, 0.075);
+  background:
+    linear-gradient(145deg, rgba(246, 200, 95, 0.1), transparent 45%),
+    var(--colour-surface);
+  overflow: auto;
+}
+
+.restart-confirmation::backdrop {
+  background: rgba(3, 8, 16, 0.78);
 }
 
 .restart-confirmation-actions {

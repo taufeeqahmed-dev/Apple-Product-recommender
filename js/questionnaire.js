@@ -70,6 +70,24 @@ export function getQuestionProgress(answers, currentQuestionId) {
   };
 }
 
+export function getAdaptiveChangeMessage(clearedQuestionIds, beforeTotal, afterTotal) {
+  const messages = [];
+  if (clearedQuestionIds.length > 0) {
+    const prompts = clearedQuestionIds.map(
+      (questionId) => getQuestionDefinition(questionId).prompt,
+    );
+    messages.push(
+      `${clearedQuestionIds.length === 1 ? "One answer was" : `${clearedQuestionIds.length} answers were`} cleared because ${clearedQuestionIds.length === 1 ? "it is" : "they are"} no longer relevant: ${prompts.join("; ")}`,
+    );
+  }
+  if (beforeTotal !== afterTotal) {
+    messages.push(
+      `The questionnaire now has ${afterTotal} questions based on your answers, previously ${beforeTotal}.`,
+    );
+  }
+  return messages.join(" ");
+}
+
 export function getNextCheckboxValue(definition, currentValue, optionId, checked) {
   const selected = new Set(Array.isArray(currentValue) ? currentValue : []);
 
@@ -133,6 +151,7 @@ function renderQuestionContent(container, state, { moveFocus = true } = {}) {
   );
   heading.id = `question-heading-${definition.id}`;
   heading.tabIndex = -1;
+  heading.append(createElement("span", "visually-hidden", `: ${definition.prompt}`));
 
   const fieldset = document.createElement("fieldset");
   const legend = createElement("legend", "", definition.prompt);
@@ -283,21 +302,8 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
   };
 
   const announceAdaptiveChange = (clearedQuestionIds, beforeTotal, afterTotal) => {
-    const messages = [];
-    if (clearedQuestionIds.length > 0) {
-      const prompts = clearedQuestionIds.map(
-        (questionId) => getQuestionDefinition(questionId).prompt,
-      );
-      messages.push(
-        `${clearedQuestionIds.length === 1 ? "One answer was" : `${clearedQuestionIds.length} answers were`} cleared because ${clearedQuestionIds.length === 1 ? "it is" : "they are"} no longer relevant: ${prompts.join("; ")}`,
-      );
-    }
-    if (beforeTotal !== afterTotal) {
-      messages.push(
-        `The questionnaire now has ${afterTotal} questions based on your answers, previously ${beforeTotal}.`,
-      );
-    }
-    if (messages.length > 0) setLiveText(changeSummary, messages.join(" "));
+    const message = getAdaptiveChangeMessage(clearedQuestionIds, beforeTotal, afterTotal);
+    if (message) setLiveText(changeSummary, message);
   };
 
   form.addEventListener("change", (event) => {
@@ -319,9 +325,7 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
       nextValue.length > definition.maximumSelections
     ) {
       control.checked = false;
-      announceError(`Choose no more than ${definition.maximumSelections} answers.`, {
-        focusInvalid: true,
-      });
+      announceError(`Choose no more than ${definition.maximumSelections} answers.`);
       return;
     }
 
@@ -392,7 +396,7 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
   });
 
   const hideRestartConfirmation = ({ restoreFocus = false } = {}) => {
-    restartConfirmation.hidden = true;
+    if (restartConfirmation.open) restartConfirmation.close();
     restartButtons.forEach((button) => button.setAttribute("aria-expanded", "false"));
     if (restoreFocus && restartReturnTarget) restartReturnTarget.focus();
   };
@@ -400,7 +404,7 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
   restartButtons.forEach((button) => {
     button.addEventListener("click", () => {
       restartReturnTarget = button;
-      restartConfirmation.hidden = false;
+      restartConfirmation.showModal();
       restartButtons.forEach((restartButton) => restartButton.setAttribute("aria-expanded", "true"));
       restartConfirmationTitle.focus();
     });
@@ -410,8 +414,9 @@ export function initialiseQuestionnaire({ onComplete = null, onRestart = null } 
     hideRestartConfirmation({ restoreFocus: true });
   });
 
-  restartConfirmation.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") hideRestartConfirmation({ restoreFocus: true });
+  restartConfirmation.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    hideRestartConfirmation({ restoreFocus: true });
   });
 
   confirmRestartButton.addEventListener("click", () => {
