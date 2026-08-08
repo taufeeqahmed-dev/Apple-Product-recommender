@@ -1,8 +1,9 @@
 # Northstar
 
 Northstar is an unofficial student portfolio project that helps people choose a MacBook without
-requiring them to decode chip names or benchmark charts. Version 1.1 uses an adaptive questionnaire,
-explicit hard-requirement choices and transparent ranking explanations to produce a focused shortlist.
+requiring them to decode chip names or benchmark charts. Version 1.1 uses a streamlined adaptive
+questionnaire, explicit must-have choices and transparent ranking explanations to produce a focused
+shortlist.
 
 > **Independent project:** Northstar is not affiliated with, endorsed by or sponsored by Apple
 > Inc. Apple and MacBook are trademarks of Apple Inc. Product facts come from official Apple UK
@@ -10,44 +11,77 @@ explicit hard-requirement choices and transparent ranking explanations to produc
 
 ![Northstar landing page](docs/images/northstar-overview.jpg)
 
-The completed v1.0 site remains live at
-[`taufeeqahmed-dev.github.io/apple-product-recommender`](https://taufeeqahmed-dev.github.io/apple-product-recommender/).
-The v1.1 usability revision is on `feature/adaptive-questionnaire-v1.1` and is not deployed yet.
-Release preparation is paused while the shortened questionnaire is reviewed.
+Northstar v1.0.0 is the currently released production version. It is live at
+[`taufeeqahmed-dev.github.io/apple-product-recommender`](https://taufeeqahmed-dev.github.io/apple-product-recommender/),
+and GitHub Pages deploys production automatically from `main`. Version 1.1 is the current release
+candidate on `feature/adaptive-questionnaire-v1.1`; it will not become production until this branch
+is merged into `main` and the Pages deployment succeeds.
 
 ## Why this project exists
 
 MacBook ranges are usually described through specifications. Northstar starts with the visitor's
-budget, local activities, multitasking, portability, screen, storage and genuinely essential needs. It keeps
-verified facts separate from project-authored assessments and explains why a result ranked well,
-where it compromises and when no verified configuration meets every hard requirement.
+budget, local activities, multitasking, portability, screen, storage and genuinely essential needs.
+It keeps verified facts separate from project-authored assessments and explains why a result ranked
+well, where it compromises, why alternatives ranked lower and when no verified MacBook meets every
+must-have requirement.
 
 ## Version 1.1 features
 
 - Seven core questionnaire steps, with no more than two essential-detail follow-ups.
 - A tailored multi-select activity step for study, programming, cybersecurity labs, photo/video
   editing, music production and 3D/engineering work.
+- Plain-language questions with selection guidance and technical clarification in associated help.
 - Multitasking assessment based on concurrent applications and browser tabs.
 - Strict, flexible and stretch budget handling, with an optional absolute maximum.
 - Ordinary preferences remain soft; only final Essential requirements selections activate workload,
-  exact screen, exact weight or verified display filters.
+  exact screen, exact weight or verified external-monitor filters.
 - Combined portability/performance and screen controls, plus a clear minimum-storage step.
 - Battery, connection and ownership-period questions are removed because they do not materially
   improve ranking with the current verified dataset.
-- Exact, closest and stretch-budget classifications plus High, Moderate or Low confidence.
-- Compact grouped answer summaries and targeted editing from the results page.
+- Exact, Closest and Stretch handling before a genuine No Match.
+- High, Moderate or Low confidence only when an eligible recommendation exists.
+- Compact grouped answer summaries, individual-answer editing and refreshed recommendations.
 - Dependent answers are cleared and announced as soon as they are no longer relevant.
 - Rich reasons, compromises and lower-ranked-product explanations.
 - Keyboard-accessible, responsive comparison of the top three recommendations.
 - Framework-free production HTML, CSS and JavaScript with no account, backend, analytics or runtime
   dependency.
 
+## Questionnaire design
+
+A typical journey covers:
+
+1. Budget and flexibility
+2. Main uses
+3. Relevant workload activities
+4. Multitasking
+5. Portability/performance and screen preference
+6. Storage
+7. Essential requirements
+
+Exact weight or external-monitor details appear only when the visitor explicitly marks them as
+essential. Where several related activities can apply, Northstar uses multi-select controls rather
+than forcing the visitor through several separate screens. Hidden or stale answers are cleared and
+cannot influence recommendations.
+
 ## How recommendations work
 
-Northstar validates the entire catalogue and all visible answer IDs before matching. Hidden or stale
-answers are reconciled out of state and cannot influence recommendations. Every product must pass
-the catalogue, market and data-completeness checks; selected hard requirements are then applied
-before scoring.
+Northstar validates the entire catalogue and all visible answer IDs before matching. Every product
+must pass the catalogue, market and data-completeness checks; explicit hard requirements are then
+applied before scoring. Ordinary preferences influence ranking without automatically eliminating an
+otherwise suitable MacBook.
+
+The result hierarchy is:
+
+```text
+Exact match
+    ↓
+Closest match
+    ↓
+Stretch match
+    ↓
+Genuine No Match
+```
 
 The configurable Northstar scoring weights are:
 
@@ -99,19 +133,19 @@ Missing facts remain `null`; configurable upgrades are not inferred or added.
 
 Prices are snapshots verified on **31 July 2026** and can change. Product facts are Apple-sourced;
 all capability bands, fit scores, confidence, reasons and compromises are independent Northstar
-judgements. Phase 5 does not change the catalogue or any verified fact.
+judgements. Version 1.1 does not change the catalogue or any verified fact.
 
 ## Accessibility
 
 The interface uses semantic landmarks, headings, native controls and dialogs; concise prompts with
-associated help and errors; calm stage-based progress with exact counts available to assistive technology; polite
-change/result announcements; deliberate focus placement; visible focus states; keyboard-operable
-comparison; responsive reflow; and reduced-motion support. Recommendations appear before secondary
-confidence and classification diagnostics. Per-product scores and ranking details are also available
-through native disclosures instead of competing with the recommendation. Terminal no-match outcomes
-do not display confidence.
+associated help and errors; calm stage-based progress with exact counts available to assistive
+technology; polite change/result announcements; deliberate focus placement; visible focus states;
+keyboard-operable comparison; responsive reflow; and reduced-motion support. Recommendations appear
+before secondary confidence and classification diagnostics. Per-product scores and ranking details
+are available through native disclosures instead of competing with the recommendation. Terminal
+no-match outcomes do not display confidence.
 
-Playwright verifies key focus, keyboard and responsive behavior, but automation does not replace
+Playwright verifies key focus, keyboard and responsive behaviour, but automation does not replace
 assistive-technology testing. Safari/iPhone, VoiceOver, Narrator, physical-device and deployed-site
 checks remain listed in [the Phase 5 test report](docs/testing.md).
 
@@ -149,7 +183,7 @@ No build step is required.
 
 `.github/workflows/pages.yml` installs frozen development dependencies, runs unit tests and syntax
 checks, installs Playwright Chromium, runs all browser projects, then prepares the static Pages
-artifact. It triggers only from `main` or manual dispatch, so this feature branch cannot deploy.
+artifact. Production deploys from `main` using GitHub Pages; this feature branch cannot deploy.
 
 Release gates and post-deployment verification are in [the v1.1 release checklist](docs/release-v1.1.md).
 
@@ -173,7 +207,8 @@ The implementation narrative and CV-ready wording are in
 
 ## Current status
 
-Phases 1–4 of v1.1 were reviewed, committed and pushed. The Phase 5 candidate was followed by a
-focused, uncommitted usability revision that reduces the questionnaire to seven core and at most
-nine total steps. It is awaiting review and has not been committed, merged, tagged or deployed.
-Release preparation and the optional shareable-results phase remain paused.
+Northstar v1.0.0 is the currently released, tagged and deployed production version. Northstar v1.1
+is the current release candidate on `feature/adaptive-questionnaire-v1.1`; it is not yet merged,
+tagged or deployed. It becomes the production version only after this feature branch is reviewed and
+merged into `main` and the GitHub Pages deployment succeeds. Optional Phase 6 shareable results have
+not begun.
