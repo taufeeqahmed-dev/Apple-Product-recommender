@@ -1,146 +1,203 @@
-# Northstar recommendation algorithm
+# Northstar v1.1 recommendation algorithm
 
-Rules version: `1.1.0`
+| Versioned concern | Value |
+| --- | --- |
+| Application | `1.1.0` |
+| Questionnaire schema | `3` |
+| Recommendation rules | `2.1.0` |
 
-Northstar separates sourced facts from project-authored suitability judgements. Product prices,
-hardware and source URLs live in `js/products.js`; all thresholds, capability bands and matrices in
-`js/recommendation-rules.js` are independent Northstar decisions, not Apple recommendations or
-performance claims.
+These versions are independent. Schema 3 is the usability-tested seven-to-nine-step questionnaire;
+rules 2.1 removes unsupported confidence caps and ownership-period scoring from active v1.1
+recommendations.
+
+Northstar separates sourced facts from project-authored assessments. Product prices, hardware and
+source URLs live in `js/products.js`; capability bands, matrices, fit scores, classifications and
+confidence logic are Northstar judgements, not Apple recommendations or performance claims.
 
 ## Processing flow
 
 ```mermaid
 flowchart TD
-  A["Validate the complete catalogue"] -->|invalid| B["Return invalid-catalog"]
-  A -->|valid| C["Validate all questionnaire answer IDs"]
-  C -->|invalid| D["Return invalid-input"]
-  C -->|valid| E["Apply hard filters to every product"]
-  E --> F["Score eligible products only"]
-  F --> G["Build reasons and compromises"]
-  G --> H["Apply deterministic tie-breaking"]
-  H --> I["Return ranked matches, exclusions and diagnostics"]
-  E -->|none eligible| J["Return no-match without relaxing requirements"]
+  A["Reconcile answers against schema 3"] --> B["Clear newly irrelevant activities and essential details"]
+  B --> C["Validate the complete catalogue"]
+  C -->|invalid| D["Return invalid-catalog"]
+  C -->|valid| E["Validate visible controls and option IDs"]
+  E -->|invalid| F["Return invalid-input"]
+  E -->|valid| G["Derive activity workload, preferences and explicit essentials"]
+  G --> H["Apply hard filters to every product"]
+  H --> I["Score eligible products only"]
+  I --> J["Classify Exact, Closest or Stretch"]
+  J --> K["Sort and explain ranking"]
+  K --> L["Calculate confidence from evaluated evidence"]
+  H -->|budget only blocks otherwise eligible products| M["Return budget-limited guidance"]
+  H -->|explicit non-budget essentials block every product| N["Return genuine no-match"]
 ```
 
-## Catalogue and input validation
+## Streamlined adaptive input
 
-The complete catalogue must pass before any recommendation is calculated. Validation covers the
-catalogue schema, stable IDs, market, currency, ISO dates, official Apple UK URLs, required fields,
-source coverage and duplicate IDs. Accepted catalogue data is deeply frozen.
+The questionnaire contains seven core steps:
 
-Questionnaire input must contain one known answer ID for each question, except `primaryUses`, which
-must contain one or two unique known IDs. Invalid input produces no matches.
+1. budget target, flexibility and optional absolute maximum;
+2. one or two primary uses;
+3. a tailored multi-select activity step;
+4. one multitasking question;
+5. portability/performance balance and screen preference;
+6. minimum storage; and
+7. essential requirements.
 
-## Hard eligibility filters
+Selecting essential maximum weight or external-display support adds one detail step for each. The
+minimum path is seven steps and the maximum is nine.
 
-A product is excluded when any of these checks fail:
+Prompts use buyer-facing language. Short rules such as choosing up to two uses, selecting all
+applicable activities and distinguishing an ideal budget from an absolute maximum are associated
+with their controls as help text. Technical terms remain where they identify a real activity or a
+verified product fact rather than an internal scoring concept.
 
-1. It is not marked available.
-2. It is not a `GB`/`GBP` record.
-3. A recommendation-critical fact is `null` or unavailable.
-4. Its verified price exceeds the selected finite budget.
-5. Its storage is below the selected minimum.
-6. Its supported external-display count is below the selected minimum.
-7. Its Northstar capability band is below the workload minimum.
+Visible progress uses “Getting to know your needs”, “A few details left” and “Almost ready”. Exact
+step and adaptive-total values remain associated with the native progress element and focused step
+heading for assistive technology, but routine total changes are not live-announced.
 
-“Flexible” or “unsure” removes only the related optional threshold; it does not invent a value or
-silently soften another requirement.
+Activity options declare the primary uses that make them relevant. Programming and cybersecurity
+share one activity group, so selecting both does not duplicate Docker, local database, development
+server, virtual-machine or local-AI choices.
 
-## Capability bands and right-sizing
+Every answer change is reconciled before state is committed. Removing a use preserves activities
+that remain relevant to another selected use and clears only the obsolete option IDs. Removing an
+essential weight or display choice clears only its dependent detail. A stale hidden value is invalid
+input and cannot reach profile derivation or scoring.
 
-Northstar assigns four internal capability bands to the catalogue chip IDs. Bands are a compact
-project model used for matching and are not benchmarks.
+## Workload derivation
 
-The Stage 4 audit found a reproducible right-sizing defect: a flexible-budget visitor with everyday
-light/moderate work and a balanced portability/performance preference received a £4,099 M5 Max as
-the first result. Higher bands had identical perfect workload scores, so small capability gains
-outweighed a much more proportionate Air match.
+Each selected use supplies a baseline capability and memory signal. Each activity supplies another
+signal, and multitasking supplies a concurrent-memory signal. Northstar takes the strongest
+applicable capability and memory values; it does not add multiple activities together and inflate a
+requirement merely because several related boxes were selected.
 
-Rules `1.1.0` correct that defect by treating extra capability as a weaker workload fit for light and
-moderate work while retaining maximum capability for visitors who explicitly select
-performance-first.
+Examples introduced by schema 3:
 
-| Workload | Band 1 | Band 2 | Band 3 | Band 4 |
-| --- | ---: | ---: | ---: | ---: |
-| Light | 100 | 100 | 85 | 70 |
-| Moderate | 40 | 100 | 95 | 85 |
-| Demanding | 0 | 55 | 100 | 100 |
-| Very demanding | 0 | 0 | 70 | 100 |
+| Activity | Capability band | Memory assessment |
+| --- | ---: | ---: |
+| Local development servers or databases | 2 | 16 GB |
+| Docker or containers | 3 | 24 GB |
+| One virtual machine | 3 | 16 GB |
+| Two simultaneous virtual machines | 3 | 24 GB |
+| Three or more simultaneous virtual machines | 4 | 36 GB |
+| Larger local AI models | 4 | 36 GB |
 
-The hard minimum remains separate: a score can describe a weaker fit only after a product passes
-eligibility.
+Equivalent photo, video, music and 3D activities retain the previous v1.1 capability/memory
+assessments. All values in this table are Northstar assessments.
 
-## Weighted scoring
+The derived targets are preferences unless `workload` is selected in Essential requirements.
 
-| Component | Weight | Source of score |
+## Hard requirements
+
+Every product first passes availability, `GB`/`GBP`, complete-data and known-chip checks. Visitor
+answers add only these hard requirements:
+
+| Answer | Hard-filter condition |
+| --- | --- |
+| Budget | Strict target, or a supplied absolute maximum for Flexible/Stretch |
+| Storage | A known selected minimum; `unsure` adds no threshold |
+| Workload and memory | `workload` is explicitly selected as essential |
+| Weight | `maximum-weight` is essential and its verified maximum is supplied |
+| Screen size | `exact-screen` is essential and a preferred size is selected |
+| External displays | `external-displays` is essential and the verified count is supplied |
+
+Portability balance and ordinary screen preference remain soft. “Let Northstar decide”, “No
+preference” and “I’m not sure” do not create constraints. Battery, connections and ownership period
+are not asked in the main questionnaire and cannot become filters.
+
+## Budget and fallback behavior
+
+- **No fixed target:** budget neither filters nor creates a Stretch classification.
+- **Strict:** target is the hard maximum.
+- **Flexible:** an optional absolute maximum is hard; within-target products form the main list and
+  eligible over-target products form a separate Stretch list.
+- **Stretch:** an optional absolute maximum is hard; eligible over-target products can enter the main
+  ranking with the existing five-point adjustment.
+
+The engine prefers eligible Exact, Closest and permitted Stretch results. A preference compromise
+never causes No Match. If budget alone blocks otherwise eligible products, the result is
+`budget-limited`. `no-match` means explicit hard requirements block every verified configuration;
+Northstar does not silently relax them.
+
+## Scoring
+
+The numeric weights and fit matrices for the remaining active dimensions are unchanged:
+
+| Component | Configured weight | Source |
 | --- | ---: | --- |
-| Workload | 30 | Workload matrix × capability band |
-| Primary uses | 25 | Average of one or two primary-use matrix values |
-| Portability/performance | 20 | Selected blend of weight band and capability band |
-| Screen size | 15 | Compact/large match; omitted for no preference |
-| Ownership period | 10 | Headroom matrix; omitted when unsure |
+| Workload | 25 | Strongest derived workload band × capability band |
+| Primary uses | 20 | Average of one or two use/capability fits |
+| Multitasking and memory | 15 | Derived memory target × verified memory band |
+| Portability and weight | 15 | Portability/performance blend; essential weight can add target fit; omitted when Northstar is asked to decide and no weight is essential |
+| Screen size | 10 | Exact/nearby marketed-size fit; omitted for no preference |
+| External displays | 5 | Verified count fit when explicitly essential |
 
-Portability/performance uses this formula:
-
-```text
-portability score = portability band / 5 × 100
-performance score = capability band / 4 × 100
-component score = portability score × selected portability share
-                + performance score × selected performance share
-```
-
-The selected shares run from `1 / 0` for portability-first to `0 / 1` for performance-first.
-Balanced uses `0.5 / 0.5`.
-
-## Normalization
-
-An optional component with “unsure” or “no preference” has `null` value and zero applied weight. The
-engine normalizes over the remaining weights:
+Ownership-period scoring is inactive in rules 2.1. The remaining configured weights deliberately
+retain their previous numeric values. Inapplicable components have zero applied weight, and the
+score is normalized over applied components:
 
 ```text
-score = weighted points / applicable weight × 100
+score = sum(component value × configured weight) / sum(applied weights)
 ```
 
-Scores are stored as integer basis points and exposed as a percentage with at most two decimal
-places. The score cannot exceed 100.
+This produces the same relative weighting those dimensions had when ownership was previously
+unanswered. Scores are stored as integer basis points and exposed as percentages up to 100.
 
-Example: if screen size and ownership are omitted, the applicable weight is `30 + 25 + 20 = 75`.
-A product earning 30, 25 and 15 weighted points scores `70 / 75 × 100 = 93.33`.
+## Result classifications and ordering
 
-## Reasons and compromises
+- **Stretch-budget match:** eligible but above the preferred target.
+- **Exact match:** within target, every applied component is at least 70 and no major compromise is
+  present.
+- **Closest match:** passes every hard requirement but contains a scored preference below 70 or a
+  major explained compromise.
 
-Reasons include both hard-requirement evidence and the strongest scored preferences. Stage 4
-reserves up to two of the three reason slots for strong preference components, preventing hard
-filter confirmations from hiding the factors that explain rank.
+Ordering is deterministic by budget-adjusted ranking score, total fit, workload, primary uses,
+multitasking/memory, portability/weight, screen, displays, fewer compromises, lower verified price
+and stable product ID. Lower-ranked products report the deciding factor, largest deficit against the
+leader and any material component advantage.
 
-Compromises identify applied component scores below 70, requirements met without headroom, or a
-price using at least 90% of a finite budget. Reasons and compromises are deterministic structured
-objects with evidence, not marketing copy.
+## Confidence
 
-## Deterministic ordering
+Confidence describes the evidence supporting an eligible ranking; it is not a probability that a
+person will like a product.
 
-Eligible matches are ordered by:
+| Contribution | Maximum |
+| --- | ---: |
+| Evaluated answer coverage | 40 |
+| Leading fit score | 30 |
+| Separation from the second match | 20 |
+| Exact/Closest/Stretch alignment | 10 |
 
-1. total score basis points;
-2. workload component;
-3. primary-use component;
-4. portability/performance component;
-5. fewer compromises;
-6. lower verified price; and
-7. lexicographic stable product ID.
+Coverage uses only ranking-capable dimensions: activities, multitasking, budget, screen, storage and
+device balance. “Not sure”, “No preference” or “Let Northstar decide” can reduce detail coverage but
+cannot invalidate the result or create a filter. Removed battery and connection concepts do not cap
+or reduce confidence.
 
-Equal-score groups are also returned in diagnostics. The engine does not mutate inputs and repeated
-calls with identical validated data produce identical output.
+Ranked labels remain High 80–100, Moderate 55–79 and Low 0–54. Confidence is rendered only for
+eligible ranked recommendations and sits inside a secondary “How Northstar reached this result”
+disclosure with classification diagnostics. `budget-limited` and `no-match` outputs retain
+non-numeric `not-applicable` engine metadata but render no confidence panel; the interface explains
+the blocking hard requirements instead.
+
+Recommendation cards lead with the product, reasons and trade-offs. Numeric score and deterministic
+ranking detail remain available in a native, closed-by-default disclosure on each card.
+
+## Compatibility
+
+The v2-to-v3 migration preserves budget, uses, multitasking, device balance, screen and storage;
+maps unambiguous workload details to activity IDs; and maps explicit mandatory workload, screen,
+weight and display choices to Essential requirements. Soft numeric weight/display preferences,
+battery, connection, sustained-duration and ownership answers are deliberately dropped with review
+issues rather than silently reinterpreted.
+
+The v1 helper continues to map only unambiguous concepts. Combined video/3D use, compact/large
+screen groupings and global workload intensity remain flagged for review.
 
 ## Output contract
 
-The engine returns one of four statuses:
-
-- `ok`: one or more ranked matches;
-- `no-match`: every product failed at least one hard rule;
-- `invalid-input`: questionnaire IDs or structure are invalid; or
-- `invalid-catalog`: the catalogue failed validation.
-
-Every output includes catalogue metadata, a frozen input snapshot, matches, exclusions, tie groups
-and diagnostic counts. A no-match response contains blockers but never a silently relaxed near
-match.
+The pure engine returns `ok`, `budget-limited`, `no-match`, `invalid-input` or `invalid-catalog`.
+Outputs contain immutable input/profile snapshots, primary and separate Stretch matches, exclusions,
+budget-limited context, ties, diagnostics, category counts, confidence and ranking explanations.
+Repeated calls with identical validated inputs are deterministic and do not mutate their arguments.

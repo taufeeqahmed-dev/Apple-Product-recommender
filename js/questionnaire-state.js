@@ -1,116 +1,198 @@
-const TOTAL_STEPS = 8;
-
-const ANSWER_KEYS = new Set([
-  "maximumBudget",
-  "primaryUses",
-  "screenSize",
-  "portabilityPerformance",
-  "workloadIntensity",
-  "minimumStorage",
-  "externalDisplays",
-  "ownershipPeriod",
-]);
+import {
+  QUESTION_ORDER,
+  getQuestionControl,
+  getQuestionDefinition,
+} from "./questionnaire-definition.js";
+import {
+  createInitialAnswers,
+  deepFreeze,
+  deriveQuestionnaireProfile,
+  getVisibleQuestionIds,
+  previewQuestionnaireAnswerChange,
+  validateQuestionnaireAnswers,
+} from "./questionnaire-profile.js";
+import { APPLICATION_VERSION, QUESTIONNAIRE_SCHEMA_VERSION } from "./version.js";
 
 function createInitialState() {
   return {
-    currentStep: 0,
+    applicationVersion: APPLICATION_VERSION,
+    questionnaireSchemaVersion: QUESTIONNAIRE_SCHEMA_VERSION,
     status: "in-progress",
-    answers: {
-      maximumBudget: "",
-      primaryUses: [],
-      screenSize: "",
-      portabilityPerformance: "",
-      workloadIntensity: "",
-      minimumStorage: "",
-      externalDisplays: "",
-      ownershipPeriod: "",
-    },
+    currentQuestionId: QUESTION_ORDER[0],
+    answers: createInitialAnswers(),
     validation: {
-      attemptedSteps: Array(TOTAL_STEPS).fill(false),
+      attemptedQuestionIds: [],
     },
+    editing: {
+      active: false,
+      originQuestionId: null,
+      returnToResults: false,
+    },
+    pendingChange: null,
   };
 }
 
 let state = createInitialState();
+let answersBeforeEditing = null;
 
-function createSnapshot() {
-  const answers = Object.freeze({
-    ...state.answers,
-    primaryUses: Object.freeze([...state.answers.primaryUses]),
-  });
-  const validation = Object.freeze({
-    attemptedSteps: Object.freeze([...state.validation.attemptedSteps]),
-  });
+function snapshot() {
+  return deepFreeze(structuredClone(state));
+}
 
-  return Object.freeze({
-    currentStep: state.currentStep,
-    status: state.status,
-    answers,
-    validation,
-  });
+function requireKnownQuestion(questionId) {
+  const definition = getQuestionDefinition(questionId);
+  if (!definition) throw new Error(`Unknown questionnaire question: ${questionId}`);
+  return definition;
+}
+
+function requireKnownControl(controlId) {
+  const control = getQuestionControl(controlId);
+  if (!control) throw new Error(`Unknown questionnaire control: ${controlId}`);
+  return control;
+}
+
+function ensureCurrentQuestionIsVisible(nextState) {
+  const visibleQuestionIds = getVisibleQuestionIds(nextState.answers);
+  if (!visibleQuestionIds.includes(nextState.currentQuestionId)) {
+    nextState.currentQuestionId = visibleQuestionIds[0] ?? QUESTION_ORDER[0];
+  }
+}
+
+function applyPreview(preview) {
+  state = {
+    ...state,
+    answers: structuredClone(preview.nextAnswers),
+    pendingChange: null,
+  };
+  ensureCurrentQuestionIsVisible(state);
+  return snapshot();
 }
 
 export function getState() {
-  return createSnapshot();
+  return snapshot();
 }
 
-export function setAnswer(answerId, value) {
-  if (!ANSWER_KEYS.has(answerId)) {
-    throw new Error(`Unknown questionnaire answer: ${answerId}`);
-  }
+export function getCurrentProfile() {
+  return deriveQuestionnaireProfile(state.answers);
+}
 
-  const nextValue = answerId === "primaryUses" ? [...value] : value;
+export function setCurrentQuestion(questionId) {
+  requireKnownQuestion(questionId);
+  if (!getVisibleQuestionIds(state.answers).includes(questionId)) {
+    throw new RangeError(`Question is not currently applicable: ${questionId}`);
+  }
+  state = { ...state, currentQuestionId: questionId };
+  return snapshot();
+}
+
+export function markQuestionAttempted(questionId) {
+  requireKnownQuestion(questionId);
+  const attemptedQuestionIds = state.validation.attemptedQuestionIds.includes(questionId)
+    ? [...state.validation.attemptedQuestionIds]
+    : [...state.validation.attemptedQuestionIds, questionId];
   state = {
     ...state,
-    answers: {
-      ...state.answers,
-      [answerId]: nextValue,
+    validation: { attemptedQuestionIds },
+  };
+  return snapshot();
+}
+
+export function requestAnswerChange(controlId, value) {
+  requireKnownControl(controlId);
+  const preview = previewQuestionnaireAnswerChange(state.answers, controlId, value);
+
+  if (preview.clearedQuestionIds.length > 0) {
+    state = {
+      ...state,
+      pendingChange: {
+        controlId,
+        value: structuredClone(value),
+        clearedQuestionIds: [...preview.clearedQuestionIds],
+        clearedAnswers: structuredClone(preview.clearedAnswers),
+      },
+    };
+    return snapshot();
+  }
+
+  return applyPreview(preview);
+}
+
+export function confirmPendingAnswerChange() {
+  if (!state.pendingChange) return snapshot();
+  const { controlId, value } = state.pendingChange;
+  return applyPreview(previewQuestionnaireAnswerChange(state.answers, controlId, value));
+}
+
+export function cancelPendingAnswerChange() {
+  state = { ...state, pendingChange: null };
+  return snapshot();
+}
+
+export function beginEditing(questionId, { returnToResults = true } = {}) {
+  if (state.status !== "complete") {
+    throw new Error("Questionnaire answers can only be edited after completion.");
+  }
+  setCurrentQuestion(questionId);
+  answersBeforeEditing = structuredClone(state.answers);
+  state = {
+    ...state,
+    status: "editing",
+    editing: {
+      active: true,
+      originQuestionId: questionId,
+      returnToResults,
     },
   };
-
-  return createSnapshot();
+  return snapshot();
 }
 
-export function setCurrentStep(stepIndex) {
-  if (!Number.isInteger(stepIndex) || stepIndex < 0 || stepIndex >= TOTAL_STEPS) {
-    throw new RangeError(`Questionnaire step must be between 0 and ${TOTAL_STEPS - 1}.`);
-  }
-
-  state = {
-    ...state,
-    currentStep: stepIndex,
-  };
-
-  return createSnapshot();
-}
-
-export function markStepAttempted(stepIndex) {
-  if (!Number.isInteger(stepIndex) || stepIndex < 0 || stepIndex >= TOTAL_STEPS) {
-    throw new RangeError(`Questionnaire step must be between 0 and ${TOTAL_STEPS - 1}.`);
-  }
-
-  const attemptedSteps = [...state.validation.attemptedSteps];
-  attemptedSteps[stepIndex] = true;
-  state = {
-    ...state,
-    validation: {
-      attemptedSteps,
-    },
-  };
-
-  return createSnapshot();
-}
-
-export function completeQuestionnaire() {
+export function finishEditing() {
+  if (!state.editing.active) return snapshot();
+  const visibleQuestionIds = getVisibleQuestionIds(state.answers);
+  answersBeforeEditing = null;
   state = {
     ...state,
     status: "complete",
+    currentQuestionId:
+      visibleQuestionIds[visibleQuestionIds.length - 1] ?? state.currentQuestionId,
+    editing: {
+      active: false,
+      originQuestionId: null,
+      returnToResults: false,
+    },
   };
+  return snapshot();
+}
 
-  return createSnapshot();
+export function cancelEditing() {
+  if (!state.editing.active) return snapshot();
+  state = {
+    ...state,
+    status: "complete",
+    answers: structuredClone(answersBeforeEditing ?? state.answers),
+    editing: {
+      active: false,
+      originQuestionId: null,
+      returnToResults: false,
+    },
+    pendingChange: null,
+  };
+  answersBeforeEditing = null;
+  ensureCurrentQuestionIsVisible(state);
+  return snapshot();
+}
+
+export function completeQuestionnaire() {
+  const validation = validateQuestionnaireAnswers(state.answers);
+  if (!validation.valid) {
+    throw new Error(`Questionnaire cannot be completed: ${validation.errors.join(" ")}`);
+  }
+  state = { ...state, status: "complete", pendingChange: null };
+  return snapshot();
 }
 
 export function resetQuestionnaire() {
   state = createInitialState();
-  return createSnapshot();
+  answersBeforeEditing = null;
+  return snapshot();
 }

@@ -1,0 +1,4 @@
+export const APPLICATION_VERSION = "1.1.0";
+export const QUESTIONNAIRE_SCHEMA_VERSION = 3;
+
+export const RECOMMENDATION_RULES_VERSION = "2.1.0";

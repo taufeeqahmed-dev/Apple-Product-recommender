@@ -17,8 +17,11 @@ Thumbs.db
 
 # Dependencies, generated output, and logs
 node_modules/
+.pnpm-store/
 dist/
 coverage/
+playwright-report/
+test-results/
 *.log
 *.tmp
 *.temp

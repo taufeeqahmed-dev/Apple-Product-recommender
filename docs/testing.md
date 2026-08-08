@@ -1,157 +1,201 @@
-# Stage 4 test report
+# Northstar v1.1 Phase 5 test report
 
-Date: 1 August 2026  
-Branch: `stage-4-final-polish`  
-Status: in review; not committed, pushed, merged or deployed
+Date: 7 August 2026
+
+Branch: `feature/adaptive-questionnaire-v1.1`
+
+Status: focused questionnaire-simplification review candidate; not committed, pushed, merged,
+tagged or deployed; release preparation paused
 
 ## Acceptance targets
 
-Production Lighthouse must reach at least 90 Performance and at least 95 for Accessibility, Best
-Practices and SEO. The requested local viewport matrix is 390×844, 768×1024 and 1440×900.
+- Preserve all unit, catalogue, migration, engine and recommendation-quality coverage.
+- Add repeatable browser tests without adding a production dependency or framework.
+- Exercise 1440×900 desktop, 768×1024 tablet and 390×844 mobile viewports.
+- Preserve keyboard operation, deliberate focus, semantic structure and responsive containment.
+- Reach at least 90 Performance and 95 Accessibility, Best Practices and SEO in valid local
+  Lighthouse runs.
+- Keep `js/products.js`, verified Apple facts and `sources/` unchanged.
+- Prove every schema-3 journey contains seven to nine steps and unsupported legacy answers cannot
+  affect ranking or confidence.
 
-Safari/iPhone, physical-device behaviour, VoiceOver, a representative Windows screen reader and
-physical keyboard-only testing are deliberately user-assisted checks. They are not marked complete
-from emulation or source inspection.
+Automation does not substitute for physical-device and assistive-technology testing. Those checks
+remain explicit rather than being marked complete from emulation.
+
+## Test environment
+
+| Tool | Version/use |
+| --- | --- |
+| Operating system | Windows |
+| Node.js | 24.14.0 |
+| pnpm | 11.16.0 |
+| Playwright Test | 1.62.0, development-only |
+| Local browser | Microsoft Edge 151.0.4129.21 via Playwright Chromium API |
+| Lighthouse | 13.4.1 using the same installed Edge executable |
+
+GitHub Actions uses Node 24, frozen pnpm dependencies and Playwright Chromium installed in the CI
+job. The production Pages artifact still contains only static site files.
 
 ## Automated verification
 
 | Check | Result |
 | --- | --- |
-| `node --test` baseline | 16/16 passed |
-| Stage 4 recommendation-quality additions | 6 tests added |
-| Current full suite | 22/22 passed |
-| `node --check` baseline | 12/12 JavaScript files passed |
-| Current syntax check | 13/13 JavaScript files passed |
-| Protected product catalogue | Unmodified |
+| Full `node --test` suite | 67 passed, 0 failed, 0 skipped, 0 cancelled |
+| v1/v2 compatibility and migration tests within the suite | 5 passed, 0 failed |
+| Recommendation-quality tests within the suite | 11 passed, 0 failed |
+| JavaScript `node --check` scan | 30 files passed, 0 failed |
+| Playwright browser suite | 9 passed, 0 failed |
+| Protected product/schema paths | Unmodified |
 | Read-only `sources/` directory | Unmodified |
 
-Coverage includes exact product facts, catalogue validation, immutability, boundary prices, no
-match, ties, malformed input, determinism, normalization, output structure, right-sized everyday
-scenarios and monotonic budget/storage/display requirements.
+The 67-test suite covers:
+
+- exact product IDs, dated prices, facts, official sources, schema validation and immutability;
+- independent application, questionnaire-schema and rules versions;
+- declarative visibility, reconciliation, hidden-answer rejection and adaptive state;
+- deliberate migration of v1 fixtures and the former schema-2 state, including dropped concepts;
+- seven core steps, nine-step maximum and tailored one/two-use activity options;
+- granular activity and essential-detail dependency clearing;
+- strict/flexible/stretch budget boundaries and budget-limited outcomes;
+- essentials-only workload, memory, weight, screen and verified-display filtering;
+- removal and non-influence of legacy battery, connection and ownership answers;
+- deterministic ranking, ties, classifications, confidence and explanations;
+- representative exact, closest, stretch, budget-limited and genuine no-match cases; and
+- right-sized university, programming, cybersecurity/virtual-machine, photo/video and demanding
+  development scenarios, plus monotonic hard-requirement behavior.
+
+## Playwright browser coverage
+
+The Playwright configuration starts the dependency-free local static server, uses one isolated page
+per test and runs the same three tests in every viewport project.
+
+| Project | Viewport | Tests | Result |
+| --- | ---: | ---: | --- |
+| Desktop | 1440×900 | 3 | Passed |
+| Tablet | 768×1024 | 3 | Passed |
+| Mobile | 390×844 | 3 | Passed |
+| **Total** | — | **9** | **9 passed, 0 failed** |
+
+### Streamlined branching and no-match test
+
+- Initial “Getting to know your needs” state with an associated `Step 1 of 7` accessible detail.
+- Required-answer alert, `aria-invalid` behavior and focus on the first invalid radio.
+- One tailored activity step with programming/cybersecurity shared options shown once.
+- Back navigation and preserved multi-select activity answers.
+- Removing study clears only its obsolete activity while preserving programming selections.
+- Calm stage labels with exact seven-to-nine-step values retained for assistive technology.
+- One contextual message after leaving Essentials without repeatedly announcing changing totals.
+- A genuine conflicting weight/display path explains its blockers and renders no confidence panel.
+- No console or uncaught page errors.
+
+### Results editing test
+
+- Completion focus on the results heading.
+- Grouped primary-use editing and heading focus.
+- Clearing/announcing a newly irrelevant activity selection.
+- Required activity completion after an edited use invalidates the previous activity.
+- Compact refreshed answer summaries without stale state.
+- Storage editing and essential maximum-weight addition/removal.
+- Dependent weight detail clearing when Essentials returns to “None”.
+- No console or uncaught page errors.
+
+### Results and comparison test
+
+- High/Moderate/Low threshold documentation for eligible rankings.
+- Exact, closest and stretch-budget classification explanations.
+- A visually dominant first recommendation with responsive single-column reflow.
+- Confidence and classification diagnostics inside a closed-by-default native disclosure.
+- Per-product score and ranking detail inside native closed-by-default disclosures.
+- Three semantic recommendation articles and lower-rank explanations.
+- Keyboard-only Tab/Enter opening, Escape closing and close-button operation.
+- Focus on dialog title when opened and comparison trigger when closed.
+- Named scrollable comparison region, four column headers and correct row-group scope.
+- Horizontal table scrolling at tablet/mobile widths and containment at desktop width.
+- Dialog within the viewport and no page-level horizontal overflow in all projects.
+- No console or uncaught page errors.
 
 ## Lighthouse
 
-Lighthouse `13.4.1` used installed Microsoft Edge `151.0.4129.21`. Reports were saved outside the
-repository. The CLI produced valid reports but returned a Windows temporary-profile cleanup warning
-after writing each file; this did not alter the recorded audit results.
+Accepted audits ran against the verified local Phase 5 candidate at
+`http://127.0.0.1:4180/`. Before each accepted audit, the response was confirmed as HTTP 200 with
+Northstar's title, meta description and `<main>` landmark. Reports were saved outside the repository.
 
 | Run | Performance | Accessibility | Best Practices | SEO |
 | --- | ---: | ---: | ---: | ---: |
-| Local baseline — mobile | 100 | 100 | 96 | 100 |
-| Local baseline — desktop | 100 | 100 | 96 | 100 |
-| Local post-fix — mobile | 99 | 100 | 100 | 100 |
-| Local post-fix — desktop | 100 | 100 | 100 | 100 |
-| Deployed production — mobile | Requires reviewed deployment |
-| Deployed production — desktop | Requires reviewed deployment |
+| Local v1.1 mobile | 100 | 100 | 100 | 100 |
+| Local v1.1 desktop | 100 | 100 | 100 | 100 |
+| Deployed v1.1 mobile | Pending reviewed deployment |
+| Deployed v1.1 desktop | Pending reviewed deployment |
 
-Baseline Best Practices lost points because the browser requested a missing `/favicon.ico`. The
-same audit also reported accessible-name/visible-label mismatch on the two Northstar home links.
-The post-fix reports contain no console errors or label-content-name failures and exceed every local
-acceptance target. Production scores remain unclaimed until deployment is approved.
+Lighthouse wrote valid JSON reports, then its Windows browser launcher returned a temporary-profile
+cleanup `EPERM` while trying to remove its already-used temporary directory. The same known cleanup
+behavior occurred after both accepted reports and does not change their URL, timestamps, audit data
+or category scores.
 
-## Functional end-to-end matrix
+An earlier report on port 4174 was rejected because that port was already occupied by an unrelated
+directory-listing server. It is not part of the results above.
 
-| Journey or state | Result |
-| --- | --- |
-| Initial load, landmarks and skip-link target | Passed |
-| Missing required budget answer | Passed; alert shown and first radio focused |
-| One and two primary uses | Passed |
-| Third primary use | Passed; selection rejected and limit announced |
-| Back/Continue and answer preservation | Passed |
-| Progress from step 1 through step 8 | Passed |
-| Complete questionnaire and render top three | Passed |
-| Result heading focus and polite announcement | Passed |
-| Restart cancellation and focus return | Passed |
-| Restart confirmation and full reset | Passed |
-| Mobile navigation open/close and Escape | Passed |
-| No-match engine output | Passed through automated scenario |
-| Invalid-input and invalid-catalogue output | Passed through automated tests |
-| Console warnings/errors during interactive journey | None observed |
-| Internal anchors | All targets present |
-| Official external links | All 18 URLs resolved; two support links reached Apple's human-verification page |
-| Repository-subdirectory CSS/modules/assets | Passed at `/apple-product-recommender/` |
+Accepted report locations outside the repository:
 
-Post-fix regression passed for the affected focus, invalid-state, restart, result-name, explanation,
-date-formatting and responsive states.
+- `northstar-v1.1-lighthouse-mobile.json`
+- `northstar-v1.1-lighthouse-desktop.json`
 
-## Browser and viewport matrix
-
-| Environment | Coverage | Result |
-| --- | --- | --- |
-| In-app Chromium-based browser | Full interactive journey and post-fix regression | Passed |
-| Microsoft Edge 151 on Windows | Lighthouse mobile and desktop page load | Passed |
-| Chrome on Windows | Not installed in this environment | Manual verification required |
-| Firefox on Windows | Not installed in this environment | Manual verification where available |
-| 390×844 emulation | Navigation, controls, one-column actions, overflow | Passed baseline |
-| 768×1024 emulation | Navigation, two-column options, overflow | Passed baseline |
-| 1440×900 | Navigation, three-column process layout, overflow | Passed baseline |
-
-No horizontal overflow was found at the three requested viewports. Screenshots are captured after
-the final regression pass so they represent the review candidate rather than the baseline.
+Production scores are intentionally unclaimed until the reviewed branch is merged and Pages deploys.
+These local Lighthouse results predate the schema-3 simplification and are retained only as prior
+Phase 5 evidence. Lighthouse has not yet been rerun for this focused revision because release
+preparation is paused.
 
 ## Accessibility review
 
-Baseline checks passed for semantic landmarks, heading order, native labels, fieldsets, error
-association, progress semantics, results status, reduced-motion CSS, focus placement, visible focus
-and responsive reflow. Lighthouse Accessibility scored 100 on mobile and desktop.
+Automated and rendered checks confirm:
 
-Confirmed improvements in the review branch:
+- one main landmark, logical headings, fieldsets, legends and native controls;
+- associated help/error text and polite adaptive/result status regions;
+- plain-language control labels with selection rules and requirement clarifications associated through
+  `aria-describedby`;
+- calm visible progress stages with accurate seven-to-nine-step values exposed to assistive technology;
+- native grouped checkboxes for tailored activities and Essential requirements;
+- one contextual essential-detail announcement after leaving Essentials rather than repeated total-change announcements;
+- deliberate focus on questions, invalid controls, results and dialog title;
+- focus restoration after comparison closes;
+- no positive `tabindex` values;
+- keyboard-operable dialog and horizontally scrollable comparison region;
+- verified facts separated from Northstar assessments;
+- evaluated-evidence confidence and classifications behind a secondary disclosure for eligible results;
+- no confidence panel for terminal outcomes, which explain blocking requirements instead;
+- responsive containment and no page-level horizontal overflow; and
+- reduced-motion and visible-focus CSS retained.
 
-- remove the two visible-label/accessibility-name mismatches;
-- expose custom invalid states with `aria-invalid`;
-- give repeated product families configuration-specific article and link names;
-- return focus when restart is cancelled with Escape;
-- explain when JavaScript is unavailable.
+## Manual verification still required
 
-Automated focus and key activation do not substitute for the pending physical keyboard and
-screen-reader checks below.
+These checks require hardware, browsers or assistive technology not genuinely represented by the
+automated environment:
 
-## Recommendation-quality scenarios
+- Safari on the target iPhone in portrait and landscape.
+- Dynamic Type/system text sizing and touch-target behavior on a physical phone.
+- VoiceOver on iPhone through branching, validation, edits, comparison and restart.
+- VoiceOver on macOS/Safari where available.
+- Narrator or another representative Windows screen reader through the same flow.
+- A complete physical-keyboard journey including Shift+Tab, Escape and horizontal comparison scroll.
+- Current Chrome and Firefox smoke tests where installed.
+- JavaScript-disabled and module-load-failure fallback in a user-controlled browser.
+- Deployed v1.1 smoke tests, internal asset paths and production Lighthouse after approval/merge.
 
-| Scenario | Expected leading outcome | Baseline result |
-| --- | --- | --- |
-| Student, portable, up to £1,500 | 13-inch Air | Passed |
-| Coding, moderate, up to £1,000 | Neo with explicit compromises | Passed |
-| Large-screen office, up to £1,500 | 15-inch Air | Passed |
-| Demanding coding, two displays, 1TB | 14-inch M5 Pro | Passed |
-| Photo/design, demanding, up to £2,000 | Eligible Air/Pro shortlist with trade-offs | Passed |
-| Audio production, demanding, two displays | 14-inch M5 Pro | Passed |
-| Video/3D, very demanding, 2TB, 3+ displays | 16-inch M5 Max | Passed |
-| Contradictory £1,000 professional requirements | No match | Passed |
-| Everyday, flexible, balanced, optional answers unsure | Right-sized 13-inch Air | Failed baseline; fixed and regression-tested |
-| Everyday, light, explicitly performance-first | Maximum capability remains possible | Passed after correction |
+Record browser/device versions, date, result and any accepted limitation in
+`docs/release-v1.1.md` before marking the corresponding release item complete.
 
-The right-sizing correction changes only Northstar workload judgements for light and moderate work;
-no Apple fact or product record changed. Rules version is now `1.1.0`.
+## Known limitations
 
-## Defects and resolution status
+- Playwright viewport projects are emulations, not physical devices.
+- Local Edge coverage does not establish Safari/WebKit or screen-reader behavior.
+- Lighthouse audits the initial page state, while interactive accessibility is covered separately by
+  Playwright and still requires representative assistive-technology checks.
+- Product facts/prices remain a dated snapshot and were not re-verified in Phase 5.
+- Optional shareable URLs are outside Phase 5 and untested because they are not implemented.
 
-| Severity | Defect | Status |
-| --- | --- | --- |
-| High | Flexible light/moderate everyday input ranked a £4,099 M5 Max first | Fixed with failing-then-passing regression test |
-| Medium | Reasons omitted scoring preferences when hard reasons filled all slots | Fixed with regression test |
-| Medium | Repeated Air cards and source links had indistinguishable accessible names | Fixed; final browser regression passed |
-| Medium | Brand-link accessible names failed label-content-name check | Fixed; local Lighthouse rerun passed |
-| Medium | Missing favicon caused the only console 404 | Fixed; local 200 check and Lighthouse rerun passed |
-| Medium | No usable explanation when JavaScript/modules are unavailable | Fixed; static fallback verified, browser test with JavaScript disabled remains manual |
-| Medium | README contradicted Git/project status | Fixed in review documentation |
-| Low | Internal stage/future wording and legacy placeholder CSS | Fixed |
-| Low | Canonical/social/crawler metadata absent | Added; production verification pending |
+## Focused revision conclusion
 
-## User-assisted manual verification
-
-Before Stage 4 can be marked complete, the project owner should verify:
-
-- Safari on the target iPhone;
-- portrait and landscape on a physical phone;
-- touch behaviour and system text sizing;
-- VoiceOver on iPhone through the questionnaire, errors, results and restart;
-- Narrator or another representative Windows screen reader;
-- a complete physical keyboard-only journey including Shift+Tab and Escape;
-- the JavaScript-disabled/module-load-failure fallback in a browser;
-- current Chrome on Windows;
-- current Firefox on Windows where available; and
-- the deployed production URL and production Lighthouse after approval/merge.
-
-Record the browser/device versions, date, outcome and any accepted limitation before changing the
-Stage 4 status to complete.
+All updated unit, syntax and browser checks available in this environment pass. Verified product
+facts, product schema and suitability matrices remain unchanged. Questionnaire schema 3 and rules
+2.1 are deliberate behavior changes described in `docs/algorithm.md`. Release preparation remains
+paused, and the revision must be reviewed before any commit or push.
