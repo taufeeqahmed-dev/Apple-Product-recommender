@@ -20,6 +20,7 @@ import {
 import {
   APPLICATION_VERSION,
   QUESTIONNAIRE_SCHEMA_VERSION,
+  QUESTIONNAIRE_STATE_SCHEMA_VERSION,
   RECOMMENDATION_RULES_VERSION,
 } from "../js/version.js";
 
@@ -38,8 +39,9 @@ function minimalValidAnswers() {
 }
 
 test("application, questionnaire schema and recommendation rules are independently versioned", () => {
-  assert.equal(APPLICATION_VERSION, "1.1.0");
+  assert.equal(APPLICATION_VERSION, "1.2.0");
   assert.equal(QUESTIONNAIRE_SCHEMA_VERSION, 3);
+  assert.equal(QUESTIONNAIRE_STATE_SCHEMA_VERSION, 1);
   assert.equal(RECOMMENDATION_RULES_VERSION, "2.1.0");
 });
 

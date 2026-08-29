@@ -1,36 +1,65 @@
 # Project status
 
-Last updated: 7 August 2026
+Last updated: 29 August 2026
 
 ## Project goal
 
 Northstar is an unofficial Computer Science portfolio project that helps people choose a MacBook
-without requiring them to understand chip names or benchmarks. Version 1.1 asks an adaptive set of
-plain-language questions, distinguishes preferences from explicit requirements and explains up to
-three deterministic recommendations, their compromises and the confidence in the shortlist.
+without requiring them to understand chip names or benchmarks. Version 1.2 is adding shareable and
+resumable recommendation decision state while retaining local deterministic recommendation
+calculation against the compatible current engine and verified catalogue.
 
 Northstar is independent and is not affiliated with, endorsed by or sponsored by Apple Inc.
 Verified Apple facts remain separate from Northstar's internal suitability judgements.
 
 ## Current branch and release state
 
-- Current branch: `feature/adaptive-questionnaire-v1.1`.
-- v1.0.0 remains tagged, released and deployed from the unchanged v1.0 main history.
-- v1.1 Phases 1–4 were reviewed, committed and pushed.
-- A focused post-Phase-5 usability revision is implemented locally and awaits review. It shortens
-  the questionnaire before release work resumes and is not committed, pushed, merged, tagged or deployed.
-- Optional Phase 6 shareable results have not begun.
+- Current branch: `feature/shareable-results-v1.2`.
+- Northstar v1.1.0 is the current stable release, tagged and deployed from `main`.
+- v1.2 Phase 1 state schema, serialization and validation are implemented locally as an uncommitted
+  review candidate.
+- Phase 2 local browser persistence has not begun and is not approved before Phase 1 review.
+- Share/copy UI and browser URL adoption have not begun.
+- No v1.2 work is committed, pushed, merged, tagged, released or deployed.
 
 ## Independent version metadata
 
 | Concern | Version |
 | --- | --- |
-| Application/package | `1.1.0` |
+| Application/package | `1.2.0` development branch |
 | Questionnaire schema | `3` |
+| Questionnaire-state schema | `1` |
 | Recommendation rules | `2.1.0` |
 | Verified catalogue | Unchanged 31 July 2026 snapshot |
 
-## Focused questionnaire usability revision
+## v1.2 Phase 1 review candidate
+
+- Minimal sparse state containing stable question/control and option IDs only.
+- State-schema versioning independent from application, questionnaire and recommendation rules.
+- Separate validation for resumable `in-progress` and fully answered `complete` state.
+- Explicit allowlist reconstruction without merging imported objects.
+- Strict rejection of unknown, stale, hidden, incompatible, duplicate and structurally unsafe data.
+- Deterministic canonical JSON with definition-ordered answer keys and multi-select values.
+- A 4,096 UTF-8 byte bound on serialized input and output.
+- No labels, display content, product facts or recommendation output in serialized state.
+- Focused unit coverage for valid, partial, complete, hostile, round-trip and size-boundary cases.
+
+The full internal contract and rejection policy are documented in
+`docs/state-serialization.md`.
+
+## v1.2 Phase 1 verification
+
+| Check | Result |
+| --- | --- |
+| Focused state-contract unit tests | 42 passed, 0 failed |
+| Complete `node --test` suite | 109 passed, 0 failed |
+| Pre-existing v1.1 tests within the suite | 67 passed, 0 failed |
+| JavaScript syntax | 32 files passed, 0 failed |
+| Playwright browser regression suite | 9 passed, 0 failed |
+| `git diff --check` | Passed |
+| Protected product/source paths | Unmodified |
+
+## v1.1 questionnaire baseline
 
 - Seven core steps and at most two conditional essential-detail steps.
 - Budget amount/flexibility and portability/screen controls are combined into logical screens.
@@ -50,7 +79,7 @@ Verified Apple facts remain separate from Northstar's internal suitability judge
 - Calm visible progress labels avoid repeatedly foregrounding adaptive total changes while exact step
   counts remain available to assistive technology.
 
-## Phase 5 review candidate
+## v1.1 verification baseline
 
 - Added exact-version development-only Playwright testing; production remains framework-free.
 - Added nine browser tests across desktop, tablet and mobile target viewports.
@@ -89,10 +118,5 @@ Production Lighthouse is intentionally unclaimed until a reviewed deployment exi
 
 ## Remaining release work
 
-The focused usability revision must be reviewed before any commit or push. Release preparation is
-paused; earlier local Lighthouse measurements predate this revision and must not be treated as its
-release evidence. Safari, VoiceOver, representative Windows screen-reader and physical-device checks
-remain manual environment-dependent verification.
-
-No Phase 6 work is authorized before the core v1.1 release is complete, stable and separately
-reviewed.
+Phase 1 must be reviewed before any commit or push. Do not begin local-storage persistence, resume
+prompts, URL adoption, copy/share controls or any later v1.2 phase without separate approval.
