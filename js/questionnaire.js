@@ -244,7 +244,11 @@ export function initialiseQuestionnaire({
   onEditCancelled = null,
   onStableStateChange = null,
   onClearSavedState = null,
+  onLoadSavedState = null,
+  onSharedStateAdopted = null,
+  onSharedImportDismissed = null,
   storedState = null,
+  sharedImport = null,
 } = {}) {
   const form = document.querySelector("#questionnaire-form");
   const questionContainer = document.querySelector("#questionnaire-question");
@@ -256,6 +260,11 @@ export function initialiseQuestionnaire({
   const backButton = document.querySelector("#questionnaire-back");
   const submitButton = document.querySelector("#questionnaire-continue");
   const completionPanel = document.querySelector("#questionnaire-complete");
+  const sharedPanel = document.querySelector("#questionnaire-shared");
+  const sharedContinueButton = document.querySelector("#questionnaire-shared-continue");
+  const sharedDismissButton = document.querySelector("#questionnaire-shared-dismiss");
+  const invalidSharedPanel = document.querySelector("#questionnaire-shared-invalid");
+  const invalidSharedContinueButton = document.querySelector("#questionnaire-shared-invalid-continue");
   const resumePanel = document.querySelector("#questionnaire-resume");
   const resumeContinueButton = document.querySelector("#questionnaire-resume-continue");
   const resumeStartAgainButton = document.querySelector("#questionnaire-resume-start-again");
@@ -267,10 +276,13 @@ export function initialiseQuestionnaire({
   let restartReturnTarget = null;
   let editingReturnTarget = null;
   let resumableState = storedState;
+  let activeSharedImport = sharedImport;
 
   if (
     !form || !questionContainer || !progressWrap || !progress || !progressText || !progressDetail ||
-    !changeSummary || !backButton || !submitButton || !completionPanel || !resumePanel ||
+    !changeSummary || !backButton || !submitButton || !completionPanel || !sharedPanel ||
+    !sharedContinueButton || !sharedDismissButton || !invalidSharedPanel ||
+    !invalidSharedContinueButton || !resumePanel ||
     !resumeContinueButton || !resumeStartAgainButton ||
     !restartConfirmation || !restartConfirmationTitle || !confirmRestartButton ||
     !cancelRestartButton
@@ -477,6 +489,8 @@ export function initialiseQuestionnaire({
   });
 
   const showFreshQuestionnaire = (message = "") => {
+    sharedPanel.hidden = true;
+    invalidSharedPanel.hidden = true;
     resumePanel.hidden = true;
     progressWrap.hidden = false;
     completionPanel.hidden = true;
@@ -487,10 +501,72 @@ export function initialiseQuestionnaire({
     if (message) setLiveText(changeSummary, message);
   };
 
+  const showStoredResume = () => {
+    sharedPanel.hidden = true;
+    invalidSharedPanel.hidden = true;
+    progressWrap.hidden = true;
+    form.hidden = true;
+    completionPanel.hidden = true;
+    resumePanel.hidden = false;
+  };
+
+  const continueWithoutSharedImport = () => {
+    activeSharedImport = null;
+    onSharedImportDismissed?.();
+    const loaded = onLoadSavedState?.();
+    resumableState = loaded?.loaded ? loaded.state : null;
+    if (resumableState) {
+      showStoredResume();
+      return;
+    }
+    resetQuestionnaire();
+    onRestart?.();
+    showFreshQuestionnaire("Continue with a new questionnaire.");
+  };
+
+  sharedContinueButton.addEventListener("click", () => {
+    try {
+      const restored = restoreQuestionnaireState(activeSharedImport?.state);
+      activeSharedImport = null;
+      resumableState = null;
+      onSharedStateAdopted?.(restored);
+      sharedPanel.hidden = true;
+      invalidSharedPanel.hidden = true;
+      resumePanel.hidden = true;
+      progressWrap.hidden = false;
+      renderCurrentQuestion({ moveFocus: false });
+      if (restored.status === "complete") {
+        form.hidden = true;
+        completionPanel.hidden = false;
+        const completionHandled = onComplete?.(restored.answers, {
+          isEdit: false,
+          isRestore: true,
+          isShared: true,
+        }) === true;
+        if (!completionHandled) completionPanel.querySelector(".questionnaire-step-heading")?.focus();
+      } else {
+        completionPanel.hidden = true;
+        form.hidden = false;
+        renderCurrentQuestion();
+        setLiveText(changeSummary, "Shared answers restored. Continue where the link left off.");
+      }
+    } catch {
+      activeSharedImport = null;
+      onSharedImportDismissed?.();
+      sharedPanel.hidden = true;
+      invalidSharedPanel.hidden = false;
+    }
+  });
+
+  sharedDismissButton.addEventListener("click", continueWithoutSharedImport);
+  invalidSharedContinueButton.addEventListener("click", continueWithoutSharedImport);
+
   resumeContinueButton.addEventListener("click", () => {
     try {
       const restored = restoreQuestionnaireState(resumableState);
       resumableState = null;
+      sharedPanel.hidden = true;
+      invalidSharedPanel.hidden = true;
       resumePanel.hidden = true;
       progressWrap.hidden = false;
       renderCurrentQuestion({ moveFocus: false });
@@ -559,11 +635,22 @@ export function initialiseQuestionnaire({
   });
 
   renderCurrentQuestion({ moveFocus: false });
-  if (resumableState) {
+  if (activeSharedImport?.valid) {
     progressWrap.hidden = true;
     form.hidden = true;
     completionPanel.hidden = true;
-    resumePanel.hidden = false;
+    resumePanel.hidden = true;
+    invalidSharedPanel.hidden = true;
+    sharedPanel.hidden = false;
+  } else if (activeSharedImport?.present) {
+    progressWrap.hidden = true;
+    form.hidden = true;
+    completionPanel.hidden = true;
+    resumePanel.hidden = true;
+    sharedPanel.hidden = true;
+    invalidSharedPanel.hidden = false;
+  } else if (resumableState) {
+    showStoredResume();
   }
   return {
     editQuestion(questionId, { returnTarget = null } = {}) {

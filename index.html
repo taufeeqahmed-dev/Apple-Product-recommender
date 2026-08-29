@@ -151,6 +151,61 @@
 
         <section
           class="questionnaire-resume"
+          id="questionnaire-shared"
+          aria-labelledby="questionnaire-shared-title"
+          aria-describedby="questionnaire-shared-description questionnaire-shared-privacy"
+          hidden
+        >
+          <p class="stage-label">Shared questionnaire</p>
+          <h3 id="questionnaire-shared-title" tabindex="-1">Open shared questionnaire?</h3>
+          <p id="questionnaire-shared-description">
+            This link contains questionnaire choices. Continue to make those answers your active
+            questionnaire session.
+          </p>
+          <p id="questionnaire-shared-privacy">
+            Anyone with the link can recover its questionnaire choices. Progress already saved in
+            this browser will not be changed unless you continue with the shared answers.
+          </p>
+          <p class="visually-hidden" role="status" aria-live="polite">
+            A shared questionnaire is ready for review.
+          </p>
+          <div class="questionnaire-resume-actions">
+            <button class="button button-primary" id="questionnaire-shared-continue" type="button">
+              Continue with shared answers
+            </button>
+            <button class="button button-secondary" id="questionnaire-shared-dismiss" type="button">
+              Use this browser instead
+            </button>
+          </div>
+        </section>
+
+        <section
+          class="questionnaire-resume"
+          id="questionnaire-shared-invalid"
+          aria-labelledby="questionnaire-shared-invalid-title"
+          aria-describedby="questionnaire-shared-invalid-description"
+          hidden
+        >
+          <p class="stage-label">Shared questionnaire unavailable</p>
+          <h3 id="questionnaire-shared-invalid-title" tabindex="-1">
+            This shared questionnaire can’t be opened
+          </h3>
+          <p id="questionnaire-shared-invalid-description">
+            The link is invalid, incompatible or incomplete. No progress saved in this browser was
+            changed, and you can continue using Northstar normally.
+          </p>
+          <p class="visually-hidden" role="status" aria-live="polite">
+            The shared questionnaire could not be opened.
+          </p>
+          <div class="questionnaire-resume-actions">
+            <button class="button button-primary" id="questionnaire-shared-invalid-continue" type="button">
+              Continue without shared link
+            </button>
+          </div>
+        </section>
+
+        <section
+          class="questionnaire-resume"
           id="questionnaire-resume"
           aria-labelledby="questionnaire-resume-title"
           aria-describedby="questionnaire-resume-description"

@@ -11,6 +11,28 @@ import {
   watchForRuntimeErrors,
 } from "./helpers.js";
 
+async function createShareUrlFromStoredState(page, baseUrl = null) {
+  return page.evaluate(
+    async ({ key, requestedBaseUrl }) => {
+      const serialized = localStorage.getItem(key);
+      if (!serialized) throw new Error("No saved questionnaire state is available for export.");
+      const moduleUrl = new URL("js/questionnaire-url.js", document.baseURI).href;
+      const { createQuestionnaireShareUrl } = await import(moduleUrl);
+      return createQuestionnaireShareUrl(
+        JSON.parse(serialized),
+        requestedBaseUrl ?? window.location.href,
+      );
+    },
+    { key: QUESTIONNAIRE_STORAGE_KEY, requestedBaseUrl: baseUrl },
+  );
+}
+
+async function openAbsoluteNorthstar(page, url) {
+  await page.goto(url);
+  await expect(page).toHaveTitle(/Northstar/);
+  await expect(page.getByRole("main")).toHaveCount(1);
+}
+
 test("the seven-step branch preserves answers and clears only obsolete activities", async ({ page }) => {
   const errors = watchForRuntimeErrors(page);
   await openNorthstar(page);
@@ -289,7 +311,6 @@ test("saved partial progress is offered explicitly and can be continued or disca
   await expect(resume).toContainText("not uploaded to Northstar");
   await expect(page.locator("#questionnaire-form")).toBeHidden();
 
-  await page.locator("body").focus();
   for (let index = 0; index < 20; index += 1) {
     await page.keyboard.press("Tab");
     if (await continueSaved.evaluate((button) => button === document.activeElement)) break;
@@ -363,4 +384,199 @@ test("completed progress is recalculated on restore and confirmed restart preven
   await expect(page.locator("#questionnaire-form")).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(0);
   await expectNoRuntimeErrors(errors);
+});
+
+test("a partial share URL restores an adaptive journey in a fresh browser context", async ({
+  page,
+  browser,
+}) => {
+  const sourceErrors = watchForRuntimeErrors(page);
+  await openNorthstar(page);
+  await choose(page, "radio", "I’m not sure yet");
+  await continueQuestionnaire(page);
+  await choose(page, "checkbox", "University, studying and general productivity");
+  await continueQuestionnaire(page);
+  await choose(page, "checkbox", "Research, large spreadsheets and many browser tabs");
+  const shareUrl = await createShareUrlFromStoredState(page);
+
+  const freshContext = await browser.newContext({ viewport: page.viewportSize() ?? undefined });
+  const sharedPage = await freshContext.newPage();
+  const sharedErrors = watchForRuntimeErrors(sharedPage);
+  await openAbsoluteNorthstar(sharedPage, shareUrl);
+  const importedUrl = sharedPage.url();
+
+  const importRegion = sharedPage.getByRole("region", {
+    name: "Open shared questionnaire?",
+    exact: true,
+  });
+  await expect(importRegion).toBeVisible();
+  await expect(importRegion).toContainText("Anyone with the link can recover its questionnaire choices");
+  const adoptButton = importRegion.getByRole("button", {
+    name: "Continue with shared answers",
+    exact: true,
+  });
+  await adoptButton.focus();
+  await sharedPage.keyboard.press("Enter");
+
+  await expect(sharedPage.getByRole("heading", { name: "Tell us what you’ll do", exact: true })).toBeFocused();
+  await expect(
+    sharedPage.getByRole("checkbox", {
+      name: "Research, large spreadsheets and many browser tabs",
+      exact: true,
+    }),
+  ).toBeChecked();
+  await expect(sharedPage.locator("#questionnaire-change-summary")).toContainText(
+    "Shared answers restored",
+  );
+  await continueQuestionnaire(sharedPage);
+  await expect(sharedPage.getByRole("heading", { name: "Tell us about multitasking", exact: true })).toBeFocused();
+  expect(sharedPage.url()).not.toBe(importedUrl);
+  expect(new URL(sharedPage.url()).hash).toMatch(/^#northstar=v1\./);
+  const adoptedStorage = await sharedPage.evaluate(
+    (key) => localStorage.getItem(key),
+    QUESTIONNAIRE_STORAGE_KEY,
+  );
+  expect(adoptedStorage).toMatch(/^\{/);
+  expect(adoptedStorage).not.toContain("northstar=v1");
+  await expectNoRuntimeErrors(sourceErrors);
+  await expectNoRuntimeErrors(sharedErrors);
+  await freshContext.close();
+});
+
+test("a complete share URL recalculates recommendations in a fresh browser context", async ({
+  page,
+  browser,
+}) => {
+  const sourceErrors = watchForRuntimeErrors(page);
+  await openNorthstar(page);
+  await completeBaselineJourney(page);
+  const expectedFirstResult = await page.locator(".recommendation-card h3").first().textContent();
+  const shareUrl = await createShareUrlFromStoredState(page);
+
+  const freshContext = await browser.newContext({ viewport: page.viewportSize() ?? undefined });
+  const sharedPage = await freshContext.newPage();
+  const sharedErrors = watchForRuntimeErrors(sharedPage);
+  await openAbsoluteNorthstar(sharedPage, shareUrl);
+  await sharedPage.getByRole("button", { name: "Continue with shared answers", exact: true }).click();
+
+  await expect(sharedPage.locator("#results-title")).toBeFocused();
+  await expect(sharedPage.getByRole("article")).toHaveCount(3);
+  await expect(sharedPage.locator(".recommendation-card h3").first()).toHaveText(expectedFirstResult);
+  const stored = await sharedPage.evaluate(
+    (key) => localStorage.getItem(key),
+    QUESTIONNAIRE_STORAGE_KEY,
+  );
+  expect(stored).not.toContain("MacBook");
+  expect(stored).not.toContain("recommendation");
+  expect(stored).not.toContain("confidence");
+  await expectNoRuntimeErrors(sourceErrors);
+  await expectNoRuntimeErrors(sharedErrors);
+  await freshContext.close();
+});
+
+test("valid shared state takes precedence without touching different local progress", async ({
+  page,
+  browser,
+}) => {
+  await openNorthstar(page);
+  await choose(page, "radio", "I’m not sure yet");
+  await continueQuestionnaire(page);
+  await choose(page, "checkbox", "University, studying and general productivity");
+  await continueQuestionnaire(page);
+  const shareUrl = await createShareUrlFromStoredState(page);
+
+  const localContext = await browser.newContext({ viewport: page.viewportSize() ?? undefined });
+  const localPage = await localContext.newPage();
+  const localErrors = watchForRuntimeErrors(localPage);
+  await openAbsoluteNorthstar(localPage, "http://127.0.0.1:4173/");
+  await choose(localPage, "radio", "I’m not sure yet");
+  await continueQuestionnaire(localPage);
+  await choose(localPage, "checkbox", "Programming and software development");
+  const localBeforeShare = await localPage.evaluate(
+    (key) => localStorage.getItem(key),
+    QUESTIONNAIRE_STORAGE_KEY,
+  );
+
+  await localPage.goto("about:blank");
+  await openAbsoluteNorthstar(localPage, shareUrl);
+  await expect(localPage.getByRole("region", { name: "Open shared questionnaire?", exact: true })).toBeVisible();
+  expect(await localPage.evaluate((key) => localStorage.getItem(key), QUESTIONNAIRE_STORAGE_KEY))
+    .toBe(localBeforeShare);
+  await localPage.getByRole("button", { name: "Continue with shared answers", exact: true }).click();
+  const localAfterAdoption = await localPage.evaluate(
+    (key) => localStorage.getItem(key),
+    QUESTIONNAIRE_STORAGE_KEY,
+  );
+  expect(localAfterAdoption).not.toBe(localBeforeShare);
+  expect(localAfterAdoption).toContain("study-productivity");
+  expect(localAfterAdoption).not.toContain("software-development");
+  await expect(localPage.getByRole("heading", { name: "Tell us what you’ll do", exact: true })).toBeFocused();
+  await expectNoRuntimeErrors(localErrors);
+  await localContext.close();
+});
+
+test("an invalid share link shows accessible recovery and preserves local progress", async ({ page }) => {
+  const errors = watchForRuntimeErrors(page);
+  await openNorthstar(page);
+  await choose(page, "radio", "I’m not sure yet");
+  await continueQuestionnaire(page);
+  await choose(page, "checkbox", "University, studying and general productivity");
+  const localBeforeInvalidLink = await page.evaluate(
+    (key) => localStorage.getItem(key),
+    QUESTIONNAIRE_STORAGE_KEY,
+  );
+
+  await page.goto("about:blank");
+  await page.goto("/#northstar=v1.!!!!");
+  const recovery = page.getByRole("region", {
+    name: "This shared questionnaire can’t be opened",
+    exact: true,
+  });
+  await expect(recovery).toBeVisible();
+  await expect(recovery).toContainText("No progress saved in this browser was changed");
+  await expect(recovery).not.toContainText("!!!!");
+  expect(new URL(page.url()).hash).toBe("");
+  expect(await page.evaluate((key) => localStorage.getItem(key), QUESTIONNAIRE_STORAGE_KEY))
+    .toBe(localBeforeInvalidLink);
+
+  const continueButton = recovery.getByRole("button", {
+    name: "Continue without shared link",
+    exact: true,
+  });
+  await continueButton.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("region", { name: "Continue where you left off?", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Choose your main uses", exact: true })).toBeFocused();
+  await expectNoRuntimeErrors(errors);
+});
+
+test("share URLs import correctly from the GitHub Pages repository subpath", async ({
+  page,
+  browser,
+}) => {
+  const errors = watchForRuntimeErrors(page);
+  await openAbsoluteNorthstar(page, "http://127.0.0.1:4173/apple-product-recommender/");
+  await choose(page, "radio", "I’m not sure yet");
+  await continueQuestionnaire(page);
+  await choose(page, "checkbox", "University, studying and general productivity");
+  const shareUrl = await createShareUrlFromStoredState(page);
+  expect(new URL(shareUrl).pathname).toBe("/apple-product-recommender/");
+
+  const freshContext = await browser.newContext({ viewport: page.viewportSize() ?? undefined });
+  const sharedPage = await freshContext.newPage();
+  const sharedErrors = watchForRuntimeErrors(sharedPage);
+  await openAbsoluteNorthstar(sharedPage, shareUrl);
+  await expect(sharedPage.getByRole("region", { name: "Open shared questionnaire?", exact: true })).toBeVisible();
+  await sharedPage.getByRole("button", { name: "Continue with shared answers", exact: true }).click();
+  await expect(sharedPage.getByRole("heading", { name: "Choose your main uses", exact: true })).toBeFocused();
+  await expect(
+    sharedPage.getByRole("checkbox", {
+      name: "University, studying and general productivity",
+      exact: true,
+    }),
+  ).toBeChecked();
+  await expectNoRuntimeErrors(errors);
+  await expectNoRuntimeErrors(sharedErrors);
+  await freshContext.close();
 });

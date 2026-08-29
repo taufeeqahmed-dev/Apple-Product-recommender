@@ -206,8 +206,8 @@ Date: 29 August 2026
 
 Branch: `feature/shareable-results-v1.2`
 
-Status: local persistence and resume review candidate; uncommitted and not pushed, merged, tagged,
-released or deployed
+Status: reviewed, committed and pushed on the v1.2 feature branch; not merged, tagged, released or
+deployed
 
 | Check | Result |
 | --- | --- |
@@ -232,3 +232,38 @@ responsive tests continue to pass in all projects.
 Playwright viewport projects do not replace manual review with Safari, physical mobile devices or a
 representative screen reader. Browser settings that refuse both removal and replacement of existing
 site data also require manual confirmation of the displayed failure message.
+
+## v1.2 Phase 3 verification addendum
+
+Date: 29 August 2026
+
+Branch: `feature/shareable-results-v1.2`
+
+Status: shareable URL import/export review candidate; uncommitted and not pushed, merged, tagged,
+released or deployed
+
+| Check | Result |
+| --- | --- |
+| Complete `node --test` suite | 155 passed, 0 failed, 0 skipped, 0 cancelled |
+| New Phase 3 unit tests | 25 passed, 0 failed |
+| JavaScript syntax scan | 37 files passed, 0 failed |
+| Playwright browser suite | 30 passed, 0 failed |
+| New Phase 3 browser cases | 5 cases × 3 viewport projects = 15 passed |
+| `git diff --check` | Passed |
+
+The Phase 3 unit coverage exercises partial/complete export, deterministic transport, canonical
+round trips, malformed base64url and UTF-8, independent transport/state compatibility, encoded-size
+bounds, hostile IDs and object fields, adaptive inconsistencies, recommendation recalculation,
+URL-before-local startup precedence, deliberate canonical persistence and repository-subpath/query
+preservation.
+
+Browser coverage opens generated partial and complete links in fresh contexts, verifies explicit
+adoption and current recommendation calculation, preserves different local progress until adoption,
+recovers from invalid links without exposing their payload, and serves/imports the same state from
+`/apple-product-recommender/`. All five cases run at desktop, tablet and mobile viewports alongside
+the Phase 2 and v1.1 regression journeys.
+
+The minimal Phase 3 adoption/recovery controls use native buttons and named regions with deliberate
+focus after interaction. Manual screen-reader, physical-device and real shared-link target testing
+remain necessary before release; Phase 4 must also review practical URL length in target messaging
+and browser interfaces.

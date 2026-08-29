@@ -18,9 +18,11 @@ Verified Apple facts remain separate from Northstar's internal suitability judge
 - Northstar v1.1.0 is the current stable release, tagged and deployed from `main`.
 - v1.2 Phase 1 state schema, serialization and validation have been reviewed, committed and pushed
   on the feature branch.
-- v1.2 Phase 2 local browser persistence and explicit resume behavior are implemented locally as an
-  uncommitted review candidate.
-- Phase 3 shared URLs, share/copy UI and Clipboard API work have not begun.
+- v1.2 Phase 2 local browser persistence and explicit resume behavior have been reviewed, committed
+  and pushed on the feature branch.
+- v1.2 Phase 3 URL import/export, precedence and minimal adoption/recovery behavior are implemented
+  locally as an uncommitted review candidate.
+- Phase 4 polished share/copy UI and Clipboard API work have not begun.
 - No v1.2 work is merged to `main`, tagged, released or deployed.
 
 ## Independent version metadata
@@ -48,7 +50,7 @@ Verified Apple facts remain separate from Northstar's internal suitability judge
 The full internal contract and rejection policy are documented in
 `docs/state-serialization.md`.
 
-## v1.2 Phase 2 review candidate
+## v1.2 Phase 2 foundation
 
 - A dedicated browser-storage boundary using `northstar.questionnaire-state.v1`.
 - Best-effort canonical auto-save after stable valid answer, navigation, completion and saved-edit
@@ -62,6 +64,32 @@ The full internal contract and rejection policy are documented in
 
 The full persistence, privacy, restore and failure contract is documented in
 `docs/local-persistence.md`.
+
+## v1.2 Phase 3 review candidate
+
+- Versioned dependency-free `#northstar=v1.<base64url>` URL transport.
+- Independent 5,462-character encoded and 4,096-byte decoded bounds.
+- Strict transport, UTF-8 and Phase 1 state validation before reconstruction.
+- Valid shared state precedence without startup access to local questionnaire storage.
+- Explicit shared-state adoption before canonical Phase 2 persistence can replace local progress.
+- Accessible recovery for malformed, incompatible, oversized, stale or tampered links.
+- Canonical `replaceState` URL hygiene without additional history entries.
+- Partial adaptive resume and complete current-engine/current-catalogue recalculation.
+- Root and GitHub Pages repository-subpath compatibility.
+
+The full transport, precedence, privacy and failure contract is documented in
+`docs/shareable-urls.md`.
+
+## v1.2 Phase 3 verification
+
+| Check | Result |
+| --- | --- |
+| New Phase 3 unit tests | 25 passed, 0 failed |
+| Complete `node --test` suite | 155 passed, 0 failed |
+| JavaScript syntax | 37 files passed, 0 failed |
+| Playwright browser suite | 30 passed, 0 failed |
+| `git diff --check` | Passed |
+| Protected product/source paths | Unmodified |
 
 ## v1.2 Phase 2 verification
 
@@ -145,5 +173,5 @@ Production Lighthouse is intentionally unclaimed until a reviewed deployment exi
 
 ## Remaining release work
 
-Phase 2 must be reviewed before any commit or push. Do not begin URL adoption, copy/share controls
-or any later v1.2 phase without separate approval.
+Phase 3 must be reviewed before any commit or push. Do not begin polished share/copy controls,
+Clipboard API work or any later v1.2 phase without separate approval.
