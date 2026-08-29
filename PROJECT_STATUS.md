@@ -5,7 +5,7 @@ Last updated: 29 August 2026
 ## Project goal
 
 Northstar is an unofficial Computer Science portfolio project that helps people choose a MacBook
-without requiring them to understand chip names or benchmarks. Version 1.2 is adding shareable and
+without requiring them to understand chip names or benchmarks. Version 1.2 adds shareable and
 resumable recommendation decision state while retaining local deterministic recommendation
 calculation against the compatible current engine and verified catalogue.
 
@@ -22,17 +22,20 @@ Verified Apple facts remain separate from Northstar's internal suitability judge
   and pushed on the feature branch.
 - v1.2 Phase 3 URL import/export, precedence and minimal adoption/recovery behavior have been
   reviewed, committed and pushed on the feature branch.
-- v1.2 Phase 4 share/copy-link UX, Clipboard fallback and imported-link messaging are implemented
-  locally as an uncommitted review candidate.
+- v1.2 Phase 4 share/copy-link UX, Clipboard fallback and imported-link messaging have been reviewed,
+  committed and pushed on the feature branch.
+- v1.2 Phase 5 release verification and release-candidate documentation are implemented locally,
+  verified and awaiting review.
 - No v1.2 work is merged to `main`, tagged, released or deployed.
 
 ## Independent version metadata
 
 | Concern | Version |
 | --- | --- |
-| Application/package | `1.2.0` development branch |
+| Application/package | `1.2.0` release candidate |
 | Questionnaire schema | `3` |
 | Questionnaire-state schema | `1` |
+| URL transport | `1` |
 | Recommendation rules | `2.1.0` |
 | Verified catalogue | Unchanged 31 July 2026 snapshot |
 
@@ -66,7 +69,38 @@ The full internal contract and rejection policy are documented in
 The full persistence, privacy, restore and failure contract is documented in
 `docs/local-persistence.md`.
 
-## v1.2 Phase 4 review candidate
+## v1.2 Phase 5 release-candidate assessment
+
+- All Phase 1–4 state, persistence, transport and share UX works together in the complete regression
+  suite.
+- The shared-complete browser journey now verifies current recalculation, editing, canonical local
+  re-persistence/share-fragment refresh and top-three comparison.
+- Local Lighthouse achieved 93/100/100/100 mobile and 94/100/100/100 desktop in
+  Performance/Accessibility/Best Practices/SEO order.
+- Release-target URL measurements range from 235 characters for an initial partial link to 1,234
+  characters for the broadest current valid complete link.
+- Local 320 px reflow review found no horizontal overflow; Safari, physical iPhone, VoiceOver,
+  representative Windows screen-reader and deployed-site checks remain pending.
+- README, architecture, testing, portfolio, project status and the v1.2 release checklist are
+  reconciled without claiming that v1.2 is production.
+- No critical or high product defect was found. Phase 5 fixes documentation drift only.
+
+## v1.2 Phase 5 verification
+
+| Check | Result |
+| --- | --- |
+| Complete `node --test` suite | 167 passed, 0 failed |
+| JavaScript syntax | 39 files passed, 0 failed |
+| Playwright browser suite | 36 passed, 0 failed |
+| Local Lighthouse mobile | 93 / 100 / 100 / 100 |
+| Local Lighthouse desktop | 94 / 100 / 100 / 100 |
+| `git diff --check` | Passed |
+| Protected product/source paths | Unmodified |
+
+The current architecture is documented in `docs/architecture.md`, complete verification evidence in
+`docs/testing.md`, and remaining review/release/deployment gates in `docs/release-v1.2.md`.
+
+## v1.2 Phase 4 foundation
 
 - Complete-results-only **Share results** action over the reviewed Phase 3 exporter.
 - Clipboard API copy with visible and politely announced success.
@@ -201,5 +235,6 @@ Production Lighthouse is intentionally unclaimed until a reviewed deployment exi
 
 ## Remaining release work
 
-Phase 4 must be reviewed before any commit or push. Do not begin Phase 5 or later release work
-without separate approval.
+Phase 5 must be reviewed before any commit or push. After a separately approved commit and feature-
+branch push, the remaining work is PR review, merge, deployed GitHub Pages verification and the
+separately approved `v1.2.0` tag/release. Do not begin v1.3 work.

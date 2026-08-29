@@ -1,6 +1,6 @@
 # Northstar share and copy-link experience
 
-Status: v1.2 Phase 4 review candidate; implemented locally, uncommitted and awaiting review
+Status: v1.2 Phase 4 behavior; reviewed, committed and pushed on the feature branch
 
 ## Product policy
 

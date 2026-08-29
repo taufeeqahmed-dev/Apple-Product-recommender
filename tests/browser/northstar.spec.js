@@ -445,6 +445,21 @@ test("saved partial progress is offered explicitly and can be continued or disca
     "Saved progress restored",
   );
 
+  await continueQuestionnaire(page);
+  await choose(page, "checkbox", "Research, large spreadsheets and many browser tabs");
+  await continueQuestionnaire(page);
+  await choose(page, "radio", "Moderate — several apps and lots of tabs");
+  await continueQuestionnaire(page);
+  await choose(page, "radio", "A balance of both");
+  await choose(page, "radio", "No preference");
+  await continueQuestionnaire(page);
+  await choose(page, "radio", "512 GB");
+  await continueQuestionnaire(page);
+  await choose(page, "checkbox", "None — find the best overall balance");
+  await choose(page, "button", "See recommendations");
+  await expect(page.locator("#results-title")).toBeFocused();
+  await expect(page.getByRole("article")).toHaveCount(3);
+
   await page.reload();
   await expect(resume).toBeVisible();
   const startAgain = resume.getByRole("button", { name: "Start again", exact: true });
@@ -594,6 +609,34 @@ test("a complete share URL recalculates recommendations in a fresh browser conte
   expect(stored).not.toContain("MacBook");
   expect(stored).not.toContain("recommendation");
   expect(stored).not.toContain("confidence");
+
+  const importedHash = new URL(sharedPage.url()).hash;
+  await editAnswer(sharedPage, "Edit storage");
+  await choose(sharedPage, "radio", "1 TB");
+  await choose(sharedPage, "button", "Save changes");
+  await expect(sharedPage.locator("#results-title")).toBeFocused();
+  await expect(sharedPage.locator("#results-stage-label")).toHaveText("Recommendations refreshed");
+  await expect(sharedPage.locator("#results-shared-notice")).toBeHidden();
+  await expect(sharedPage.getByRole("region", { name: "Review your answers", exact: true }))
+    .toContainText("At least 1 TB");
+  expect(new URL(sharedPage.url()).hash).not.toBe(importedHash);
+  expect(
+    await sharedPage.evaluate((key) => localStorage.getItem(key), QUESTIONNAIRE_STORAGE_KEY),
+  ).toContain('"minimumStorage":"1tb"');
+
+  const compareButton = sharedPage.getByRole("button", { name: "Compare top 3", exact: true });
+  await compareButton.click();
+  const comparison = sharedPage.getByRole("dialog", {
+    name: "Compare recommendations",
+    exact: true,
+  });
+  await expect(comparison).toBeVisible();
+  await expect(sharedPage.locator("#comparison-title")).toBeFocused();
+  await expect(comparison.getByRole("table", { name: "Top 3 recommendation comparison" }))
+    .toBeVisible();
+  await comparison.getByRole("button", { name: "Close comparison", exact: true }).click();
+  await expect(comparison).toBeHidden();
+  await expect(compareButton).toBeFocused();
   await expectNoRuntimeErrors(sourceErrors);
   await expectNoRuntimeErrors(sharedErrors);
   await freshContext.close();
