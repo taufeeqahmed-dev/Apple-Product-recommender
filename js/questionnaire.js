@@ -18,6 +18,7 @@ import {
   markQuestionAttempted,
   requestAnswerChange,
   resetQuestionnaire,
+  restoreQuestionnaireState,
   setCurrentQuestion,
 } from "./questionnaire-state.js";
 
@@ -241,9 +242,13 @@ export function initialiseQuestionnaire({
   onComplete = null,
   onRestart = null,
   onEditCancelled = null,
+  onStableStateChange = null,
+  onClearSavedState = null,
+  storedState = null,
 } = {}) {
   const form = document.querySelector("#questionnaire-form");
   const questionContainer = document.querySelector("#questionnaire-question");
+  const progressWrap = document.querySelector("#questionnaire-progress-wrap");
   const progress = document.querySelector("#questionnaire-progress");
   const progressText = document.querySelector("#questionnaire-progress-text");
   const progressDetail = document.querySelector("#questionnaire-progress-detail");
@@ -251,6 +256,9 @@ export function initialiseQuestionnaire({
   const backButton = document.querySelector("#questionnaire-back");
   const submitButton = document.querySelector("#questionnaire-continue");
   const completionPanel = document.querySelector("#questionnaire-complete");
+  const resumePanel = document.querySelector("#questionnaire-resume");
+  const resumeContinueButton = document.querySelector("#questionnaire-resume-continue");
+  const resumeStartAgainButton = document.querySelector("#questionnaire-resume-start-again");
   const restartConfirmation = document.querySelector("#restart-confirmation");
   const restartConfirmationTitle = document.querySelector("#restart-confirmation-title");
   const confirmRestartButton = document.querySelector("#confirm-restart");
@@ -258,13 +266,22 @@ export function initialiseQuestionnaire({
   const restartButtons = [...document.querySelectorAll("[data-restart-questionnaire]")];
   let restartReturnTarget = null;
   let editingReturnTarget = null;
+  let resumableState = storedState;
 
   if (
-    !form || !questionContainer || !progress || !progressText || !progressDetail || !changeSummary ||
-    !backButton || !submitButton || !completionPanel ||
+    !form || !questionContainer || !progressWrap || !progress || !progressText || !progressDetail ||
+    !changeSummary || !backButton || !submitButton || !completionPanel || !resumePanel ||
+    !resumeContinueButton || !resumeStartAgainButton ||
     !restartConfirmation || !restartConfirmationTitle || !confirmRestartButton ||
     !cancelRestartButton
   ) return;
+
+  const notifyStableStateChange = () => {
+    const currentState = getState();
+    if (currentState.status === "in-progress" || currentState.status === "complete") {
+      onStableStateChange?.(currentState);
+    }
+  };
 
   const updateProgress = () => {
     const state = getState();
@@ -365,6 +382,7 @@ export function initialiseQuestionnaire({
     if (validation.valid) clearError(control.id);
     const message = getAdaptiveChangeMessage(clearedAnswers);
     if (message) setLiveText(changeSummary, message);
+    notifyStableStateChange();
   });
 
   form.addEventListener("submit", (event) => {
@@ -401,6 +419,7 @@ export function initialiseQuestionnaire({
         announceError(validations[0].control.id, "Some related answers are incomplete.", { focusInvalid: true });
         return;
       }
+      notifyStableStateChange();
       form.hidden = true;
       completionPanel.hidden = false;
       const completionHandled = onComplete?.(getState().answers, { isEdit: true }) === true;
@@ -417,6 +436,7 @@ export function initialiseQuestionnaire({
         announceError(validations[0].control.id, "Some required answers are incomplete. Use Back to review the questionnaire.", { focusInvalid: true });
         return;
       }
+      notifyStableStateChange();
       form.hidden = true;
       completionPanel.hidden = false;
       const completionHandled = onComplete?.(getState().answers, { isEdit: false }) === true;
@@ -432,6 +452,7 @@ export function initialiseQuestionnaire({
     }
     setCurrentQuestion(current.visibleQuestionIds[current.currentIndex + 1]);
     renderCurrentQuestion();
+    notifyStableStateChange();
   });
 
   backButton.addEventListener("click", () => {
@@ -452,6 +473,57 @@ export function initialiseQuestionnaire({
     if (current.currentIndex <= 0) return;
     setCurrentQuestion(current.visibleQuestionIds[current.currentIndex - 1]);
     renderCurrentQuestion();
+    notifyStableStateChange();
+  });
+
+  const showFreshQuestionnaire = (message = "") => {
+    resumePanel.hidden = true;
+    progressWrap.hidden = false;
+    completionPanel.hidden = true;
+    form.hidden = false;
+    changeSummary.hidden = true;
+    changeSummary.textContent = "";
+    renderCurrentQuestion();
+    if (message) setLiveText(changeSummary, message);
+  };
+
+  resumeContinueButton.addEventListener("click", () => {
+    try {
+      const restored = restoreQuestionnaireState(resumableState);
+      resumableState = null;
+      resumePanel.hidden = true;
+      progressWrap.hidden = false;
+      renderCurrentQuestion({ moveFocus: false });
+      if (restored.status === "complete") {
+        form.hidden = true;
+        completionPanel.hidden = false;
+        const completionHandled = onComplete?.(restored.answers, { isEdit: false, isRestore: true }) === true;
+        if (!completionHandled) completionPanel.querySelector(".questionnaire-step-heading")?.focus();
+      } else {
+        completionPanel.hidden = true;
+        form.hidden = false;
+        renderCurrentQuestion();
+        setLiveText(changeSummary, "Saved progress restored. Continue where you left off.");
+      }
+    } catch {
+      resumableState = null;
+      onClearSavedState?.();
+      resetQuestionnaire();
+      onRestart?.();
+      showFreshQuestionnaire("Saved progress could not be restored. A new questionnaire has started.");
+    }
+  });
+
+  resumeStartAgainButton.addEventListener("click", () => {
+    const clearing = onClearSavedState?.();
+    resumableState = null;
+    resetQuestionnaire();
+    onRestart?.();
+    showFreshQuestionnaire(
+      clearing?.cleared === false
+        ? "A new questionnaire has started. This browser did not allow saved progress to be cleared."
+        : "Saved progress cleared. A new questionnaire has started.",
+    );
   });
 
   const hideRestartConfirmation = ({ restoreFocus = false } = {}) => {
@@ -473,18 +545,26 @@ export function initialiseQuestionnaire({
     hideRestartConfirmation({ restoreFocus: true });
   });
   confirmRestartButton.addEventListener("click", () => {
+    const clearing = onClearSavedState?.();
+    resumableState = null;
     resetQuestionnaire();
     editingReturnTarget = null;
     onRestart?.();
     hideRestartConfirmation();
-    completionPanel.hidden = true;
-    form.hidden = false;
-    changeSummary.hidden = true;
-    changeSummary.textContent = "";
-    renderCurrentQuestion();
+    showFreshQuestionnaire(
+      clearing?.cleared === false
+        ? "Questionnaire restarted. This browser did not allow saved progress to be cleared."
+        : "Questionnaire restarted. Saved progress was cleared.",
+    );
   });
 
   renderCurrentQuestion({ moveFocus: false });
+  if (resumableState) {
+    progressWrap.hidden = true;
+    form.hidden = true;
+    completionPanel.hidden = true;
+    resumePanel.hidden = false;
+  }
   return {
     editQuestion(questionId, { returnTarget = null } = {}) {
       beginEditing(questionId);

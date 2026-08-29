@@ -199,3 +199,36 @@ All updated unit, syntax and browser checks available in this environment pass. 
 facts, product schema and suitability matrices remain unchanged. Questionnaire schema 3 and rules
 2.1 are deliberate behavior changes described in `docs/algorithm.md`. Release preparation remains
 paused, and the revision must be reviewed before any commit or push.
+
+## v1.2 Phase 2 verification addendum
+
+Date: 29 August 2026
+
+Branch: `feature/shareable-results-v1.2`
+
+Status: local persistence and resume review candidate; uncommitted and not pushed, merged, tagged,
+released or deployed
+
+| Check | Result |
+| --- | --- |
+| Complete `node --test` suite | 130 passed, 0 failed, 0 skipped, 0 cancelled |
+| New Phase 2 unit tests | 21 passed, 0 failed |
+| JavaScript syntax scan | 34 files passed, 0 failed |
+| Playwright browser suite | 15 passed, 0 failed |
+| New Phase 2 browser cases | 2 cases × 3 viewport projects = 6 passed |
+| `git diff --check` | Passed |
+
+The new unit coverage exercises canonical partial/complete saves, duplicate-write avoidance,
+canonicalization on load, trusted restoration, recommendation recalculation, removal of transient
+and protected data, most-recent-save behavior, malformed/unsupported/stale data and every
+read/write/remove/unavailable-storage failure path.
+
+The browser additions run at 1440×900, 768×1024 and 390×844. They cover an explicit resume prompt,
+browser/device-only privacy wording, keyboard Continue and Start again activation, deliberate focus,
+restored adaptive progress, completed-session recalculation, cancelled-restart preservation and
+confirmed-restart clearing across reloads. The prior branching, editing, comparison, result and
+responsive tests continue to pass in all projects.
+
+Playwright viewport projects do not replace manual review with Safari, physical mobile devices or a
+representative screen reader. Browser settings that refuse both removal and replacement of existing
+site data also require manual confirmation of the displayed failure message.

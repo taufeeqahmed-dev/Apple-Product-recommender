@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { QUESTIONNAIRE_STORAGE_KEY } from "../../js/questionnaire-persistence.js";
 
 import {
   choose,
@@ -265,5 +266,101 @@ test("classifications, confidence and comparison remain accessible and responsiv
   await page.keyboard.press("Enter");
   await expect(dialog).toBeHidden();
   await expect(compareButton).toBeFocused();
+  await expectNoRuntimeErrors(errors);
+});
+
+test("saved partial progress is offered explicitly and can be continued or discarded", async ({
+  page,
+}) => {
+  const errors = watchForRuntimeErrors(page);
+  await openNorthstar(page);
+  await choose(page, "radio", "I’m not sure yet");
+  await continueQuestionnaire(page);
+  await choose(page, "checkbox", "University, studying and general productivity");
+
+  await expect.poll(() => page.evaluate((key) => localStorage.getItem(key), QUESTIONNAIRE_STORAGE_KEY))
+    .not.toBeNull();
+  await page.reload();
+
+  const resume = page.getByRole("region", { name: "Continue where you left off?", exact: true });
+  const continueSaved = resume.getByRole("button", { name: "Continue", exact: true });
+  await expect(resume).toBeVisible();
+  await expect(resume).toContainText("saved only in this browser on this device");
+  await expect(resume).toContainText("not uploaded to Northstar");
+  await expect(page.locator("#questionnaire-form")).toBeHidden();
+
+  await page.locator("body").focus();
+  for (let index = 0; index < 20; index += 1) {
+    await page.keyboard.press("Tab");
+    if (await continueSaved.evaluate((button) => button === document.activeElement)) break;
+  }
+  await expect(continueSaved).toBeFocused();
+  await page.keyboard.press("Enter");
+
+  await expect(page.getByRole("heading", { name: "Choose your main uses", exact: true })).toBeFocused();
+  await expect(
+    page.getByRole("checkbox", {
+      name: "University, studying and general productivity",
+      exact: true,
+    }),
+  ).toBeChecked();
+  await expect(page.locator("#questionnaire-change-summary")).toContainText(
+    "Saved progress restored",
+  );
+
+  await page.reload();
+  await expect(resume).toBeVisible();
+  const startAgain = resume.getByRole("button", { name: "Start again", exact: true });
+  await startAgain.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { name: "Set your budget", exact: true })).toBeFocused();
+  await expect(page.locator('input[type="radio"]:checked')).toHaveCount(0);
+  await expect(page.locator("#questionnaire-change-summary")).toContainText("Saved progress cleared");
+  expect(await page.evaluate((key) => localStorage.getItem(key), QUESTIONNAIRE_STORAGE_KEY)).toBeNull();
+
+  await page.reload();
+  await expect(resume).toBeHidden();
+  await expect(page.locator("#questionnaire-form")).toBeVisible();
+  await expectNoRuntimeErrors(errors);
+});
+
+test("completed progress is recalculated on restore and confirmed restart prevents another resume", async ({
+  page,
+}) => {
+  const errors = watchForRuntimeErrors(page);
+  await openNorthstar(page);
+  await completeBaselineJourney(page);
+  const firstResultBeforeReload = await page.locator(".recommendation-card h3").first().textContent();
+  const storedBeforeReload = await page.evaluate(
+    (key) => localStorage.getItem(key),
+    QUESTIONNAIRE_STORAGE_KEY,
+  );
+  expect(storedBeforeReload).not.toBeNull();
+  expect(storedBeforeReload).not.toContain("MacBook");
+  expect(storedBeforeReload).not.toContain("recommendation");
+  expect(storedBeforeReload).not.toContain("confidence");
+
+  await page.reload();
+  const resume = page.getByRole("region", { name: "Continue where you left off?", exact: true });
+  await expect(resume).toBeVisible();
+  await resume.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(page.locator("#results-title")).toBeFocused();
+  await expect(page.getByRole("article")).toHaveCount(3);
+  await expect(page.locator(".recommendation-card h3").first()).toHaveText(firstResultBeforeReload);
+
+  await page.getByRole("button", { name: "Restart questionnaire", exact: true }).last().click();
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  expect(await page.evaluate((key) => localStorage.getItem(key), QUESTIONNAIRE_STORAGE_KEY))
+    .toBe(storedBeforeReload);
+
+  await page.getByRole("button", { name: "Restart questionnaire", exact: true }).last().click();
+  await page.getByRole("button", { name: "Yes, restart", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Set your budget", exact: true })).toBeFocused();
+  expect(await page.evaluate((key) => localStorage.getItem(key), QUESTIONNAIRE_STORAGE_KEY)).toBeNull();
+
+  await page.reload();
+  await expect(resume).toBeHidden();
+  await expect(page.locator("#questionnaire-form")).toBeVisible();
+  await expect(page.getByRole("article")).toHaveCount(0);
   await expectNoRuntimeErrors(errors);
 });

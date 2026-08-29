@@ -149,7 +149,30 @@
           page to continue.
         </p>
 
-        <div class="questionnaire-progress-wrap">
+        <section
+          class="questionnaire-resume"
+          id="questionnaire-resume"
+          aria-labelledby="questionnaire-resume-title"
+          aria-describedby="questionnaire-resume-description"
+          hidden
+        >
+          <p class="stage-label">Saved questionnaire</p>
+          <h3 id="questionnaire-resume-title" tabindex="-1">Continue where you left off?</h3>
+          <p id="questionnaire-resume-description">
+            Your questionnaire progress is saved only in this browser on this device. It is not
+            uploaded to Northstar and is not linked to an account or cloud sync.
+          </p>
+          <div class="questionnaire-resume-actions">
+            <button class="button button-primary" id="questionnaire-resume-continue" type="button">
+              Continue
+            </button>
+            <button class="button button-secondary" id="questionnaire-resume-start-again" type="button">
+              Start again
+            </button>
+          </div>
+        </section>
+
+        <div class="questionnaire-progress-wrap" id="questionnaire-progress-wrap">
           <p id="questionnaire-progress-text">
             Getting to know your needs
           </p>

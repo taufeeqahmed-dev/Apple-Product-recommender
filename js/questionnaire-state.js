@@ -12,6 +12,7 @@ import {
   validateQuestionnaireAnswers,
 } from "./questionnaire-profile.js";
 import { APPLICATION_VERSION, QUESTIONNAIRE_SCHEMA_VERSION } from "./version.js";
+import { validateQuestionnaireState } from "./questionnaire-serialization.js";
 
 function createInitialState() {
   return {
@@ -74,6 +75,22 @@ export function getState() {
 
 export function getCurrentProfile() {
   return deriveQuestionnaireProfile(state.answers);
+}
+
+export function restoreQuestionnaireState(input) {
+  const validation = validateQuestionnaireState(input);
+  if (!validation.valid) {
+    throw new TypeError("Questionnaire state cannot be restored because it is invalid.");
+  }
+
+  state = {
+    ...createInitialState(),
+    status: validation.state.status,
+    currentQuestionId: validation.state.currentQuestionId,
+    answers: structuredClone(validation.questionnaireAnswers),
+  };
+  answersBeforeEditing = null;
+  return snapshot();
 }
 
 export function setCurrentQuestion(questionId) {

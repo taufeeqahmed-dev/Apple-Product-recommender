@@ -16,11 +16,12 @@ Verified Apple facts remain separate from Northstar's internal suitability judge
 
 - Current branch: `feature/shareable-results-v1.2`.
 - Northstar v1.1.0 is the current stable release, tagged and deployed from `main`.
-- v1.2 Phase 1 state schema, serialization and validation are implemented locally as an uncommitted
-  review candidate.
-- Phase 2 local browser persistence has not begun and is not approved before Phase 1 review.
-- Share/copy UI and browser URL adoption have not begun.
-- No v1.2 work is committed, pushed, merged, tagged, released or deployed.
+- v1.2 Phase 1 state schema, serialization and validation have been reviewed, committed and pushed
+  on the feature branch.
+- v1.2 Phase 2 local browser persistence and explicit resume behavior are implemented locally as an
+  uncommitted review candidate.
+- Phase 3 shared URLs, share/copy UI and Clipboard API work have not begun.
+- No v1.2 work is merged to `main`, tagged, released or deployed.
 
 ## Independent version metadata
 
@@ -32,7 +33,7 @@ Verified Apple facts remain separate from Northstar's internal suitability judge
 | Recommendation rules | `2.1.0` |
 | Verified catalogue | Unchanged 31 July 2026 snapshot |
 
-## v1.2 Phase 1 review candidate
+## v1.2 Phase 1 foundation
 
 - Minimal sparse state containing stable question/control and option IDs only.
 - State-schema versioning independent from application, questionnaire and recommendation rules.
@@ -46,6 +47,32 @@ Verified Apple facts remain separate from Northstar's internal suitability judge
 
 The full internal contract and rejection policy are documented in
 `docs/state-serialization.md`.
+
+## v1.2 Phase 2 review candidate
+
+- A dedicated browser-storage boundary using `northstar.questionnaire-state.v1`.
+- Best-effort canonical auto-save after stable valid answer, navigation, completion and saved-edit
+  changes, with duplicate writes avoided.
+- Explicit, keyboard-operable Continue/Start again prompt rather than silent restoration.
+- Validated reconstruction through questionnaire-state invariants for partial and complete sessions.
+- Current-engine/current-catalogue recalculation after completed-session restoration.
+- Confirmed restart clearing and cancelled restart preservation.
+- Safe handling of missing, throwing, malformed, incompatible and stale storage.
+- Browser/device-only privacy wording and a documented most-recent-valid-save multi-tab policy.
+
+The full persistence, privacy, restore and failure contract is documented in
+`docs/local-persistence.md`.
+
+## v1.2 Phase 2 verification
+
+| Check | Result |
+| --- | --- |
+| New Phase 2 unit tests | 21 passed, 0 failed |
+| Complete `node --test` suite | 130 passed, 0 failed |
+| JavaScript syntax | 34 files passed, 0 failed |
+| Playwright browser suite | 15 passed, 0 failed |
+| `git diff --check` | Passed |
+| Protected product/source paths | Unmodified |
 
 ## v1.2 Phase 1 verification
 
@@ -118,5 +145,5 @@ Production Lighthouse is intentionally unclaimed until a reviewed deployment exi
 
 ## Remaining release work
 
-Phase 1 must be reviewed before any commit or push. Do not begin local-storage persistence, resume
-prompts, URL adoption, copy/share controls or any later v1.2 phase without separate approval.
+Phase 2 must be reviewed before any commit or push. Do not begin URL adoption, copy/share controls
+or any later v1.2 phase without separate approval.

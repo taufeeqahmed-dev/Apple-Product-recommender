@@ -1,6 +1,6 @@
 # Northstar questionnaire-state serialization
 
-Status: v1.2 Phase 1 internal contract; implemented locally and awaiting review
+Status: v1.2 Phase 1 internal contract; reviewed, committed and pushed on the v1.2 feature branch
 
 | Versioned concern | Value |
 | --- | --- |
