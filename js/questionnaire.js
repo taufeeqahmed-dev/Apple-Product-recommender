@@ -548,7 +548,10 @@ export function initialiseQuestionnaire({
         completionPanel.hidden = true;
         form.hidden = false;
         renderCurrentQuestion();
-        setLiveText(changeSummary, "Shared answers restored. Continue where the link left off.");
+        setLiveText(
+          changeSummary,
+          "These answers came from a shared link. Continue the questionnaire from here.",
+        );
       }
     } catch {
       activeSharedImport = null;

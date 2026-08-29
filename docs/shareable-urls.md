@@ -1,6 +1,6 @@
 # Northstar shareable questionnaire URLs
 
-Status: v1.2 Phase 3 internal contract; implemented locally, uncommitted and awaiting review
+Status: v1.2 Phase 3 internal contract; reviewed, committed and pushed on the feature branch
 
 ## Transport format
 
@@ -116,5 +116,6 @@ recommendations or product data. They do contain recoverable questionnaire choic
 treated as private storage. Links may be retained in browser history, bookmarks, messages or any
 service through which a user shares them; URL fragments are not sent in the HTTP request itself.
 
-Phase 3 provides transport, import, precedence and minimal adoption/recovery controls only. The final
-export/copy/share interface and Clipboard API belong to Phase 4.
+Phase 3 provides the transport, import and precedence contract. Phase 4's complete-results sharing,
+Clipboard API fallback and imported-link messaging are documented in `docs/share-ux.md`; they reuse
+this format without changing it.

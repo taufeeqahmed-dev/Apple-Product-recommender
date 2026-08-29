@@ -20,9 +20,10 @@ Verified Apple facts remain separate from Northstar's internal suitability judge
   on the feature branch.
 - v1.2 Phase 2 local browser persistence and explicit resume behavior have been reviewed, committed
   and pushed on the feature branch.
-- v1.2 Phase 3 URL import/export, precedence and minimal adoption/recovery behavior are implemented
+- v1.2 Phase 3 URL import/export, precedence and minimal adoption/recovery behavior have been
+  reviewed, committed and pushed on the feature branch.
+- v1.2 Phase 4 share/copy-link UX, Clipboard fallback and imported-link messaging are implemented
   locally as an uncommitted review candidate.
-- Phase 4 polished share/copy UI and Clipboard API work have not begun.
 - No v1.2 work is merged to `main`, tagged, released or deployed.
 
 ## Independent version metadata
@@ -65,7 +66,34 @@ The full internal contract and rejection policy are documented in
 The full persistence, privacy, restore and failure contract is documented in
 `docs/local-persistence.md`.
 
-## v1.2 Phase 3 review candidate
+## v1.2 Phase 4 review candidate
+
+- Complete-results-only **Share results** action over the reviewed Phase 3 exporter.
+- Clipboard API copy with visible and politely announced success.
+- Labelled readonly manual-copy fallback for missing, throwing or rejected Clipboard APIs.
+- Concise privacy wording that identifies recoverable choices, excludes browser metadata/accounts
+  and explains current-engine/current-catalogue recalculation.
+- Visible and announced complete-import feedback plus clearer partial-import and invalid-link recovery
+  wording.
+- Keyboard focus management, inline non-modal disclosure and responsive long-URL containment.
+- No Web Share API dependency and no state-schema, transport or recommendation changes.
+
+The full user-interface, privacy, accessibility and fallback behavior is documented in
+`docs/share-ux.md`.
+
+## v1.2 Phase 4 verification
+
+| Check | Result |
+| --- | --- |
+| New Phase 4 unit tests | 12 passed, 0 failed |
+| Complete `node --test` suite | 167 passed, 0 failed |
+| JavaScript syntax | 39 files passed, 0 failed |
+| Playwright browser suite | 36 passed, 0 failed |
+| New Phase 4 browser cases | 2 cases × 3 viewport projects = 6 passed |
+| `git diff --check` | Passed |
+| Protected product/source paths | Unmodified |
+
+## v1.2 Phase 3 foundation
 
 - Versioned dependency-free `#northstar=v1.<base64url>` URL transport.
 - Independent 5,462-character encoded and 4,096-byte decoded bounds.
@@ -173,5 +201,5 @@ Production Lighthouse is intentionally unclaimed until a reviewed deployment exi
 
 ## Remaining release work
 
-Phase 3 must be reviewed before any commit or push. Do not begin polished share/copy controls,
-Clipboard API work or any later v1.2 phase without separate approval.
+Phase 4 must be reviewed before any commit or push. Do not begin Phase 5 or later release work
+without separate approval.

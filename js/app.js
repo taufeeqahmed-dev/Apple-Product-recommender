@@ -6,6 +6,7 @@ import {
   saveQuestionnaireState,
 } from "./questionnaire-persistence.js";
 import { createQuestionnaireState } from "./questionnaire-serialization.js";
+import { getState } from "./questionnaire-state.js";
 import { resolveQuestionnaireStartup } from "./questionnaire-startup.js";
 import {
   createQuestionnaireShareUrl,
@@ -13,6 +14,7 @@ import {
   removeQuestionnaireShareStateFromUrl,
 } from "./questionnaire-url.js";
 import { recommendMacBooks } from "./recommendation-engine.js";
+import { initialiseResultsShare } from "./results-share.js";
 import { clearRecommendationResults, renderRecommendationResults } from "./results.js";
 import { initialiseNavigation } from "./ui.js";
 
@@ -22,6 +24,19 @@ initialiseNavigation();
 let questionnaireController = null;
 let sharedUrlSessionActive = false;
 const questionnaireStartup = resolveQuestionnaireStartup({ url: window.location.href });
+
+const getCanonicalQuestionnaireState = () => {
+  const state = getState();
+  return createQuestionnaireState({
+    status: state.status,
+    currentQuestionId: state.currentQuestionId,
+    answers: state.answers,
+  });
+};
+
+const resultsShareController = initialiseResultsShare({
+  getQuestionnaireState: getCanonicalQuestionnaireState,
+});
 
 const replaceCurrentUrl = (url) => {
   try {
@@ -71,24 +86,32 @@ const saveStableQuestionnaireState = (state) => {
   }
 };
 
-const renderResults = (answers, { isEdit = false } = {}) => {
+const renderResults = (answers, { isEdit = false, isShared = false } = {}) => {
   const output = recommendMacBooks({ catalogue: productCatalogue, answers });
-  return renderRecommendationResults(output, productCatalogue, {
+  const rendered = renderRecommendationResults(output, productCatalogue, {
     isRefresh: isEdit,
+    isShared,
     onEditAnswer(questionId, returnTarget) {
+      resultsShareController.hide();
       questionnaireController?.editQuestion(questionId, { returnTarget });
     },
   });
+  if (rendered) resultsShareController.show();
+  return rendered;
 };
 
 questionnaireController = initialiseQuestionnaire({
   sharedImport: questionnaireStartup.shared.present ? questionnaireStartup.shared : null,
   storedState: questionnaireStartup.stored?.loaded ? questionnaireStartup.stored.state : null,
-  onComplete(answers, { isEdit = false } = {}) {
-    return renderResults(answers, { isEdit });
+  onComplete(answers, { isEdit = false, isShared = false } = {}) {
+    return renderResults(answers, { isEdit, isShared });
+  },
+  onEditCancelled() {
+    resultsShareController.show();
   },
   onRestart() {
     leaveSharedUrlSession();
+    resultsShareController.clear();
     clearRecommendationResults();
   },
   onStableStateChange: saveStableQuestionnaireState,

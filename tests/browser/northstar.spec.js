@@ -33,6 +33,14 @@ async function openAbsoluteNorthstar(page, url) {
   await expect(page.getByRole("main")).toHaveCount(1);
 }
 
+async function tabTo(page, locator, maximumTabs = 60) {
+  for (let index = 0; index < maximumTabs; index += 1) {
+    await page.keyboard.press("Tab");
+    if (await locator.evaluate((element) => element === document.activeElement)) return;
+  }
+  throw new Error(`Could not reach ${await locator.getAttribute("id")} using Tab.`);
+}
+
 test("the seven-step branch preserves answers and clears only obsolete activities", async ({ page }) => {
   const errors = watchForRuntimeErrors(page);
   await openNorthstar(page);
@@ -291,6 +299,114 @@ test("classifications, confidence and comparison remain accessible and responsiv
   await expectNoRuntimeErrors(errors);
 });
 
+test("completed results can be shared and copied with accessible keyboard feedback", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        async writeText(value) {
+          window.__northstarCopiedUrl = value;
+        },
+      },
+    });
+  });
+  const errors = watchForRuntimeErrors(page);
+  await openNorthstar(page);
+  await completeBaselineJourney(page);
+
+  const shareTrigger = page.getByRole("button", { name: "Share results", exact: true });
+  await expect(shareTrigger).toBeVisible();
+  await tabTo(page, shareTrigger);
+  await expect(shareTrigger).toBeFocused();
+  await page.keyboard.press("Enter");
+
+  const sharePanel = page.getByRole("region", { name: "Share this result", exact: true });
+  await expect(sharePanel).toBeVisible();
+  await expect(page.locator("#results-share-title")).toBeFocused();
+  await expect(sharePanel).toContainText(
+    "Anyone with this link can view the questionnaire choices included in it.",
+  );
+  await expect(sharePanel).toContainText("no account or saved browser metadata");
+  await expect(sharePanel).toContainText("recalculates recommendations");
+
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Close sharing", exact: true })).toBeFocused();
+  await page.keyboard.press("Tab");
+  const copyButton = page.getByRole("button", { name: "Copy link", exact: true });
+  await expect(copyButton).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#results-share-status")).toHaveText("Recommendation link copied.");
+  await expect(page.locator("#results-share-fallback")).toBeHidden();
+
+  const copiedUrl = await page.evaluate(() => window.__northstarCopiedUrl);
+  expect(new URL(copiedUrl).hash).toMatch(/^#northstar=v1\./);
+  expect(copiedUrl).not.toContain("MacBook");
+  await page.getByRole("button", { name: "Close sharing", exact: true }).click();
+  await expect(shareTrigger).toBeFocused();
+  await expect(page.locator("#results-share-status")).toBeHidden();
+  await expect(page.locator("#results-share-url")).toHaveValue("");
+  await expectNoRuntimeErrors(errors);
+});
+
+test("clipboard failure exposes a selected manual-copy field without mobile overflow", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        async writeText() {
+          throw new DOMException("Clipboard permission denied", "NotAllowedError");
+        },
+      },
+    });
+  });
+  const errors = watchForRuntimeErrors(page);
+  await openNorthstar(page);
+  await completeBaselineJourney(page);
+  await page.getByRole("button", { name: "Share results", exact: true }).click();
+  await page.getByRole("button", { name: "Copy link", exact: true }).click();
+
+  await expect(page.locator("#results-share-status")).toHaveText("Copy this link manually.");
+  const fallback = page.locator("#results-share-fallback");
+  const urlField = page.getByRole("textbox", { name: "Recommendation link", exact: true });
+  await expect(fallback).toBeVisible();
+  await expect(urlField).toBeFocused();
+  await expect(urlField).toHaveAttribute("readonly", "");
+  await expect(urlField).toHaveValue(/^http:\/\/127\.0\.0\.1:4173\/#northstar=v1\./);
+  expect(
+    await urlField.evaluate((field) =>
+      field.selectionStart === 0 && field.selectionEnd === field.value.length,
+    ),
+  ).toBe(true);
+
+  const layout = await page.evaluate(() => {
+    const panel = document.querySelector("#results-share-panel").getBoundingClientRect();
+    const field = document.querySelector("#results-share-url").getBoundingClientRect();
+    const copy = document.querySelector("#results-share-copy").getBoundingClientRect();
+    return {
+      pageOverflow: document.documentElement.scrollWidth > window.innerWidth,
+      panelWithinPage: panel.left >= 0 && panel.right <= window.innerWidth,
+      fieldWithinPanel: field.left >= panel.left && field.right <= panel.right,
+      copyHeight: copy.height,
+    };
+  });
+  expect(layout.pageOverflow).toBe(false);
+  expect(layout.panelWithinPage).toBe(true);
+  expect(layout.fieldWithinPanel).toBe(true);
+  expect(layout.copyHeight).toBeGreaterThanOrEqual(44);
+
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.getByRole("button", { name: "Copy link", exact: true })).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.getByRole("button", { name: "Close sharing", exact: true })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("button", { name: "Share results", exact: true })).toBeFocused();
+  await expectNoRuntimeErrors(errors);
+});
+
 test("saved partial progress is offered explicitly and can be continued or discarded", async ({
   page,
 }) => {
@@ -426,7 +542,7 @@ test("a partial share URL restores an adaptive journey in a fresh browser contex
     }),
   ).toBeChecked();
   await expect(sharedPage.locator("#questionnaire-change-summary")).toContainText(
-    "Shared answers restored",
+    "These answers came from a shared link",
   );
   await continueQuestionnaire(sharedPage);
   await expect(sharedPage.getByRole("heading", { name: "Tell us about multitasking", exact: true })).toBeFocused();
@@ -460,6 +576,15 @@ test("a complete share URL recalculates recommendations in a fresh browser conte
   await sharedPage.getByRole("button", { name: "Continue with shared answers", exact: true }).click();
 
   await expect(sharedPage.locator("#results-title")).toBeFocused();
+  await expect(sharedPage.locator("#results-shared-notice")).toContainText(
+    "Shared recommendation loaded",
+  );
+  await expect(sharedPage.locator("#results-shared-notice")).toContainText(
+    "recalculated the result using its current verified catalogue",
+  );
+  await expect(sharedPage.locator("#results-announcement")).toContainText(
+    "Shared recommendation loaded",
+  );
   await expect(sharedPage.getByRole("article")).toHaveCount(3);
   await expect(sharedPage.locator(".recommendation-card h3").first()).toHaveText(expectedFirstResult);
   const stored = await sharedPage.evaluate(
@@ -500,6 +625,9 @@ test("valid shared state takes precedence without touching different local progr
   await localPage.goto("about:blank");
   await openAbsoluteNorthstar(localPage, shareUrl);
   await expect(localPage.getByRole("region", { name: "Open shared questionnaire?", exact: true })).toBeVisible();
+  await expect(localPage.locator("#questionnaire-shared")).toContainText(
+    "saved in this browser stays untouched",
+  );
   expect(await localPage.evaluate((key) => localStorage.getItem(key), QUESTIONNAIRE_STORAGE_KEY))
     .toBe(localBeforeShare);
   await localPage.getByRole("button", { name: "Continue with shared answers", exact: true }).click();
@@ -529,7 +657,7 @@ test("an invalid share link shows accessible recovery and preserves local progre
   await page.goto("about:blank");
   await page.goto("/#northstar=v1.!!!!");
   const recovery = page.getByRole("region", {
-    name: "This shared questionnaire can’t be opened",
+    name: "This shared link couldn’t be used",
     exact: true,
   });
   await expect(recovery).toBeVisible();

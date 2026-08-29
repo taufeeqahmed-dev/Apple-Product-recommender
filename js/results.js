@@ -721,20 +721,28 @@ function createRecommendationGroup(matches, catalogue, { stretch = false } = {})
 export function renderRecommendationResults(
   output,
   catalogue,
-  { onEditAnswer = null, isRefresh = false } = {},
+  { onEditAnswer = null, isRefresh = false, isShared = false } = {},
 ) {
   const section = document.querySelector("#results");
   const title = document.querySelector("#results-title");
   const stageLabel = document.querySelector("#results-stage-label");
   const summary = document.querySelector("#results-summary");
   const announcement = document.querySelector("#results-announcement");
+  const sharedNotice = document.querySelector("#results-shared-notice");
   const container = document.querySelector("#recommendation-output");
   const restartButton = document.querySelector("#results-restart");
-  if (!section || !title || !stageLabel || !summary || !announcement || !container) return false;
+  if (
+    !section || !title || !stageLabel || !summary || !announcement || !sharedNotice || !container
+  ) return false;
 
   closeComparison();
   container.replaceChildren();
   restartButton?.removeAttribute("hidden");
+  sharedNotice.hidden = !isShared;
+  sharedNotice.textContent = isShared
+    ? "Shared recommendation loaded. These answers came from a shared link, and Northstar recalculated the result using its current verified catalogue."
+    : "";
+  const sharedAnnouncement = isShared ? "Shared recommendation loaded. " : "";
 
   if (output.status === "ok") {
     const primaryMatches = output.matches.slice(0, 3).map((match, index) =>
@@ -760,28 +768,28 @@ export function renderRecommendationResults(
       container.append(createRecommendationGroup(stretchMatches, catalogue, { stretch: true }));
     }
     container.append(createMethodDisclosure(output));
-    announcement.textContent = isRefresh
+    announcement.textContent = sharedAnnouncement + (isRefresh
       ? `${mainMatches.length} recommendation${mainMatches.length === 1 ? " was" : "s were"} refreshed after your edit. Focus moved to the results heading.`
-      : `${mainMatches.length} recommendation${mainMatches.length === 1 ? " is" : "s are"} ready. Focus moved to the results heading.`;
+      : `${mainMatches.length} recommendation${mainMatches.length === 1 ? " is" : "s are"} ready. Focus moved to the results heading.`);
   } else if (output.status === "no-match") {
     stageLabel.textContent = isRefresh ? "Edited answers produced no exact match" : "No exact match";
     summary.textContent = "No MacBook in Northstar’s verified list meets all of your must-haves.";
     container.append(createNoMatch(output));
-    announcement.textContent = isRefresh
+    announcement.textContent = sharedAnnouncement + (isRefresh
       ? "Recommendations were refreshed after your edit, but no exact match was found. Focus moved to the results heading."
-      : "No exact match was found. Focus moved to the results heading.";
+      : "No exact match was found. Focus moved to the results heading.");
   } else if (output.status === "budget-limited") {
     stageLabel.textContent = "No match within budget";
     summary.textContent = "MacBooks that meet your other must-haves cost more than your maximum budget.";
     container.append(createBudgetLimited(output, catalogue));
-    announcement.textContent = isRefresh
+    announcement.textContent = sharedAnnouncement + (isRefresh
       ? "Recommendations were refreshed after your edit, but no MacBook fit the maximum budget. Focus moved to the results heading."
-      : "No MacBook fit the maximum budget. Focus moved to the results heading.";
+      : "No MacBook fit the maximum budget. Focus moved to the results heading.");
   } else {
     stageLabel.textContent = "Recommendation unavailable";
     summary.textContent = "Northstar stopped safely instead of calculating from invalid information.";
     container.append(createDataError(output));
-    announcement.textContent = "Recommendations could not be calculated. Focus moved to the results heading.";
+    announcement.textContent = `${sharedAnnouncement}Recommendations could not be calculated. Focus moved to the results heading.`;
   }
 
   if (output.profile && output.input.answers) {
@@ -797,6 +805,7 @@ export function clearRecommendationResults() {
   const stageLabel = document.querySelector("#results-stage-label");
   const summary = document.querySelector("#results-summary");
   const announcement = document.querySelector("#results-announcement");
+  const sharedNotice = document.querySelector("#results-shared-notice");
   const container = document.querySelector("#recommendation-output");
   const restartButton = document.querySelector("#results-restart");
   if (!section || !stageLabel || !summary || !announcement || !container) return;
@@ -807,6 +816,10 @@ export function clearRecommendationResults() {
   summary.textContent =
     "Your top verified matches will appear here after the adaptive questionnaire is complete.";
   announcement.textContent = "";
+  if (sharedNotice) {
+    sharedNotice.hidden = true;
+    sharedNotice.textContent = "";
+  }
   container.replaceChildren();
   restartButton?.setAttribute("hidden", "");
 }

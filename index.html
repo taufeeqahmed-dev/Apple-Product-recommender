@@ -163,8 +163,9 @@
             questionnaire session.
           </p>
           <p id="questionnaire-shared-privacy">
-            Anyone with the link can recover its questionnaire choices. Progress already saved in
-            this browser will not be changed unless you continue with the shared answers.
+            Anyone with the link can recover its questionnaire choices. A questionnaire already
+            saved in this browser stays untouched until you continue with the shared answers; then
+            the shared choices become this browser’s active saved session.
           </p>
           <p class="visually-hidden" role="status" aria-live="polite">
             A shared questionnaire is ready for review.
@@ -186,12 +187,12 @@
           aria-describedby="questionnaire-shared-invalid-description"
           hidden
         >
-          <p class="stage-label">Shared questionnaire unavailable</p>
+          <p class="stage-label">Shared link unavailable</p>
           <h3 id="questionnaire-shared-invalid-title" tabindex="-1">
-            This shared questionnaire can’t be opened
+            This shared link couldn’t be used
           </h3>
           <p id="questionnaire-shared-invalid-description">
-            The link is invalid, incompatible or incomplete. No progress saved in this browser was
+            It may be invalid, incompatible or incomplete. No progress saved in this browser was
             changed, and you can continue using Northstar normally.
           </p>
           <p class="visually-hidden" role="status" aria-live="polite">
@@ -332,7 +333,67 @@
           </button>
         </div>
         <p class="visually-hidden" id="results-announcement" role="status" aria-live="polite"></p>
+        <p class="results-shared-notice" id="results-shared-notice" hidden></p>
         <div id="recommendation-output"></div>
+        <div class="results-share" id="results-share" hidden>
+          <button
+            class="button button-secondary"
+            id="results-share-trigger"
+            type="button"
+            aria-controls="results-share-panel"
+            aria-expanded="false"
+          >
+            Share results
+          </button>
+          <section
+            class="results-share-panel"
+            id="results-share-panel"
+            aria-labelledby="results-share-title"
+            aria-describedby="results-share-privacy results-share-detail"
+            hidden
+          >
+            <div class="results-share-header">
+              <div>
+                <p class="stage-label">Share</p>
+                <h3 id="results-share-title" tabindex="-1">Share this result</h3>
+              </div>
+              <button class="text-button" id="results-share-close" type="button">
+                Close sharing
+              </button>
+            </div>
+            <p id="results-share-privacy">
+              Anyone with this link can view the questionnaire choices included in it.
+            </p>
+            <p class="results-share-detail" id="results-share-detail">
+              The link contains no account or saved browser metadata. It is encoded, not encrypted
+              or private, and Northstar recalculates recommendations when it is opened.
+            </p>
+            <div class="results-share-actions">
+              <button class="button button-primary" id="results-share-copy" type="button">
+                Copy link
+              </button>
+            </div>
+            <p
+              class="results-share-status"
+              id="results-share-status"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+              hidden
+            ></p>
+            <div class="results-share-fallback" id="results-share-fallback" hidden>
+              <label for="results-share-url">Recommendation link</label>
+              <p id="results-share-instructions">Copy this link manually.</p>
+              <textarea
+                id="results-share-url"
+                rows="3"
+                readonly
+                spellcheck="false"
+                aria-describedby="results-share-instructions"
+              ></textarea>
+            </div>
+          </section>
+        </div>
         <p class="results-method-note">
           Fit scores, reasons and compromises are independent Northstar project judgements, not
           Apple claims. Prices are dated UK snapshots and may change.

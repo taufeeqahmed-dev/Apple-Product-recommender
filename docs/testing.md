@@ -191,7 +191,8 @@ Record browser/device versions, date, result and any accepted limitation in
 - Lighthouse audits the initial page state, while interactive accessibility is covered separately by
   Playwright and still requires representative assistive-technology checks.
 - Product facts/prices remain a dated snapshot and were not re-verified in Phase 5.
-- Optional shareable URLs are outside Phase 5 and untested because they are not implemented.
+- The historical v1.1 Phase 5 report predates v1.2 sharing; current coverage is recorded in the
+  addenda below.
 
 ## Focused revision conclusion
 
@@ -239,8 +240,8 @@ Date: 29 August 2026
 
 Branch: `feature/shareable-results-v1.2`
 
-Status: shareable URL import/export review candidate; uncommitted and not pushed, merged, tagged,
-released or deployed
+Status: reviewed, committed and pushed on the v1.2 feature branch; not merged, tagged, released or
+deployed
 
 | Check | Result |
 | --- | --- |
@@ -265,5 +266,38 @@ the Phase 2 and v1.1 regression journeys.
 
 The minimal Phase 3 adoption/recovery controls use native buttons and named regions with deliberate
 focus after interaction. Manual screen-reader, physical-device and real shared-link target testing
-remain necessary before release; Phase 4 must also review practical URL length in target messaging
-and browser interfaces.
+remain necessary before release.
+
+## v1.2 Phase 4 verification addendum
+
+Date: 29 August 2026
+
+Branch: `feature/shareable-results-v1.2`
+
+Status: share/copy-link UX review candidate; uncommitted and not pushed, merged, tagged, released or
+deployed
+
+| Check | Result |
+| --- | --- |
+| Complete `node --test` suite | 167 passed, 0 failed, 0 skipped, 0 cancelled |
+| New Phase 4 unit tests | 12 passed, 0 failed |
+| JavaScript syntax scan | 39 files passed, 0 failed |
+| Playwright browser suite | 36 passed, 0 failed |
+| New Phase 4 browser cases | 2 cases × 3 viewport projects = 6 passed |
+| `git diff --check` | Passed |
+
+The Phase 4 unit coverage verifies complete-state eligibility, rejection of partial UI export,
+delegation to the canonical Phase 3 format, deterministic generation, Clipboard API success,
+unavailable and rejected Clipboard behavior, fallback presentation, trusted wording and readonly
+URL-field semantics.
+
+The two browser additions cover keyboard-only opening and copying with polite success feedback, and
+a rejected Clipboard API followed by a labelled, focused and selected manual-copy field. Both run at
+1440×900, 768×1024 and 390×844 and assert comfortable button height and page/panel/field
+containment. Existing Phase 3 browser journeys now also verify the complete imported-state notice,
+partial imported-state guidance, local/shared-state explanation and friendly invalid-link recovery.
+
+A local visual pass at the default desktop viewport and 390×844 confirmed the share panel follows
+the answer review, remains secondary to the recommendation and introduces no page-level horizontal
+overflow. Automation and viewport inspection do not replace VoiceOver/Narrator, 200–400% zoom,
+Safari or physical-device checks before release.
