@@ -4,9 +4,9 @@ Northstar is an accessible, explainable MacBook recommendation web application t
 people choose a MacBook based on what they actually need — without requiring them to decode chip
 names, benchmark charts or technical specification tables.
 
-Version 1.1.0 introduces a streamlined adaptive questionnaire, richer workload modelling, 
-explicit must-have requirements and transparent recommendation explanations to produce a focused
-shortlist of suitable MacBooks.
+Version 1.2.0 is currently a release candidate on the feature branch. It adds validated browser-local
+resume and shareable recommendation links to the v1.1 adaptive questionnaire without persisting or
+transporting recommendation output or product data.
 
 > Independent project: Northstar is an unofficial student portfolio project and is not
 > affiliated with, endorsed by or sponsored by Apple Inc. Apple and MacBook are trademarks of
@@ -21,6 +21,8 @@ Production:
 [https://taufeeqahmed-dev.github.io/Apple-Product-recommender/](https://taufeeqahmed-dev.github.io/Apple-Product-recommender/)
 
 Current stable release: `v1.1.0`
+
+Release candidate: `v1.2.0` on `feature/shareable-results-v1.2`
 
 Production is deployed automatically from `main` using GitHub Pages.
 
@@ -68,6 +70,10 @@ Highlights
 - Recommendations automatically recalculate after an answer is changed.
 - Explainable reasons, compromises and lower-ranked-product explanations.
 - Accessible comparison of the top three recommendations.
+- Explicit browser-local resume for partial and completed questionnaires.
+- Shareable completed-result links containing validated questionnaire decision IDs only.
+- Current-engine/current-catalogue recalculation after local restore or shared-link import.
+- Clipboard copy with a labelled manual-copy fallback.
 - Keyboard navigation, deliberate focus management, responsive layouts and reduced-motion support.
 - Verified catalogue of 10 exact MacBook configurations.
 - Automated unit, recommendation-quality and Playwright browser testing.
@@ -98,6 +104,25 @@ forcing the user through multiple separate questionnaire screens.
 
 Hidden, stale or newly irrelevant answers are cleared from active state and cannot continue to
 influence recommendations.
+
+---
+
+Resume and sharing
+
+Northstar can save validated questionnaire progress in the current browser and device. A returning
+visitor is asked whether to Continue or Start again; saved state is never silently adopted. This is
+browser storage, not an account, cloud sync or secure storage.
+
+Completed results expose a secondary Share results action. The resulting URL contains canonical,
+versioned questionnaire decision IDs—not recommendation results, scores, confidence, product facts,
+labels or browser metadata. Anyone with the link can recover those choices, and base64url encoding
+is not encryption.
+
+Opening a valid link requires explicit adoption before it replaces locally saved progress. Northstar
+then reconstructs the adaptive answers and recalculates recommendations using the compatible current
+engine and verified catalogue. Invalid, oversized, incompatible or tampered links fail safely without
+destroying browser-local progress. If automatic clipboard copying is unavailable, a labelled readonly
+field presents the URL for manual copying.
 
 Workload examples
 
@@ -134,9 +159,55 @@ Result hierarchy
 
 ```text
 Exact match
-    ↓
+↓
 Closest match
-    ↓
+↓
 Stretch match
-    ↓
+↓
 Genuine No Match
+```
+
+Recommendation output is never cached in local or shared state. This means the same compatible link
+may produce a different result after a future verified catalogue or recommendation-rules update.
+
+---
+
+Architecture
+
+Northstar remains a static, framework-free HTML/CSS/JavaScript application with no backend or
+production runtime dependency. Its main boundaries are:
+
+- declarative questionnaire definitions and private immutable questionnaire state;
+- strict schema-versioned canonical serialization of stable decision IDs;
+- a dedicated best-effort local-persistence boundary;
+- startup orchestration that resolves shared URLs before local resume state;
+- a versioned dependency-free URL transport compatible with the GitHub Pages repository subpath;
+- a pure deterministic recommendation engine over a validated product catalogue;
+- results rendering, answer editing and accessible comparison; and
+- a dedicated results-sharing controller for complete-state eligibility, copy feedback and fallback.
+
+See [architecture](docs/architecture.md), [state serialization](docs/state-serialization.md),
+[local persistence](docs/local-persistence.md), [shareable URLs](docs/shareable-urls.md) and
+[share UX](docs/share-ux.md).
+
+---
+
+Release-candidate verification
+
+The current v1.2 candidate has:
+
+- 167 passing Node tests;
+- 39 JavaScript files passing syntax checks;
+- 36 passing Playwright executions across 1440×900, 768×1024 and 390×844;
+- local Lighthouse scores of 93/100/100/100 mobile and 94/100/100/100 desktop, ordered as
+  Performance/Accessibility/Best Practices/SEO; and
+- no production dependency beyond browser platform APIs.
+
+Automated coverage includes serialization and hostile-input rejection, storage failures, resume and
+restart behavior, partial/complete URL import, URL/local precedence, current recommendation
+recalculation, imported-state editing and comparison, Clipboard API fallback, keyboard focus and
+responsive containment.
+
+Safari, physical iPhone, VoiceOver, a representative Windows screen reader, physical-device input
+and deployed-site checks remain pending and are not claimed by viewport automation. See the
+[v1.2 release checklist](docs/release-v1.2.md) and [testing report](docs/testing.md).

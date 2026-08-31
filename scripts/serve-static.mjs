@@ -5,6 +5,7 @@ import { extname, relative, resolve, sep } from "node:path";
 const repositoryRoot = resolve(import.meta.dirname, "..");
 const host = process.env.NORTHSTAR_HOST ?? "127.0.0.1";
 const port = Number(process.env.NORTHSTAR_PORT ?? 4173);
+const githubPagesRepositoryPath = "/apple-product-recommender";
 const publicDirectories = new Set(["assets", "css", "docs", "js"]);
 const publicRootFiles = new Set(["index.html", "robots.txt", "sitemap.xml"]);
 const contentTypes = new Map([
@@ -23,7 +24,14 @@ const contentTypes = new Map([
 
 function resolvePublicPath(requestUrl) {
   const pathname = decodeURIComponent(new URL(requestUrl, `http://${host}:${port}`).pathname);
-  const relativePath = pathname === "/" ? "index.html" : pathname.replace(/^\/+/, "");
+  const applicationPathname =
+    pathname === githubPagesRepositoryPath
+      ? "/"
+      : pathname.startsWith(`${githubPagesRepositoryPath}/`)
+        ? pathname.slice(githubPagesRepositoryPath.length)
+        : pathname;
+  const relativePath =
+    applicationPathname === "/" ? "index.html" : applicationPathname.replace(/^\/+/, "");
   const topLevel = relativePath.split("/")[0];
   if (!publicRootFiles.has(relativePath) && !publicDirectories.has(topLevel)) return null;
 

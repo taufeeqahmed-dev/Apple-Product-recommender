@@ -5,12 +5,12 @@ choose a MacBook based on their needs.
 
 ## Current scope and stage
 
-- Version 1.0.0 is complete, tagged and deployed from `main`.
-- Version 1.1 is being prepared on `feature/adaptive-questionnaire-v1.1`.
-- v1.1 Phases 1–4 are reviewed, committed and pushed.
-- A focused schema-3 questionnaire simplification is a local review candidate after Phase 5. Do not
-  describe it as committed, merged, released or deployed, and do not resume release preparation yet.
-- Optional Phase 6 shareable results are not approved to begin.
+- Version 1.1.0 is the current stable release, tagged and deployed from `main`.
+- Version 1.2 is being prepared on `feature/shareable-results-v1.2`.
+- v1.2 Phases 1–4 are reviewed, committed and pushed on the feature branch.
+- v1.2 Phase 5 release-candidate verification and documentation are a local review candidate. Do not
+  describe v1.2 as merged, released or deployed.
+- Do not begin v1.3 work.
 - Do not modify the project beyond an explicitly approved phase.
 - Read `PROJECT_STATUS.md` before making changes.
 

@@ -1,14 +1,14 @@
-# Northstar v1.1 recommendation algorithm
+# Northstar v1.2 release-candidate recommendation algorithm
 
 | Versioned concern | Value |
 | --- | --- |
-| Application | `1.1.0` |
+| Application | `1.2.0` |
 | Questionnaire schema | `3` |
 | Recommendation rules | `2.1.0` |
 
-These versions are independent. Schema 3 is the usability-tested seven-to-nine-step questionnaire;
-rules 2.1 removes unsupported confidence caps and ownership-period scoring from active v1.1
-recommendations.
+These versions are independent. Schema 3 remains the usability-tested seven-to-nine-step
+questionnaire, and rules 2.1 remains the recommendation behavior released in v1.1. Version 1.2 adds
+validated persistence and sharing around the engine without changing scoring, filtering or ranking.
 
 Northstar separates sourced facts from project-authored assessments. Product prices, hardware and
 source URLs live in `js/products.js`; capability bands, matrices, fit scores, classifications and
@@ -201,3 +201,7 @@ The pure engine returns `ok`, `budget-limited`, `no-match`, `invalid-input` or `
 Outputs contain immutable input/profile snapshots, primary and separate Stretch matches, exclusions,
 budget-limited context, ties, diagnostics, category counts, confidence and ranking explanations.
 Repeated calls with identical validated inputs are deterministic and do not mutate their arguments.
+
+Persisted or shared v1.2 state never contains this output. It contains validated questionnaire
+decision IDs only; restoration reconstructs current compatible answers and invokes this engine
+again against the current verified catalogue.

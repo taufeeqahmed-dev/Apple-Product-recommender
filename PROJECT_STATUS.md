@@ -1,36 +1,182 @@
 # Project status
 
-Last updated: 7 August 2026
+Last updated: 29 August 2026
 
 ## Project goal
 
 Northstar is an unofficial Computer Science portfolio project that helps people choose a MacBook
-without requiring them to understand chip names or benchmarks. Version 1.1 asks an adaptive set of
-plain-language questions, distinguishes preferences from explicit requirements and explains up to
-three deterministic recommendations, their compromises and the confidence in the shortlist.
+without requiring them to understand chip names or benchmarks. Version 1.2 adds shareable and
+resumable recommendation decision state while retaining local deterministic recommendation
+calculation against the compatible current engine and verified catalogue.
 
 Northstar is independent and is not affiliated with, endorsed by or sponsored by Apple Inc.
 Verified Apple facts remain separate from Northstar's internal suitability judgements.
 
 ## Current branch and release state
 
-- Current branch: `feature/adaptive-questionnaire-v1.1`.
-- v1.0.0 remains tagged, released and deployed from the unchanged v1.0 main history.
-- v1.1 Phases 1–4 were reviewed, committed and pushed.
-- A focused post-Phase-5 usability revision is implemented locally and awaits review. It shortens
-  the questionnaire before release work resumes and is not committed, pushed, merged, tagged or deployed.
-- Optional Phase 6 shareable results have not begun.
+- Current branch: `feature/shareable-results-v1.2`.
+- Northstar v1.1.0 is the current stable release, tagged and deployed from `main`.
+- v1.2 Phase 1 state schema, serialization and validation have been reviewed, committed and pushed
+  on the feature branch.
+- v1.2 Phase 2 local browser persistence and explicit resume behavior have been reviewed, committed
+  and pushed on the feature branch.
+- v1.2 Phase 3 URL import/export, precedence and minimal adoption/recovery behavior have been
+  reviewed, committed and pushed on the feature branch.
+- v1.2 Phase 4 share/copy-link UX, Clipboard fallback and imported-link messaging have been reviewed,
+  committed and pushed on the feature branch.
+- v1.2 Phase 5 release verification and release-candidate documentation are implemented locally,
+  verified and awaiting review.
+- No v1.2 work is merged to `main`, tagged, released or deployed.
 
 ## Independent version metadata
 
 | Concern | Version |
 | --- | --- |
-| Application/package | `1.1.0` |
+| Application/package | `1.2.0` release candidate |
 | Questionnaire schema | `3` |
+| Questionnaire-state schema | `1` |
+| URL transport | `1` |
 | Recommendation rules | `2.1.0` |
 | Verified catalogue | Unchanged 31 July 2026 snapshot |
 
-## Focused questionnaire usability revision
+## v1.2 Phase 1 foundation
+
+- Minimal sparse state containing stable question/control and option IDs only.
+- State-schema versioning independent from application, questionnaire and recommendation rules.
+- Separate validation for resumable `in-progress` and fully answered `complete` state.
+- Explicit allowlist reconstruction without merging imported objects.
+- Strict rejection of unknown, stale, hidden, incompatible, duplicate and structurally unsafe data.
+- Deterministic canonical JSON with definition-ordered answer keys and multi-select values.
+- A 4,096 UTF-8 byte bound on serialized input and output.
+- No labels, display content, product facts or recommendation output in serialized state.
+- Focused unit coverage for valid, partial, complete, hostile, round-trip and size-boundary cases.
+
+The full internal contract and rejection policy are documented in
+`docs/state-serialization.md`.
+
+## v1.2 Phase 2 foundation
+
+- A dedicated browser-storage boundary using `northstar.questionnaire-state.v1`.
+- Best-effort canonical auto-save after stable valid answer, navigation, completion and saved-edit
+  changes, with duplicate writes avoided.
+- Explicit, keyboard-operable Continue/Start again prompt rather than silent restoration.
+- Validated reconstruction through questionnaire-state invariants for partial and complete sessions.
+- Current-engine/current-catalogue recalculation after completed-session restoration.
+- Confirmed restart clearing and cancelled restart preservation.
+- Safe handling of missing, throwing, malformed, incompatible and stale storage.
+- Browser/device-only privacy wording and a documented most-recent-valid-save multi-tab policy.
+
+The full persistence, privacy, restore and failure contract is documented in
+`docs/local-persistence.md`.
+
+## v1.2 Phase 5 release-candidate assessment
+
+- All Phase 1–4 state, persistence, transport and share UX works together in the complete regression
+  suite.
+- The shared-complete browser journey now verifies current recalculation, editing, canonical local
+  re-persistence/share-fragment refresh and top-three comparison.
+- Local Lighthouse achieved 93/100/100/100 mobile and 94/100/100/100 desktop in
+  Performance/Accessibility/Best Practices/SEO order.
+- Release-target URL measurements range from 235 characters for an initial partial link to 1,234
+  characters for the broadest current valid complete link.
+- Local 320 px reflow review found no horizontal overflow; Safari, physical iPhone, VoiceOver,
+  representative Windows screen-reader and deployed-site checks remain pending.
+- README, architecture, testing, portfolio, project status and the v1.2 release checklist are
+  reconciled without claiming that v1.2 is production.
+- No critical or high product defect was found. Phase 5 fixes documentation drift only.
+
+## v1.2 Phase 5 verification
+
+| Check | Result |
+| --- | --- |
+| Complete `node --test` suite | 167 passed, 0 failed |
+| JavaScript syntax | 39 files passed, 0 failed |
+| Playwright browser suite | 36 passed, 0 failed |
+| Local Lighthouse mobile | 93 / 100 / 100 / 100 |
+| Local Lighthouse desktop | 94 / 100 / 100 / 100 |
+| `git diff --check` | Passed |
+| Protected product/source paths | Unmodified |
+
+The current architecture is documented in `docs/architecture.md`, complete verification evidence in
+`docs/testing.md`, and remaining review/release/deployment gates in `docs/release-v1.2.md`.
+
+## v1.2 Phase 4 foundation
+
+- Complete-results-only **Share results** action over the reviewed Phase 3 exporter.
+- Clipboard API copy with visible and politely announced success.
+- Labelled readonly manual-copy fallback for missing, throwing or rejected Clipboard APIs.
+- Concise privacy wording that identifies recoverable choices, excludes browser metadata/accounts
+  and explains current-engine/current-catalogue recalculation.
+- Visible and announced complete-import feedback plus clearer partial-import and invalid-link recovery
+  wording.
+- Keyboard focus management, inline non-modal disclosure and responsive long-URL containment.
+- No Web Share API dependency and no state-schema, transport or recommendation changes.
+
+The full user-interface, privacy, accessibility and fallback behavior is documented in
+`docs/share-ux.md`.
+
+## v1.2 Phase 4 verification
+
+| Check | Result |
+| --- | --- |
+| New Phase 4 unit tests | 12 passed, 0 failed |
+| Complete `node --test` suite | 167 passed, 0 failed |
+| JavaScript syntax | 39 files passed, 0 failed |
+| Playwright browser suite | 36 passed, 0 failed |
+| New Phase 4 browser cases | 2 cases × 3 viewport projects = 6 passed |
+| `git diff --check` | Passed |
+| Protected product/source paths | Unmodified |
+
+## v1.2 Phase 3 foundation
+
+- Versioned dependency-free `#northstar=v1.<base64url>` URL transport.
+- Independent 5,462-character encoded and 4,096-byte decoded bounds.
+- Strict transport, UTF-8 and Phase 1 state validation before reconstruction.
+- Valid shared state precedence without startup access to local questionnaire storage.
+- Explicit shared-state adoption before canonical Phase 2 persistence can replace local progress.
+- Accessible recovery for malformed, incompatible, oversized, stale or tampered links.
+- Canonical `replaceState` URL hygiene without additional history entries.
+- Partial adaptive resume and complete current-engine/current-catalogue recalculation.
+- Root and GitHub Pages repository-subpath compatibility.
+
+The full transport, precedence, privacy and failure contract is documented in
+`docs/shareable-urls.md`.
+
+## v1.2 Phase 3 verification
+
+| Check | Result |
+| --- | --- |
+| New Phase 3 unit tests | 25 passed, 0 failed |
+| Complete `node --test` suite | 155 passed, 0 failed |
+| JavaScript syntax | 37 files passed, 0 failed |
+| Playwright browser suite | 30 passed, 0 failed |
+| `git diff --check` | Passed |
+| Protected product/source paths | Unmodified |
+
+## v1.2 Phase 2 verification
+
+| Check | Result |
+| --- | --- |
+| New Phase 2 unit tests | 21 passed, 0 failed |
+| Complete `node --test` suite | 130 passed, 0 failed |
+| JavaScript syntax | 34 files passed, 0 failed |
+| Playwright browser suite | 15 passed, 0 failed |
+| `git diff --check` | Passed |
+| Protected product/source paths | Unmodified |
+
+## v1.2 Phase 1 verification
+
+| Check | Result |
+| --- | --- |
+| Focused state-contract unit tests | 42 passed, 0 failed |
+| Complete `node --test` suite | 109 passed, 0 failed |
+| Pre-existing v1.1 tests within the suite | 67 passed, 0 failed |
+| JavaScript syntax | 32 files passed, 0 failed |
+| Playwright browser regression suite | 9 passed, 0 failed |
+| `git diff --check` | Passed |
+| Protected product/source paths | Unmodified |
+
+## v1.1 questionnaire baseline
 
 - Seven core steps and at most two conditional essential-detail steps.
 - Budget amount/flexibility and portability/screen controls are combined into logical screens.
@@ -50,7 +196,7 @@ Verified Apple facts remain separate from Northstar's internal suitability judge
 - Calm visible progress labels avoid repeatedly foregrounding adaptive total changes while exact step
   counts remain available to assistive technology.
 
-## Phase 5 review candidate
+## v1.1 verification baseline
 
 - Added exact-version development-only Playwright testing; production remains framework-free.
 - Added nine browser tests across desktop, tablet and mobile target viewports.
@@ -89,10 +235,6 @@ Production Lighthouse is intentionally unclaimed until a reviewed deployment exi
 
 ## Remaining release work
 
-The focused usability revision must be reviewed before any commit or push. Release preparation is
-paused; earlier local Lighthouse measurements predate this revision and must not be treated as its
-release evidence. Safari, VoiceOver, representative Windows screen-reader and physical-device checks
-remain manual environment-dependent verification.
-
-No Phase 6 work is authorized before the core v1.1 release is complete, stable and separately
-reviewed.
+Phase 5 must be reviewed before any commit or push. After a separately approved commit and feature-
+branch push, the remaining work is PR review, merge, deployed GitHub Pages verification and the
+separately approved `v1.2.0` tag/release. Do not begin v1.3 work.
