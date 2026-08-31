@@ -1,0 +1,53 @@
+name: Pull request CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up pnpm and Node.js
+        uses: pnpm/setup@v2
+        with:
+          version: 11.16.0
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Install development dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run automated tests
+        run: pnpm test
+
+      - name: Check JavaScript syntax
+        run: pnpm check:syntax
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run browser tests
+        id: browser_tests
+        run: pnpm test:browser
+
+      - name: Upload browser-test diagnostics
+        if: ${{ failure() && steps.browser_tests.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-diagnostics
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7
