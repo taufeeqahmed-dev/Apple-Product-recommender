@@ -18,7 +18,7 @@ transporting recommendation output or product data.
 Live application
 
 Production:  
-[https://taufeeqahmed-dev.github.io/apple-product-recommender/](https://taufeeqahmed-dev.github.io/apple-product-recommender/)
+[https://taufeeqahmed-dev.github.io/Apple-Product-recommender/](https://taufeeqahmed-dev.github.io/Apple-Product-recommender/)
 
 Current stable release: `v1.1.0`
 
@@ -159,11 +159,11 @@ Result hierarchy
 
 ```text
 Exact match
-    ↓
+↓
 Closest match
-    ↓
+↓
 Stretch match
-    ↓
+↓
 Genuine No Match
 ```
 
