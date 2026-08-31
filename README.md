@@ -18,7 +18,7 @@ shortlist of suitable MacBooks.
 Live application
 
 Production:  
-[https://taufeeqahmed-dev.github.io/apple-product-recommender/](https://taufeeqahmed-dev.github.io/apple-product-recommender/)
+[https://taufeeqahmed-dev.github.io/Apple-Product-recommender/](https://taufeeqahmed-dev.github.io/Apple-Product-recommender/)
 
 Current stable release: `v1.1.0`
 
