@@ -1583,8 +1583,19 @@ html:not(.js) .results-section {
   }
 
   .results-share-header {
-    align-items: stretch;
+    align-items: flex-start;
     flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .results-share-header h3 {
+    margin-bottom: 0;
+  }
+
+  .results-share-header .text-button {
+    min-height: 2.75rem;
+    align-self: flex-start;
+    text-align: left;
   }
 
   .comparison-open-button {
