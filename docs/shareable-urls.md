@@ -79,7 +79,7 @@ state.
 - **Continue with shared answers:** the shared state is restored through the trusted state API and
   immediately saved using the normal Phase 2 canonical local format. From that deliberate adoption
   point, it becomes the active browser session.
-- **Use this browser instead:** the share fragment is removed and Phase 2 local loading begins. A
+- **Keep my saved questionnaire:** the share fragment is removed and Phase 2 local loading begins. A
   valid saved session receives the normal resume prompt; otherwise a fresh questionnaire begins.
 - **Invalid shared state:** an accessible recovery panel explains that the link cannot be used and
   that browser progress was not changed. Local storage is not read until “Continue without shared

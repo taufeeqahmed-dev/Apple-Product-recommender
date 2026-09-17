@@ -352,7 +352,7 @@ test("completed results can be shared and copied with accessible keyboard feedba
 
 test("clipboard failure exposes a selected manual-copy field without mobile overflow", async ({
   page,
-}) => {
+}, testInfo) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
@@ -386,17 +386,56 @@ test("clipboard failure exposes a selected manual-copy field without mobile over
     const panel = document.querySelector("#results-share-panel").getBoundingClientRect();
     const field = document.querySelector("#results-share-url").getBoundingClientRect();
     const copy = document.querySelector("#results-share-copy").getBoundingClientRect();
+    const title = document.querySelector("#results-share-title").getBoundingClientRect();
+    const close = document.querySelector("#results-share-close").getBoundingClientRect();
     return {
       pageOverflow: document.documentElement.scrollWidth > window.innerWidth,
       panelWithinPage: panel.left >= 0 && panel.right <= window.innerWidth,
       fieldWithinPanel: field.left >= panel.left && field.right <= panel.right,
       copyHeight: copy.height,
+      titleLeft: title.left,
+      titleRight: title.right,
+      titleBottom: title.bottom,
+      closeLeft: close.left,
+      closeTop: close.top,
+      closeHeight: close.height,
     };
   });
   expect(layout.pageOverflow).toBe(false);
   expect(layout.panelWithinPage).toBe(true);
   expect(layout.fieldWithinPanel).toBe(true);
   expect(layout.copyHeight).toBeGreaterThanOrEqual(44);
+  expect(layout.closeHeight).toBeGreaterThanOrEqual(44);
+  if (testInfo.project.name === "mobile") {
+    expect(layout.closeTop).toBeGreaterThanOrEqual(layout.titleBottom);
+    expect(Math.abs(layout.closeLeft - layout.titleLeft)).toBeLessThanOrEqual(1);
+
+    await page.setViewportSize({ width: 320, height: 844 });
+    const narrowLayout = await page.evaluate(() => {
+      const panel = document.querySelector("#results-share-panel").getBoundingClientRect();
+      const field = document.querySelector("#results-share-url").getBoundingClientRect();
+      const title = document.querySelector("#results-share-title").getBoundingClientRect();
+      const close = document.querySelector("#results-share-close").getBoundingClientRect();
+      return {
+        pageOverflow: document.documentElement.scrollWidth > window.innerWidth,
+        panelWithinPage: panel.left >= 0 && panel.right <= window.innerWidth,
+        fieldWithinPanel: field.left >= panel.left && field.right <= panel.right,
+        titleLeft: title.left,
+        titleBottom: title.bottom,
+        closeLeft: close.left,
+        closeTop: close.top,
+        closeHeight: close.height,
+      };
+    });
+    expect(narrowLayout.pageOverflow).toBe(false);
+    expect(narrowLayout.panelWithinPage).toBe(true);
+    expect(narrowLayout.fieldWithinPanel).toBe(true);
+    expect(narrowLayout.closeTop).toBeGreaterThanOrEqual(narrowLayout.titleBottom);
+    expect(Math.abs(narrowLayout.closeLeft - narrowLayout.titleLeft)).toBeLessThanOrEqual(1);
+    expect(narrowLayout.closeHeight).toBeGreaterThanOrEqual(44);
+  } else {
+    expect(layout.closeLeft).toBeGreaterThan(layout.titleRight);
+  }
 
   await page.keyboard.press("Shift+Tab");
   await expect(page.getByRole("button", { name: "Copy link", exact: true })).toBeFocused();
@@ -671,6 +710,9 @@ test("valid shared state takes precedence without touching different local progr
   await expect(localPage.locator("#questionnaire-shared")).toContainText(
     "saved in this browser stays untouched",
   );
+  await expect(
+    localPage.getByRole("button", { name: "Keep my saved questionnaire", exact: true }),
+  ).toBeVisible();
   expect(await localPage.evaluate((key) => localStorage.getItem(key), QUESTIONNAIRE_STORAGE_KEY))
     .toBe(localBeforeShare);
   await localPage.getByRole("button", { name: "Continue with shared answers", exact: true }).click();

@@ -140,6 +140,14 @@ test("imported and invalid link messages are friendly trusted interface text", a
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   const resultsSource = await readFile(new URL("../js/results.js", import.meta.url), "utf8");
   assert.match(resultsSource, /Shared recommendation loaded\./);
+  assert.match(
+    html,
+    /id="questionnaire-shared-continue"[\s\S]*Continue with shared answers/,
+  );
+  assert.match(
+    html,
+    /id="questionnaire-shared-dismiss"[\s\S]*Keep my saved questionnaire/,
+  );
   assert.match(html, /This shared link couldn’t be used/);
   assert.match(html, /No progress saved in this browser was[\s\S]*changed/);
 });
