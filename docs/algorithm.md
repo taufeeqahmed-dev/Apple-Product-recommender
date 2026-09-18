@@ -1,4 +1,4 @@
-# Northstar v1.2 release-candidate recommendation algorithm
+# Northstar v1.2 recommendation algorithm
 
 | Versioned concern | Value |
 | --- | --- |

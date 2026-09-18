@@ -129,10 +129,14 @@ no-match presentation. That evidence led to schema 3, rules 2.1 and new seven-to
 These examples show why recommendation quality needs scenario tests, while accessible stateful UI
 needs rendered keyboard and focus tests.
 
-The v1.2 release-candidate review found documentation drift rather than a product defect: Phase 4
+The v1.2 pre-release review found documentation drift rather than a product defect: Phase 4
 still described itself as uncommitted and the README ended with an unfinished result-hierarchy code
 block. Phase 5 reconciled release status and architecture/testing evidence and strengthened the
 shared-result browser journey to include editing, canonical re-persistence and comparison.
+
+PR #3 introduced the main v1.2 feature set. The final production UX polish in PR #4 clarified the
+browser-progress choice as **Keep my saved questionnaire** and moved **Close sharing** beneath the
+share heading at mobile widths without changing the state, transport or recommendation contracts.
 
 ## Verification evidence
 
@@ -146,8 +150,11 @@ shared-result browser journey to include editing, canonical re-persistence and c
   Performance/Accessibility/Best Practices/SEO order.
 - Frozen development lockfile and a Pages workflow gated by unit, syntax and browser tests.
 
-Safari, VoiceOver, representative Windows screen-reader, physical-device and deployed-production
-verification remain explicit manual release checks rather than automated claims.
+Production smoke testing passed for the released homepage, questionnaire, resume, result, sharing,
+shared-link recovery, 390×844 layout and keyboard journeys. A final check after PR #4 confirmed the
+deployed **Keep my saved questionnaire** wording and mobile **Close sharing** placement. Safari,
+VoiceOver, a representative Windows screen reader, physical-device testing and production Lighthouse
+remain unclaimed.
 
 ## Outcome
 
@@ -158,7 +165,8 @@ remain inspectable.
 
 ## CV-ready wording
 
-Use the v1.2 release wording only after it has been reviewed, merged, deployed and released.
+The v1.2 production wording is now supported by the merged deployment and recorded smoke checks.
+Describe v1.2.0 as tagged or published as a GitHub release only after those remaining actions occur.
 
 ### Compact bullet
 

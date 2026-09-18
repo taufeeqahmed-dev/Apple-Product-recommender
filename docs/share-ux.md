@@ -1,6 +1,6 @@
 # Northstar share and copy-link experience
 
-Status: v1.2 Phase 4 behavior; reviewed, committed and pushed on the feature branch
+Status: v1.2 Phase 4 behavior; included in the v1.2.0 production release
 
 ## Product policy
 
@@ -54,6 +54,9 @@ A valid shared link retains Phase 3's explicit adoption step. If a browser alrea
 progress, the panel states that it remains untouched until the visitor continues with the shared
 answers; adoption then makes those choices the active locally saved session.
 
+The primary action remains **Continue with shared answers**. The secondary action is **Keep my saved
+questionnaire**, which accurately describes returning to browser-local progress.
+
 After a partial link is adopted, the live questionnaire message says that the answers came from a
 shared link and invites the visitor to continue. After a complete link is adopted, results include
 the visible notice **Shared recommendation loaded** and explain that the current verified catalogue
@@ -72,8 +75,10 @@ until the visitor chooses to continue normally, preserving the Phase 3 precedenc
 - Copy feedback uses a polite, atomic status region. Successful copying does not move focus; manual
   fallback focus is deliberate and its textarea has a programmatic label and instructions.
 - The panel is part of normal document flow and inherits Northstar's reduced-motion behavior.
-- At narrow widths, actions reflow to comfortable full-width targets. The readonly URL wraps inside
-  its container and cannot introduce page-level horizontal scrolling.
+- At narrow widths, **Close sharing** moves directly beneath the **Share this result** heading as a
+  comfortable secondary action; the desktop header layout remains unchanged. Other actions reflow
+  to comfortable full-width targets, and the readonly URL wraps inside its container without
+  introducing page-level horizontal scrolling.
 - Playwright viewport projects verify keyboard use and containment, but representative screen-reader,
   zoom/reflow, physical-device and Safari testing remain manual release checks.
 

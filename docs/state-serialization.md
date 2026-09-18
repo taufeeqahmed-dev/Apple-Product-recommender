@@ -1,6 +1,6 @@
 # Northstar questionnaire-state serialization
 
-Status: v1.2 Phase 1 internal contract; reviewed, committed and pushed on the v1.2 feature branch
+Status: v1.2 Phase 1 internal contract; included in the v1.2.0 production release
 
 | Versioned concern | Value |
 | --- | --- |
@@ -9,7 +9,7 @@ Status: v1.2 Phase 1 internal contract; reviewed, committed and pushed on the v1
 | Questionnaire-state schema | `1` |
 | Recommendation rules | `2.1.0` |
 
-These versions are independent. The application version identifies the developing release, the
+These versions are independent. The application version identifies the application release, the
 questionnaire schema identifies the meaning of questionnaire and option IDs, the state-schema
 version identifies the persisted/shared envelope, and the recommendation-rules version identifies
 scoring behaviour. A state-schema change does not implicitly change questionnaire meanings or

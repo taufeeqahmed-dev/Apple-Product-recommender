@@ -1,7 +1,6 @@
 # Northstar v1.2 architecture
 
-Status: v1.2 release-candidate architecture on `feature/shareable-results-v1.2`; not merged,
-released or deployed
+Status: v1.2.0 production architecture, merged into `main` and deployed through GitHub Pages
 
 Northstar is a static, framework-free browser application. Version 1.2 adds portable questionnaire
 decision state around the existing v1.1 recommendation system while keeping product data, rules,
@@ -65,7 +64,7 @@ rendered as HTML.
 
 ## Independent versions
 
-| Concern | Release-candidate value | Changes when |
+| Concern | v1.2.0 value | Changes when |
 | --- | --- | --- |
 | Application/package | `1.2.0` | The released application changes |
 | Questionnaire schema | `3` | Stable question/option meanings or compatibility change |

@@ -1,10 +1,10 @@
 # Northstar v1.1 release checklist
 
-Status: Phase 5 local review candidate
+Status: Historical checklist; v1.1.0 is preserved as the previous tagged release
 
-Branch: `feature/adaptive-questionnaire-v1.1`
+Historical implementation branch: `feature/adaptive-questionnaire-v1.1`
 
-Intended release/tag: `v1.1.0`
+Release/tag: `v1.1.0`
 
 This checklist does not authorize a commit, merge, tag, push or deployment.
 
