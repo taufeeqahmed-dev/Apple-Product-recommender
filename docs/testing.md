@@ -1,13 +1,20 @@
 # Northstar testing and verification report
 
-## v1.2 Phase 5 release-candidate verification
+## v1.2 release verification
 
-Date: 29 August 2026
+Automated verification date: 29 August 2026
 
-Branch: `feature/shareable-results-v1.2`
+Production smoke-test date: 31 August 2026
 
-Status: Phase 5 verified local review candidate; uncommitted and not pushed, merged, tagged,
-released or deployed
+Final UX-polish production smoke confirmation: 18 September 2026
+
+Release source: `main`; PR #3 introduced the main v1.2 feature set and PR #4 added the final UX
+polish, with both deployed through GitHub Pages
+
+Documentation branch: `docs/v1.2-release-finalisation`
+
+Status: v1.2.0 is the current stable production version; the formal tag and GitHub release remain
+pending
 
 ### Automated results
 
@@ -26,6 +33,34 @@ The 167-test suite covers the v1.1 catalogue, schema, migration, recommendation-
 baseline plus v1.2 canonical serialization, separate partial/complete validation, size boundaries,
 dangerous object shapes, malformed/tampered state, persistence failures, trusted restoration,
 versioned URL transport, startup precedence, deterministic sharing and Clipboard API outcomes.
+
+### Manual production smoke verification
+
+Production URL:
+[https://taufeeqahmed-dev.github.io/Apple-Product-recommender/](https://taufeeqahmed-dev.github.io/Apple-Product-recommender/)
+
+The following checks were performed manually against the deployed production application. They are
+separate from the automated Node, Playwright and Lighthouse results recorded elsewhere in this
+report:
+
+- homepage loading;
+- completing the questionnaire;
+- reloading partial progress and choosing Continue where you left off;
+- viewing recommendation results;
+- using Share results and Copy link;
+- opening a shared link in a fresh browser context;
+- recovering from a malformed shared link while keeping the application usable;
+- reviewing the responsive layout at 390×844; and
+- completing a keyboard-only navigation smoke journey.
+
+A final manual production smoke check after PR #4 separately confirmed that:
+
+- **Keep my saved questionnaire** appears correctly on the deployed shared-questionnaire panel; and
+- at mobile width, **Close sharing** is positioned directly beneath the **Share this result** heading
+  as intended.
+
+These checks establish only the listed production journeys. They do not establish the pending
+physical-device, assistive-technology, browser, Clipboard fallback or production Lighthouse results.
 
 ### Integrated browser journeys
 
@@ -79,7 +114,7 @@ Both JSON reports were written outside the repository and verified to contain th
 URL, timestamps, Lighthouse version, Edge user agent, category data and scores. After report
 generation, the CLI returned the same Windows temporary-profile cleanup `EPERM` documented for the
 earlier v1.1 audits. The cleanup warning does not change the completed audit evidence. Production
-Lighthouse is unclaimed until deployment.
+Lighthouse has not been run and remains unclaimed.
 
 ### URL-length measurements
 
@@ -119,10 +154,17 @@ limitations:
 - physical iPhone touch targets, Dynamic Type/system text sizing and long-URL fallback;
 - VoiceOver on iPhone and macOS/Safari;
 - Narrator or another representative Windows screen reader;
-- a complete physical-keyboard/device journey including manual copy and comparison scrolling;
+- a complete physical-keyboard/device journey including Shift+Tab, Escape, manual copy and
+  comparison scrolling beyond the completed production keyboard smoke;
 - current Chrome and Firefox smoke tests where available;
 - JavaScript-disabled and module-load-failure behavior; and
-- deployed GitHub Pages persistence, sharing, subpath, clipboard/fallback and production Lighthouse.
+- deployed Start again and Restart persistence clearing;
+- deployed Clipboard manual fallback;
+- editing/comparison after a deployed shared-link import;
+- deployed partial shared-link import and local/shared precedence;
+- preservation of a separate valid local session after malformed-link recovery;
+- deployed privacy-copy and console review; and
+- production Lighthouse mobile and desktop.
 
 Automation, viewport emulation, local Edge and Lighthouse do not establish these results.
 
@@ -333,10 +375,9 @@ paused, and the revision must be reviewed before any commit or push.
 
 Date: 29 August 2026
 
-Branch: `feature/shareable-results-v1.2`
+Historical implementation branch: `feature/shareable-results-v1.2`
 
-Status: reviewed, committed and pushed on the v1.2 feature branch; not merged, tagged, released or
-deployed
+Status: historical Phase 2 evidence; subsequently merged through PR #3 and deployed in v1.2.0
 
 | Check | Result |
 | --- | --- |
@@ -366,10 +407,9 @@ site data also require manual confirmation of the displayed failure message.
 
 Date: 29 August 2026
 
-Branch: `feature/shareable-results-v1.2`
+Historical implementation branch: `feature/shareable-results-v1.2`
 
-Status: reviewed, committed and pushed on the v1.2 feature branch; not merged, tagged, released or
-deployed
+Status: historical Phase 3 evidence; subsequently merged through PR #3 and deployed in v1.2.0
 
 | Check | Result |
 | --- | --- |
@@ -393,17 +433,16 @@ recovers from invalid links without exposing their payload, and serves/imports t
 the Phase 2 and v1.1 regression journeys.
 
 The minimal Phase 3 adoption/recovery controls use native buttons and named regions with deliberate
-focus after interaction. Manual screen-reader, physical-device and real shared-link target testing
-remain necessary before release.
+focus after interaction. Manual screen-reader and physical-device testing remain outside the
+completed release evidence; the listed production shared-link smoke checks are recorded above.
 
 ## v1.2 Phase 4 verification addendum
 
 Date: 29 August 2026
 
-Branch: `feature/shareable-results-v1.2`
+Historical implementation branch: `feature/shareable-results-v1.2`
 
-Status: reviewed, committed and pushed on the v1.2 feature branch; not merged, tagged, released or
-deployed
+Status: historical Phase 4 evidence; subsequently merged through PR #3 and deployed in v1.2.0
 
 | Check | Result |
 | --- | --- |
@@ -428,4 +467,4 @@ partial imported-state guidance, local/shared-state explanation and friendly inv
 A local visual pass at the default desktop viewport and 390×844 confirmed the share panel follows
 the answer review, remains secondary to the recommendation and introduces no page-level horizontal
 overflow. Automation and viewport inspection do not replace VoiceOver/Narrator, 200–400% zoom,
-Safari or physical-device checks before release.
+Safari or physical-device checks, which remain unclaimed after release.

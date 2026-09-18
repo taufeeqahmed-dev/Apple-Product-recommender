@@ -1,6 +1,6 @@
 # Northstar local questionnaire persistence
 
-Status: v1.2 Phase 2 internal contract; reviewed, committed and pushed on the v1.2 feature branch
+Status: v1.2 Phase 2 internal contract; included in the v1.2.0 production release
 
 ## Boundary and storage key
 

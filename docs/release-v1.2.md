@@ -1,20 +1,21 @@
 # Northstar v1.2 release checklist
 
-Status: Phase 5 release-candidate review; uncommitted and not approved for push, PR, merge, tag,
-release or deployment
+Status: v1.2.0's main feature set from PR #3 and final UX polish from PR #4 are merged into `main`,
+deployed through GitHub Pages and production-smoke verified; the formal v1.2.0 tag and GitHub release
+remain pending
 
-Branch: `feature/shareable-results-v1.2`
+Documentation branch: `docs/v1.2-release-finalisation`
 
-Intended release/tag: `v1.2.0`
+Current stable production version: `v1.2.0`
 
-Current production release: `v1.1.0` from `main`
+Previous tagged release: `v1.1.0` (preserved)
 
-This checklist records evidence and remaining gates. It does not authorize a commit, push, pull
-request, merge, tag, release or deployment.
+This checklist records completed evidence and remaining gates. It does not authorize a documentation
+commit or push, or creation of the pending v1.2.0 tag and GitHub release.
 
 ## Release metadata
 
-| Concern | Release-candidate value |
+| Concern | v1.2.0 value |
 | --- | --- |
 | Package/application version | `1.2.0` |
 | Questionnaire schema | `3` |
@@ -44,7 +45,7 @@ request, merge, tag, release or deployment.
 - [x] Playwright mobile 390×844: 12 passed.
 - [x] Local Lighthouse mobile: 93/100/100/100.
 - [x] Local Lighthouse desktop: 94/100/100/100.
-- [x] `git diff --check` passes for the Phase 5 candidate.
+- [x] `git diff --check` passed for the Phase 5 verification diff.
 - [x] Protected-file diff is empty.
 
 Lighthouse category order is Performance, Accessibility, Best Practices and SEO. The accepted local
@@ -83,7 +84,7 @@ and final URL, timestamps, user agent, audit data and category scores.
 ## URL-length evidence
 
 Measured against the production repository-subpath base
-`https://taufeeqahmed-dev.github.io/apple-product-recommender/`:
+`https://taufeeqahmed-dev.github.io/Apple-Product-recommender/`:
 
 | Fixture | Total URL | Encoded payload | Canonical UTF-8 state |
 | --- | ---: | ---: | ---: |
@@ -124,47 +125,49 @@ Record date, browser/device/assistive-technology version, result and notes befor
 
 Playwright emulation, local Edge and Lighthouse do not complete these checks.
 
-## Reviewer and pre-PR gates
+## Review, integration and remaining release gates
 
-- [ ] Review the complete Phase 5 diff.
-- [ ] Confirm documentation accurately preserves v1.1.0 as current production.
-- [ ] Confirm Playwright remains development-only and the Pages artifact excludes development tools.
-- [ ] Confirm the URL/privacy language is acceptable for release.
-- [ ] Confirm no critical/high defect remains.
-- [ ] Approve the Phase 5 commit.
-- [ ] Approve the feature-branch push separately.
-- [ ] Re-run required gates on the reviewed commit if it differs from this candidate.
-- [ ] Create a pull request only after explicit approval.
-
-## Approved release sequence
-
-Do not perform these steps without separate user approval.
-
-1. Commit the reviewed Phase 5 changes on `feature/shareable-results-v1.2`.
-2. Push the reviewed feature branch.
-3. Review the complete branch diff and pull-request checks against `main`.
-4. Merge through the approved process without rewriting the v1.1.0 release.
-5. Confirm the `main` Pages workflow passes unit, syntax and all browser projects.
-6. Complete the deployed-site checks below.
-7. Create tag/release `v1.2.0` only after the merged/deployed commit is confirmed.
+- [x] Phase 5 documentation and verification reviewed.
+- [x] Original feature work committed and pushed on historical branch
+  `feature/shareable-results-v1.2`.
+- [x] PR #3 reviewed and merged the main v1.2 feature set into `main` without rewriting v1.1.0
+  history.
+- [x] PR #4 reviewed and merged the final v1.2 UX polish into `main`.
+- [x] GitHub Pages deployment completed successfully from the final `main` state.
+- [x] Listed production smoke journeys completed successfully.
+- [ ] Review the release-finalisation documentation diff.
+- [ ] Approve and commit the release-finalisation documentation.
+- [ ] Approve and push `docs/v1.2-release-finalisation`.
+- [ ] Create tag and GitHub release `v1.2.0` only after separate approval.
 
 ## Post-deployment verification
 
-- [ ] GitHub Pages workflow passed unit, syntax and all browser projects.
-- [ ] Public URL serves v1.2 over HTTPS from `/apple-product-recommender/`.
-- [ ] CSS, modules, images, crawler files and module imports resolve under the repository subpath.
-- [ ] Partial progress persists and presents the resume choice on the deployed origin.
+- [x] GitHub Pages workflow and deployment completed successfully.
+- [x] Public URL serves v1.2 over HTTPS from `/Apple-Product-recommender/`.
+- [x] Homepage loads successfully on the deployed origin.
+- [ ] CSS, modules, images, crawler files and module imports are individually verified under the
+  production repository subpath.
+- [x] Questionnaire completion works on the deployed origin.
+- [x] Partial progress survives reload and presents Continue where you left off.
+- [x] Recommendation results render after the deployed questionnaire is completed.
 - [ ] Start again and confirmed Restart prevent a later deployed-site resume.
-- [ ] A deployed complete result can generate and copy a canonical share URL.
+- [x] A deployed complete result can use Share results and Copy link.
 - [ ] The deployed Clipboard fallback is usable where clipboard permission/support is unavailable.
-- [ ] A deployed complete shared URL imports, recalculates, edits and compares successfully.
+- [x] A deployed shared result opens successfully in a fresh browser context.
+- [ ] A deployed complete shared URL is edited and compared after import.
 - [ ] A deployed partial shared URL resumes at its validated adaptive step.
-- [ ] Invalid/tampered deployed links preserve local state and show friendly recovery.
+- [x] A malformed deployed shared link shows friendly recovery and leaves the application usable.
+- [ ] A malformed deployed link is confirmed to preserve a separate valid local session.
+- [x] The deployed 390×844 layout passes responsive smoke review.
+- [x] **Keep my saved questionnaire** appears correctly on the deployed shared-questionnaire panel.
+- [x] At mobile width, **Close sharing** appears directly beneath the **Share this result** heading as
+  intended.
+- [x] Keyboard-only navigation passes a deployed production smoke journey.
 - [ ] Privacy text matches the reviewed release wording.
 - [ ] Production console has no unexpected errors.
 - [ ] Run and record production Lighthouse mobile and desktop.
 - [ ] Confirm v1.1.0 tag/release and prior immutable releases remain unchanged.
-- [ ] Reconcile `PROJECT_STATUS.md` to released/deployed in a separate reviewed change if needed.
+- [x] Reconcile `PROJECT_STATUS.md` to the merged/deployed production state in this documentation diff.
 
 ## Rollback approach
 

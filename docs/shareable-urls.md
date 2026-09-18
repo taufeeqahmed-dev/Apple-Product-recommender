@@ -1,6 +1,6 @@
 # Northstar shareable questionnaire URLs
 
-Status: v1.2 Phase 3 internal contract; reviewed, committed and pushed on the feature branch
+Status: v1.2 Phase 3 internal contract; included in the v1.2.0 production release
 
 ## Transport format
 
@@ -39,7 +39,7 @@ forms work without server routing:
 
 ```text
 http://127.0.0.1:4173/#northstar=v1.<payload>
-https://taufeeqahmed-dev.github.io/apple-product-recommender/#northstar=v1.<payload>
+https://taufeeqahmed-dev.github.io/Apple-Product-recommender/#northstar=v1.<payload>
 ```
 
 Equivalent valid state produces the same payload. The current base path and query remain part of

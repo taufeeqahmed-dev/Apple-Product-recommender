@@ -4,9 +4,9 @@ Northstar is an accessible, explainable MacBook recommendation web application t
 people choose a MacBook based on what they actually need — without requiring them to decode chip
 names, benchmark charts or technical specification tables.
 
-Version 1.2.0 is currently a release candidate on the feature branch. It adds validated browser-local
-resume and shareable recommendation links to the v1.1 adaptive questionnaire without persisting or
-transporting recommendation output or product data.
+Version 1.2.0 is the current stable production release. It adds validated browser-local resume and
+shareable recommendation links to the v1.1 adaptive questionnaire without persisting or transporting
+recommendation output or product data.
 
 > Independent project: Northstar is an unofficial student portfolio project and is not
 > affiliated with, endorsed by or sponsored by Apple Inc. Apple and MacBook are trademarks of
@@ -20,9 +20,9 @@ Live application
 Production:  
 [https://taufeeqahmed-dev.github.io/Apple-Product-recommender/](https://taufeeqahmed-dev.github.io/Apple-Product-recommender/)
 
-Current stable release: `v1.1.0`
+Current stable production release: `v1.2.0`
 
-Release candidate: `v1.2.0` on `feature/shareable-results-v1.2`
+Previous stable tagged release: `v1.1.0`
 
 Production is deployed automatically from `main` using GitHub Pages.
 
@@ -192,9 +192,9 @@ See [architecture](docs/architecture.md), [state serialization](docs/state-seria
 
 ---
 
-Release-candidate verification
+Released v1.2 verification
 
-The current v1.2 candidate has:
+The released v1.2 production version was verified with:
 
 - 167 passing Node tests;
 - 39 JavaScript files passing syntax checks;
@@ -208,6 +208,10 @@ restart behavior, partial/complete URL import, URL/local precedence, current rec
 recalculation, imported-state editing and comparison, Clipboard API fallback, keyboard focus and
 responsive containment.
 
-Safari, physical iPhone, VoiceOver, a representative Windows screen reader, physical-device input
-and deployed-site checks remain pending and are not claimed by viewport automation. See the
+Production smoke testing confirmed the homepage, questionnaire completion, browser-local resume,
+recommendation results, sharing and copy, shared-link import, malformed-link recovery, the 390×844
+layout and keyboard-only navigation. A final production check after PR #4 also confirmed **Keep my
+saved questionnaire** on the shared-questionnaire panel and **Close sharing** directly beneath the
+share heading at mobile width. Safari, physical iPhone, VoiceOver, a representative Windows screen
+reader and production Lighthouse remain unverified. See the
 [v1.2 release checklist](docs/release-v1.2.md) and [testing report](docs/testing.md).

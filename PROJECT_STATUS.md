@@ -1,6 +1,6 @@
 # Project status
 
-Last updated: 29 August 2026
+Last updated: 18 September 2026
 
 ## Project goal
 
@@ -14,25 +14,21 @@ Verified Apple facts remain separate from Northstar's internal suitability judge
 
 ## Current branch and release state
 
-- Current branch: `feature/shareable-results-v1.2`.
-- Northstar v1.1.0 is the current stable release, tagged and deployed from `main`.
-- v1.2 Phase 1 state schema, serialization and validation have been reviewed, committed and pushed
-  on the feature branch.
-- v1.2 Phase 2 local browser persistence and explicit resume behavior have been reviewed, committed
-  and pushed on the feature branch.
-- v1.2 Phase 3 URL import/export, precedence and minimal adoption/recovery behavior have been
-  reviewed, committed and pushed on the feature branch.
-- v1.2 Phase 4 share/copy-link UX, Clipboard fallback and imported-link messaging have been reviewed,
-  committed and pushed on the feature branch.
-- v1.2 Phase 5 release verification and release-candidate documentation are implemented locally,
-  verified and awaiting review.
-- No v1.2 work is merged to `main`, tagged, released or deployed.
+- Current documentation branch: `docs/v1.2-release-finalisation`.
+- Northstar v1.2.0 is the current stable production version. PR #3 introduced the main v1.2 feature
+  set; PR #4 added the final production UX polish. Both are merged into `main`, deployed through
+  GitHub Pages and covered by the recorded production smoke checks.
+- Northstar v1.1.0 remains preserved as the previous tagged release.
+- v1.2 Phases 1–5 are reviewed, committed and included in the merged production version.
+- The formal v1.2.0 tag and GitHub release have not yet been created.
+- This final documentation reconciliation is local and awaiting review; it has not been committed or
+  pushed.
 
 ## Independent version metadata
 
 | Concern | Version |
 | --- | --- |
-| Application/package | `1.2.0` release candidate |
+| Application/package | `1.2.0` production |
 | Questionnaire schema | `3` |
 | Questionnaire-state schema | `1` |
 | URL transport | `1` |
@@ -69,7 +65,7 @@ The full internal contract and rejection policy are documented in
 The full persistence, privacy, restore and failure contract is documented in
 `docs/local-persistence.md`.
 
-## v1.2 Phase 5 release-candidate assessment
+## v1.2 release assessment
 
 - All Phase 1–4 state, persistence, transport and share UX works together in the complete regression
   suite.
@@ -77,15 +73,23 @@ The full persistence, privacy, restore and failure contract is documented in
   re-persistence/share-fragment refresh and top-three comparison.
 - Local Lighthouse achieved 93/100/100/100 mobile and 94/100/100/100 desktop in
   Performance/Accessibility/Best Practices/SEO order.
-- Release-target URL measurements range from 235 characters for an initial partial link to 1,234
+- Production-base URL measurements range from 235 characters for an initial partial link to 1,234
   characters for the broadest current valid complete link.
 - Local 320 px reflow review found no horizontal overflow; Safari, physical iPhone, VoiceOver,
-  representative Windows screen-reader and deployed-site checks remain pending.
-- README, architecture, testing, portfolio, project status and the v1.2 release checklist are
-  reconciled without claiming that v1.2 is production.
-- No critical or high product defect was found. Phase 5 fixes documentation drift only.
+  representative Windows screen-reader and production Lighthouse checks remain pending.
+- Production smoke testing passed for homepage loading, questionnaire completion, partial-progress
+  reload and Continue, recommendation results, Share results / Copy link, opening a shared link in a
+  fresh browser context, malformed-link recovery, the 390×844 layout and keyboard-only navigation.
+- The final post-PR #4 production smoke check confirmed **Keep my saved questionnaire** on the
+  deployed shared-questionnaire panel and placed **Close sharing** beneath the **Share this result**
+  heading at mobile width as intended.
+- README, architecture, testing, portfolio, project status and the v1.2 release checklist are being
+  reconciled with the deployed production status on the documentation branch.
+- No critical or high product defect was found. Phase 5 fixed documentation drift; PR #4 then made
+  the reviewed wording and narrow-layout UX polish without changing v1.2 state or recommendation
+  behaviour.
 
-## v1.2 Phase 5 verification
+## v1.2 release verification
 
 | Check | Result |
 | --- | --- |
@@ -98,7 +102,7 @@ The full persistence, privacy, restore and failure contract is documented in
 | Protected product/source paths | Unmodified |
 
 The current architecture is documented in `docs/architecture.md`, complete verification evidence in
-`docs/testing.md`, and remaining review/release/deployment gates in `docs/release-v1.2.md`.
+`docs/testing.md`, and remaining manual and formal-release gates in `docs/release-v1.2.md`.
 
 ## v1.2 Phase 4 foundation
 
@@ -219,9 +223,9 @@ The full transport, precedence, privacy and failure contract is documented in
 | Local Lighthouse mobile | 100 / 100 / 100 / 100 |
 | Local Lighthouse desktop | 100 / 100 / 100 / 100 |
 
-Lighthouse category order is Performance, Accessibility, Best Practices and SEO. Accepted audits
-used Lighthouse 13.4.1 with Microsoft Edge 151.0.4129.21 against the verified local review candidate.
-Production Lighthouse is intentionally unclaimed until a reviewed deployment exists.
+Lighthouse category order is Performance, Accessibility, Best Practices and SEO. These historical
+v1.1 audits used Lighthouse 13.4.1 with Microsoft Edge 151.0.4129.21 against the verified local
+candidate; this report does not claim a production Lighthouse result for v1.1.
 
 ## Protected boundaries confirmed
 
@@ -235,6 +239,7 @@ Production Lighthouse is intentionally unclaimed until a reviewed deployment exi
 
 ## Remaining release work
 
-Phase 5 must be reviewed before any commit or push. After a separately approved commit and feature-
-branch push, the remaining work is PR review, merge, deployed GitHub Pages verification and the
-separately approved `v1.2.0` tag/release. Do not begin v1.3 work.
+The release-finalisation documentation diff must be reviewed before any commit or push. Remaining
+manual device, assistive-technology, browser and production Lighthouse checks stay explicitly open in
+`docs/release-v1.2.md`. Creating the `v1.2.0` tag and GitHub release requires separate approval. Do
+not begin v1.3 work.

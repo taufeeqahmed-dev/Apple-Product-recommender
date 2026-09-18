@@ -5,11 +5,12 @@ choose a MacBook based on their needs.
 
 ## Current scope and stage
 
-- Version 1.1.0 is the current stable release, tagged and deployed from `main`.
-- Version 1.2 is being prepared on `feature/shareable-results-v1.2`.
-- v1.2 Phases 1–4 are reviewed, committed and pushed on the feature branch.
-- v1.2 Phase 5 release-candidate verification and documentation are a local review candidate. Do not
-  describe v1.2 as merged, released or deployed.
+- Version 1.2.0 is the current stable production version. PR #3 introduced the main v1.2 feature
+  set, and PR #4 added the final production UX polish; both are merged into `main` and deployed
+  through GitHub Pages.
+- Version 1.1.0 remains preserved as the previous tagged release.
+- Final release-documentation reconciliation is being prepared on
+  `docs/v1.2-release-finalisation`; the formal v1.2.0 tag and GitHub release are still pending.
 - Do not begin v1.3 work.
 - Do not modify the project beyond an explicitly approved phase.
 - Read `PROJECT_STATUS.md` before making changes.
