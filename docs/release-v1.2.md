@@ -135,9 +135,9 @@ Playwright emulation, local Edge and Lighthouse do not complete these checks.
 - [x] PR #4 reviewed and merged the final v1.2 UX polish into `main`.
 - [x] GitHub Pages deployment completed successfully from the final `main` state.
 - [x] Listed production smoke journeys completed successfully.
-- [ ] Review the release-finalisation documentation diff.
-- [ ] Approve and commit the release-finalisation documentation.
-- [ ] Approve and push `docs/v1.2-release-finalisation`.
+- [x] Review the release-finalisation documentation diff.
+- [x] Approve and commit the release-finalisation documentation.
+- [x] Approve and push `docs/v1.2-release-finalisation`.
 - [ ] Create tag and GitHub release `v1.2.0` only after separate approval.
 
 ## Post-deployment verification
