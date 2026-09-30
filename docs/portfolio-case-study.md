@@ -165,8 +165,9 @@ remain inspectable.
 
 ## CV-ready wording
 
-The v1.2 production wording is now supported by the merged deployment and recorded smoke checks.
-Describe v1.2.0 as tagged or published as a GitHub release only after those remaining actions occur.
+The v1.2 production wording is supported by the merged deployment and recorded smoke checks.
+Northstar v1.2.0 is formally tagged and published as a GitHub Release (21 September 2026), so that
+release status may now be stated in CV and portfolio wording.
 
 ### Compact bullet
 

@@ -1,6 +1,6 @@
 # Project status
 
-Last updated: 18 September 2026
+Last updated: 30 September 2026
 
 ## Project goal
 
@@ -12,17 +12,18 @@ calculation against the compatible current engine and verified catalogue.
 Northstar is independent and is not affiliated with, endorsed by or sponsored by Apple Inc.
 Verified Apple facts remain separate from Northstar's internal suitability judgements.
 
-## Current branch and release state
+## Current release state
 
-- Current documentation branch: `docs/v1.2-release-finalisation`.
+- `main` is the stable v1.2.0 production baseline.
 - Northstar v1.2.0 is the current stable production version. PR #3 introduced the main v1.2 feature
   set; PR #4 added the final production UX polish. Both are merged into `main`, deployed through
   GitHub Pages and covered by the recorded production smoke checks.
-- Northstar v1.1.0 remains preserved as the previous tagged release.
+- Northstar v1.1.0 remains preserved as the previous stable tagged release.
 - v1.2 Phases 1–5 are reviewed, committed and included in the merged production version.
-- The formal v1.2.0 tag and GitHub release have not yet been created.
-- This final documentation reconciliation is local and awaiting review; it has not been committed or
-  pushed.
+- The `v1.2.0` tag and GitHub Release `Northstar v1.2.0` are published (21 September 2026),
+  with the tag pointing to released commit `63ff711`.
+- Release-finalisation documentation is reviewed, committed, pushed and merged through PR #5.
+- v1.3 planning and development may begin only through explicitly approved scope.
 
 ## Independent version metadata
 
@@ -83,8 +84,8 @@ The full persistence, privacy, restore and failure contract is documented in
 - The final post-PR #4 production smoke check confirmed **Keep my saved questionnaire** on the
   deployed shared-questionnaire panel and placed **Close sharing** beneath the **Share this result**
   heading at mobile width as intended.
-- README, architecture, testing, portfolio, project status and the v1.2 release checklist are being
-  reconciled with the deployed production status on the documentation branch.
+- README, architecture, testing, portfolio, project status and the v1.2 release checklist have been
+  reconciled with the deployed production status; release-finalisation documentation is complete.
 - No critical or high product defect was found. Phase 5 fixed documentation drift; PR #4 then made
   the reviewed wording and narrow-layout UX polish without changing v1.2 state or recommendation
   behaviour.
@@ -102,7 +103,7 @@ The full persistence, privacy, restore and failure contract is documented in
 | Protected product/source paths | Unmodified |
 
 The current architecture is documented in `docs/architecture.md`, complete verification evidence in
-`docs/testing.md`, and remaining manual and formal-release gates in `docs/release-v1.2.md`.
+`docs/testing.md`, and remaining manual and production verification items in `docs/release-v1.2.md`.
 
 ## v1.2 Phase 4 foundation
 
@@ -237,9 +238,10 @@ candidate; this report does not claim a production Lighthouse result for v1.1.
 - Verified product facts and capability/fit matrices are unchanged. Rules 2.1 removes ownership
   from active scoring and removes unsupported confidence caps; remaining numeric weights are unchanged.
 
-## Remaining release work
+## Next work and verification limitations
 
-The release-finalisation documentation diff must be reviewed before any commit or push. Remaining
+v1.2.0 release-finalisation is complete, and `main` is the stable production baseline. Remaining
 manual device, assistive-technology, browser and production Lighthouse checks stay explicitly open in
-`docs/release-v1.2.md`. Creating the `v1.2.0` tag and GitHub release requires separate approval. Do
-not begin v1.3 work.
+`docs/release-v1.2.md`; publishing the release does not establish those results. v1.3 planning and
+development may begin through explicitly approved scope. Preserve the existing v1.2.0 tag and GitHub
+Release when making later changes on `main`.

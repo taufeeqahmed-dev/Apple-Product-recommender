@@ -5,13 +5,14 @@ choose a MacBook based on their needs.
 
 ## Current scope and stage
 
-- Version 1.2.0 is the current stable production version. PR #3 introduced the main v1.2 feature
+- `main` is the stable v1.2.0 production baseline. PR #3 introduced the main v1.2 feature
   set, and PR #4 added the final production UX polish; both are merged into `main` and deployed
   through GitHub Pages.
-- Version 1.1.0 remains preserved as the previous tagged release.
-- Final release-documentation reconciliation is being prepared on
-  `docs/v1.2-release-finalisation`; the formal v1.2.0 tag and GitHub release are still pending.
-- Do not begin v1.3 work.
+- Version 1.2.0 is formally tagged and published as the GitHub Release `Northstar v1.2.0`
+  (21 September 2026). Preserve the published tag and release.
+- Version 1.1.0 remains preserved as the previous stable tagged release.
+- v1.2 release-finalisation documentation is complete and merged through PR #5.
+- v1.3 planning and development may begin only through explicitly approved scope.
 - Do not modify the project beyond an explicitly approved phase.
 - Read `PROJECT_STATUS.md` before making changes.
 

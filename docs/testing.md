@@ -11,10 +11,10 @@ Final UX-polish production smoke confirmation: 18 September 2026
 Release source: `main`; PR #3 introduced the main v1.2 feature set and PR #4 added the final UX
 polish, with both deployed through GitHub Pages
 
-Documentation branch: `docs/v1.2-release-finalisation`
+Release-finalisation documentation: complete and merged into `main` through PR #5
 
-Status: v1.2.0 is the current stable production version; the formal tag and GitHub release remain
-pending
+Status: v1.2.0 is the current stable production release, formally tagged and published as the GitHub
+Release `Northstar v1.2.0` on 21 September 2026. Outstanding verification limitations remain below.
 
 ### Automated results
 
