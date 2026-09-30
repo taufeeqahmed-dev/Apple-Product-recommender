@@ -1,17 +1,17 @@
 # Northstar v1.2 release checklist
 
 Status: v1.2.0's main feature set from PR #3 and final UX polish from PR #4 are merged into `main`,
-deployed through GitHub Pages and production-smoke verified; the formal v1.2.0 tag and GitHub release
-remain pending
+deployed through GitHub Pages and covered by the recorded production smoke checks. The `v1.2.0` tag
+and GitHub Release `Northstar v1.2.0` were published on 21 September 2026.
 
-Documentation branch: `docs/v1.2-release-finalisation`
+Release-finalisation documentation: complete and merged through PR #5
 
 Current stable production version: `v1.2.0`
 
-Previous tagged release: `v1.1.0` (preserved)
+Previous stable tagged release: `v1.1.0` (preserved)
 
-This checklist records completed evidence and remaining gates. It does not authorize a documentation
-commit or push, or creation of the pending v1.2.0 tag and GitHub release.
+This checklist records completed release work and remaining verification limitations. Publishing
+v1.2.0 does not establish the unchecked manual, device, accessibility or production checks below.
 
 ## Release metadata
 
@@ -125,7 +125,7 @@ Record date, browser/device/assistive-technology version, result and notes befor
 
 Playwright emulation, local Edge and Lighthouse do not complete these checks.
 
-## Review, integration and remaining release gates
+## Review, integration and release gates
 
 - [x] Phase 5 documentation and verification reviewed.
 - [x] Original feature work committed and pushed on historical branch
@@ -138,7 +138,9 @@ Playwright emulation, local Edge and Lighthouse do not complete these checks.
 - [x] Review the release-finalisation documentation diff.
 - [x] Approve and commit the release-finalisation documentation.
 - [x] Approve and push `docs/v1.2-release-finalisation`.
-- [ ] Create tag and GitHub release `v1.2.0` only after separate approval.
+- [x] Release-finalisation documentation merged through PR #5.
+- [x] Tag `v1.2.0` and GitHub Release `Northstar v1.2.0` published on 21 September 2026 at
+  released commit `63ff711` (not a prerelease).
 
 ## Post-deployment verification
 
@@ -171,12 +173,12 @@ Playwright emulation, local Edge and Lighthouse do not complete these checks.
 
 ## Rollback approach
 
-Do not move or rewrite the `v1.1.0` or earlier tags. If a material v1.2 deployment defect is found,
+Do not move or rewrite the `v1.2.0` or earlier tags. If a material v1.2 deployment defect is found,
 prepare an explicit reviewed revert commit on `main` and let the Pages workflow redeploy the prior
 static site. Preserve failed-link examples and test reports, document the defect and add regression
 coverage before preparing a corrected release.
 
-## Release notes draft
+## Release summary
 
 Northstar v1.2 adds resumable browser-local questionnaire progress and shareable recommendation
 links through a versioned, strictly validated decision-state contract. Shared and restored answers

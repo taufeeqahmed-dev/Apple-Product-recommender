@@ -20,7 +20,8 @@ Live application
 Production:  
 [https://taufeeqahmed-dev.github.io/Apple-Product-recommender/](https://taufeeqahmed-dev.github.io/Apple-Product-recommender/)
 
-Current stable production release: `v1.2.0`
+Current stable production release: [Northstar v1.2.0](https://github.com/taufeeqahmed-dev/Apple-Product-recommender/releases/tag/v1.2.0),
+formally tagged and published on 21 September 2026.
 
 Previous stable tagged release: `v1.1.0`
 
