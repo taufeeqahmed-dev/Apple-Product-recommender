@@ -51,9 +51,10 @@ existing edit destinations without predicting changes. Terminal outcomes return 
 fields with no confidence, fabricated evidence or suggestions. No upstream contract changes were
 needed. The comparison includes an explicit `evidenceId` for its existing deciding-factor annotation.
 
-The application does not import or render the builder. Product data, ranking, rules, questionnaire,
-persistence, shared URLs and all version/release metadata remain unchanged. This phase is local and
-uncommitted; UI integration and any commit/push/PR require separate approval.
+The v1.3 pure recommendation-insights layer is implemented and committed; PR #7 records this phase's
+integration history. The application does not import or render the builder. UI integration has not
+begun and remains a separately approved future phase. Recommendation behaviour, product data, rules,
+questionnaire and state/URL schemas, persistence, sharing and all version/release metadata remain unchanged.
 
 See [the insight contract](docs/recommendation-insights.md) and
 [local verification evidence](docs/testing.md#v13-pure-insight-layer-verification).
