@@ -1,6 +1,6 @@
 # Project status
 
-Last updated: 30 September 2026
+Last updated: 1 October 2026
 
 ## Project goal
 
@@ -35,6 +35,28 @@ Verified Apple facts remain separate from Northstar's internal suitability judge
 | URL transport | `1` |
 | Recommendation rules | `2.1.0` |
 | Verified catalogue | Unchanged 31 July 2026 snapshot |
+
+## v1.3 Decision Clarity: first implementation phase
+
+Branch: `feature/recommendation-insights-v1.3`, based on `c133db9` after housekeeping PR #6.
+
+The explicitly approved pure-layer phase implements `buildRecommendationInsights({ output,
+catalogue })` in `js/recommendation-insights.js`, with focused tests, scenario fixtures and contract
+documentation. It returns deterministic, deeply frozen evidence connecting existing user answers,
+derived needs, sourced catalogue references and Northstar assessments. Engine reason/requirement
+order is preserved, and runner-up comparison uses only candidate two in the same result group.
+
+Fact pairs remain contextual; refinement opportunities identify reduced-specificity answers and
+existing edit destinations without predicting changes. Terminal outcomes return explicit null/empty
+fields with no confidence, fabricated evidence or suggestions. No upstream contract changes were
+needed. The comparison includes an explicit `evidenceId` for its existing deciding-factor annotation.
+
+The application does not import or render the builder. Product data, ranking, rules, questionnaire,
+persistence, shared URLs and all version/release metadata remain unchanged. This phase is local and
+uncommitted; UI integration and any commit/push/PR require separate approval.
+
+See [the insight contract](docs/recommendation-insights.md) and
+[local verification evidence](docs/testing.md#v13-pure-insight-layer-verification).
 
 ## v1.2 Phase 1 foundation
 

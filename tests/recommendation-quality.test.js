@@ -1,8 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 
 import { productCatalogue } from "../js/products.js";
 import { recommendMacBooks } from "../js/recommendation-engine.js";
+import { buildRecommendationInsights } from "../js/recommendation-insights.js";
+import { insightScenarios } from "./fixtures/recommendation-insight-scenarios.js";
 import {
   cloneAnswers,
   demandingCodingAnswers,
@@ -12,6 +15,28 @@ import {
 
 function recommend(answers) {
   return recommendMacBooks({ catalogue: productCatalogue, answers: cloneAnswers(answers) });
+}
+
+for (const { id, answers, expected } of insightScenarios) {
+  test(`insights preserve the complete v1.2 engine baseline: ${id}`, () => {
+    const output = recommend(answers);
+    const before = structuredClone(output);
+    const model = buildRecommendationInsights({ output, catalogue: productCatalogue });
+    assert.equal(output.status, "ok");
+    assert.equal(output.matches[0].productId, expected.leaderId);
+    assert.equal(output.matches[0].matchType, expected.matchType);
+    assert.equal(output.matches[0].score.basisPoints, expected.basisPoints);
+    assert.equal(output.confidence.points, expected.confidencePoints);
+    assert.equal(model.leadingMatch.productId, expected.leaderId);
+    assert.equal(model.leadingMatch.matchType, expected.matchType);
+    assert.equal(model.runnerUpComparison?.decidingFactor.code ?? null, expected.decidingFactor);
+    assert.equal(model.confidence.points, expected.confidencePoints);
+    // Covers every rank, score, exclusion, profile, annotation and confidence field,
+    // not just the leading recommendation. Digests were captured before insights.
+    assert.equal(createHash("sha256").update(JSON.stringify(output)).digest("hex"), expected.engineDigest);
+    assert.deepEqual(output, before);
+    assert.deepEqual(recommend(answers), before);
+  });
 }
 
 test("an everyday portable profile still favours a right-sized 13-inch MacBook Air", () => {

@@ -1,5 +1,47 @@
 # Northstar testing and verification report
 
+## v1.3 pure insight layer verification
+
+Date: 1 October 2026
+
+Branch: `feature/recommendation-insights-v1.3`; local, uncommitted implementation of the explicitly
+approved pure-layer phase. There is no application wiring or visible insight UI. The following are
+local results, not a deployment or v1.3 release assessment.
+
+| Check | Result |
+| --- | --- |
+| New focused insight unit tests | 30 passed, 0 failed |
+| New complete-engine scenario regressions | 8 passed, 0 failed |
+| Focused insight and recommendation-quality suites, including existing quality tests | 49 passed, 0 failed |
+| Complete `node --test` suite | 205 passed, 0 failed, 0 skipped, 0 cancelled |
+| `node scripts/check-javascript-syntax.mjs` | 42 JavaScript files passed, 0 failed |
+| Existing Playwright desktop 1440×900 | 12 passed |
+| Existing Playwright tablet 768×1024 | 12 passed |
+| Existing Playwright mobile 390×844 | 12 passed |
+| Complete existing Playwright suite | 36 passed, 0 failed |
+| `git diff --check` and new-file whitespace review | Passed |
+| Application, product, rules, questionnaire, persistence, URL and version paths | Unmodified |
+
+The new unit tests verify deterministic ordering independently of object-key insertion order;
+deep freezing, detached output and unchanged inputs; resolvable evidence and source provenance;
+workload contributor traceability; hard versus soft requirements; engine-ordered reasons and
+compromises; exact/closest/stretch and single-candidate results; same-group-only runner comparison;
+negative raw-fit gaps under budget adjustment; tied/close results; non-predictive refinements; all
+four terminal statuses; hidden-answer rejection; and unsupported/inconsistent contract failures.
+
+The eight scenario fixtures cover everyday study/portability, Docker/local databases, cybersecurity
+VMs, creative photo/video, Essential workload, a portability compromise, uncertain answers and a
+close ranking. Readable expectations and pinned complete-engine JSON digests preserve every rank,
+score, exclusion, confidence and explanation from the unchanged `c133db9` baseline. Tests also
+compare full engine output before/after building insights and after a fresh calculation.
+
+The builder is called directly by these tests. Existing local Edge browser journeys confirm the
+unchanged application's questionnaire, results, sharing, persistence, keyboard and viewport
+regressions still pass. They do not validate a future insight interface. No new UI/browser tests,
+production smoke checks, Lighthouse measurements, physical-device checks or assistive-technology
+results are claimed. The historical v1.2 evidence and outstanding manual limitations below remain
+unchanged. See [the insight contract](recommendation-insights.md) for data shapes and ordering.
+
 ## v1.2 release verification
 
 Automated verification date: 29 August 2026

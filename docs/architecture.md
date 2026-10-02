@@ -83,3 +83,21 @@ the fragment. Browser storage is origin-scoped and uses `northstar.questionnaire
 
 Production has no framework or runtime package dependency. Playwright remains exact-version,
 development-only test tooling and is excluded from the Pages artifact.
+
+## v1.3 pure insight layer (not integrated into the application)
+
+The approved first Decision Clarity phase adds `js/recommendation-insights.js`. Its
+`buildRecommendationInsights({ output, catalogue })` function consumes an existing engine result
+and the same validated catalogue, returning deeply frozen evidence references and insight selectors.
+It separates user answers, derived needs, verified catalogue facts and Northstar assessments without
+changing the engine, profile, rules, questionnaire or any persistence/URL boundary.
+
+The builder retains engine reasons, passed requirements, compromises and confidence. Runner-up
+comparison is restricted to the second candidate in the selected result group; contextual fact pairs
+cannot independently explain ranking. Terminal outcomes contain no fabricated evidence or advice.
+Explicit ordering, provenance and failure behavior are documented in
+[recommendation-insights.md](recommendation-insights.md).
+
+This module is exercised directly by unit and quality tests. `app.js`, `results.js` and the runtime
+flow above are unchanged; there is no visible insight UI or new serialized data. Integration and
+rendering require a separately approved phase.
