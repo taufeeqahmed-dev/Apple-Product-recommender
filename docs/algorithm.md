@@ -205,3 +205,20 @@ Repeated calls with identical validated inputs are deterministic and do not muta
 Persisted or shared v1.2 state never contains this output. It contains validated questionnaire
 decision IDs only; restoration reconstructs current compatible answers and invokes this engine
 again against the current verified catalogue.
+
+## v1.3 insight projection (pure layer only)
+
+`buildRecommendationInsights({ output, catalogue })` is a separate downstream consumer of this
+unchanged algorithm. It connects existing answer/profile evidence, sourced catalogue references
+and Northstar assessments for later explanation. It does not run another scoring algorithm or
+alter eligibility, reasons, confidence, ranking or the rules version.
+
+Leading reasons and user-dependent passed requirements retain engine order; the main compromise
+is the first existing compromise. Candidate two is compared only within the selected primary or
+stretch group, using its existing ranking annotations. Raw-fit gaps can be negative when the
+existing budget adjustment determines ordering. Fact pairs are contextual, and reduced-specificity
+answer choices produce non-predictive edit destinations rather than hypothetical results.
+
+The complete data/provenance contract and ordering policy are in
+[recommendation-insights.md](recommendation-insights.md). The application does not consume this
+pure layer yet; rendering and interaction remain outside this implementation phase.
