@@ -1,6 +1,6 @@
 # Project status
 
-Last updated: 1 October 2026
+Last updated: 3 October 2026
 
 ## Project goal
 
@@ -38,7 +38,7 @@ Verified Apple facts remain separate from Northstar's internal suitability judge
 
 ## v1.3 Decision Clarity: first implementation phase
 
-Branch: `feature/recommendation-insights-v1.3`, based on `c133db9` after housekeeping PR #6.
+Historical branch: `feature/recommendation-insights-v1.3`, based on `c133db9` after housekeeping PR #6.
 
 The explicitly approved pure-layer phase implements `buildRecommendationInsights({ output,
 catalogue })` in `js/recommendation-insights.js`, with focused tests, scenario fixtures and contract
@@ -52,12 +52,36 @@ fields with no confidence, fabricated evidence or suggestions. No upstream contr
 needed. The comparison includes an explicit `evidenceId` for its existing deciding-factor annotation.
 
 The v1.3 pure recommendation-insights layer is implemented and committed; PR #7 records this phase's
-integration history. The application does not import or render the builder. UI integration has not
-begun and remains a separately approved future phase. Recommendation behaviour, product data, rules,
-questionnaire and state/URL schemas, persistence, sharing and all version/release metadata remain unchanged.
+integration history. Its approved contract is unchanged by the separately approved Decision Brief
+phase below. Recommendation behaviour, product data, rules, questionnaire and state/URL schemas,
+persistence, sharing and all version/release metadata remain unchanged.
 
 See [the insight contract](docs/recommendation-insights.md) and
 [local verification evidence](docs/testing.md#v13-pure-insight-layer-verification).
+
+## v1.3 Decision Brief: local visible implementation
+
+Branch: `feature/decision-brief-v1.3`, from synchronized `main` at `9054c08` after merged PR #7.
+
+The explicitly approved **Why this fits** phase is implemented locally and uncommitted. A separate
+pure presentation helper resolves existing insight references into immutable display data. The
+actual eligible leader receives two existing reasons, its main consideration, the original
+same-group runner annotation and Moderate/Low qualification where applicable. Remaining explanations
+and supporting labelled evidence are available in a closed native disclosure. Source dates remain
+the recorded catalogue dates; no new product verification is claimed.
+
+The brief is rebuilt after completion, saved edits, restoration and shared-state adoption. Narrow
+explanation failure handling preserves the existing recommendation cards and reasons/compromises.
+Secondary cards and the existing comparison, confidence, answer-review and blocked-result experiences
+retain their behaviour. No scoring, ranking, eligibility, product, questionnaire/schema, persistence,
+sharing or release/version changes were made. Further UI features require separately approved scope.
+
+Local verification: **237 Node tests**, **45 JavaScript syntax checks**, **60 Playwright tests** and
+diff/whitespace checks pass. Desktop, tablet, mobile and 320 px visual inspection and native keyboard
+disclosure checks found no horizontal overflow. Actual 200% browser zoom, physical-device and
+screen-reader testing remain unverified; reduced-motion coverage is automated. Full measurements and
+limitations are in [Decision Brief verification](docs/testing.md#v13-decision-brief-verification).
+No commit, push or PR has been made for this phase; it stops for review.
 
 ## v1.2 Phase 1 foundation
 

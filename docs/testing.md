@@ -1,12 +1,79 @@
 # Northstar testing and verification report
 
+## v1.3 Decision Brief verification
+
+Date: 3 October 2026
+
+Branch: `feature/decision-brief-v1.3`, from synchronized `main` at `9054c08` after merged PR #7.
+Local, uncommitted implementation of the separately approved first visible Decision Clarity phase.
+These results are not a deployment, CI run or v1.3 release assessment.
+
+| Check | Result |
+| --- | --- |
+| New focused presentation tests | 26 passed, 0 failed |
+| New rendered-card content tests | 6 passed, 0 failed |
+| Focused presentation and complete results-UI unit suites | 38 passed, 0 failed |
+| Complete `node --test` suite | 237 passed, 0 failed, 0 skipped, 0 cancelled |
+| `node scripts/check-javascript-syntax.mjs` | 45 JavaScript files passed, 0 failed |
+| Playwright desktop 1440×900 | 20 passed |
+| Playwright tablet 768×1024 | 20 passed |
+| Playwright mobile 390×844 | 20 passed |
+| Complete Playwright suite | 60 passed, 0 failed |
+| New Decision Brief browser cases | 8 cases × 3 viewport projects = 24 passed |
+| Existing browser cases with result-presence assertions updated | 36 passed |
+| `git diff --check` and new-file whitespace review | Passed |
+| Insight contract, engine/profile/rules, catalogue, schemas, persistence, URLs and version metadata | Unmodified |
+
+Presentation tests cover deterministic/frozen/detached output, exact results with no or minor
+compromise, closest/major compromise, primary and stretch-only leaders, exact same-group runner
+references, single results, close ranking, neutral stable-ID ties, Moderate/Low qualification,
+multiple target-attaining workload contributors, optional missing provenance, recorded sources/dates
+and all terminal outcomes. Eight representative scenarios also preserve complete engine output
+before/after presentation and after fresh calculation. Existing pinned engine-output regressions
+remain unchanged. Rendered-card tests verify leader-only placement, H4 structure, native closed
+disclosure, labels, no duplicated leader reason/compromise blocks and legacy fallback.
+
+The new browser cases cover normal completion, exact/closest/stretch-only results, native keyboard
+Enter/Space disclosure operation, save versus cancel edits, restoration/shared-state/reload rebuilds,
+absence of evidence in saved state, and synthetic insight and presentation failures retaining valid
+recommendations. Every case checks runtime errors. The narrow-layout case explicitly uses 320×844
+with reduced-motion emulation and checks page/brief containment, automatic scroll behaviour and
+44×44 CSS px minimum source-link/summary targets. Existing no-match, restart, restore, refresh and
+shared-complete journeys also assert brief presence or absence as appropriate.
+
+The first browser run found an incorrect keyboard-test assumption that the disclosure was the first
+Tab stop after the results heading; the existing restart control comes first. The test now follows
+normal Tab order. No production change was needed. The complete rerun passed all 60 tests.
+
+### Local visual and keyboard checks
+
+The Codex in-app Chromium browser was used against the local preview, separately from the automated
+Edge suite. A study/documents, moderate-multitasking, portable 13-inch, strict £1,500 and 256 GB
+scenario was completed through the visible questionnaire. The resulting Exact leader retained its
+two engine reasons, neutral no-significant-compromise wording and existing tie/close-ranking text.
+
+- At 1440×900, the brief remains vertical inside the emphasized leader; existing headings and
+  results-heading focus are preserved. Enter opens and Space closes the native disclosure while
+  retaining summary focus; the existing visible focus outline remains present.
+- At 768×1024, the open disclosure and longer runner configuration wrap inside the card.
+- At 390×844 and 320×844, product/configuration, reason, evidence and source text wrap without
+  truncation or horizontal page/brief overflow. The 320 px summary measured 197×46.39 CSS px;
+  visible source links measured 197 px wide and at least 62.38 px high.
+- Recorded verification and price snapshot dates remain 31 July 2026; links use descriptive Apple
+  source text. No Apple page was re-verified for this phase.
+
+Actual 200% browser zoom could not be activated in the available in-app browser: zoom shortcuts
+left viewport width and pixel ratio unchanged, and no zoom control was exposed. It remains an open
+manual check. Reduced-motion behaviour is covered by Playwright, not a manually changed OS setting.
+No physical-device, Safari/WebKit, screen-reader, production smoke or new Lighthouse result is claimed.
+
 ## v1.3 pure insight layer verification
 
 Date: 1 October 2026
 
-Branch: `feature/recommendation-insights-v1.3`; local, uncommitted implementation of the explicitly
-approved pure-layer phase. There is no application wiring or visible insight UI. The following are
-local results, not a deployment or v1.3 release assessment.
+Historical branch: `feature/recommendation-insights-v1.3`; the approved pure phase is committed and
+merged through PR #7. At that phase there was no application wiring or visible insight UI. The
+following remain its local results, not a deployment or v1.3 release assessment.
 
 | Check | Result |
 | --- | --- |

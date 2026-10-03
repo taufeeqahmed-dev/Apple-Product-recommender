@@ -361,9 +361,84 @@ function createRankingExplanation(match) {
   return panel;
 }
 
-function createResultCard(match, product, { labelPrefix = "Recommendation" } = {}) {
+function createDecisionBrief(model, stableId) {
+  const section = element("section", "decision-brief");
+  const title = element("h4", "", model.heading);
+  title.id = `decision-brief-title-${stableId}`;
+  section.setAttribute("aria-labelledby", title.id);
+  section.append(title, element("p", "decision-brief-label", "Northstar assessment"));
+  const reasons = element("ul", "decision-brief-reasons");
+  model.reasons.forEach(({ message }) => reasons.append(element("li", "", message)));
+  section.append(reasons);
+  const consideration = element("p", "decision-brief-consideration");
+  consideration.append(element("strong", "", "Main consideration: "),
+    document.createTextNode(model.consideration.message));
+  section.append(consideration);
+  if (model.runnerUp) {
+    const runner = element("div", "decision-brief-runner");
+    runner.append(element("strong", "", "How the first two were ordered"),
+      element("p", "", `Next in the same result group: ${model.runnerUp.productLabel}.`),
+      element("p", "", model.runnerUp.message));
+    if (model.runnerUp.closeRankingMessage) {
+      runner.append(element("p", "", model.runnerUp.closeRankingMessage));
+    }
+    section.append(runner);
+  }
+  if (model.confidenceQualifier) {
+    section.append(element("p", "decision-brief-confidence", model.confidenceQualifier));
+  }
+  const disclosure = element("details", "decision-brief-details");
+  disclosure.append(element("summary", "", "Answers and evidence"));
+  const content = element("div", "decision-brief-evidence");
+  const { remainingReasons, remainingConsiderations, evidence } = model.details;
+  if (remainingReasons.length || remainingConsiderations.length) {
+    section.append(element("p", "decision-brief-more-count",
+      `${remainingReasons.length} further reason${remainingReasons.length === 1 ? "" : "s"} and ${remainingConsiderations.length} further consideration${remainingConsiderations.length === 1 ? "" : "s"}.`));
+  }
+  const appendRemaining = (items, heading) => {
+    if (items.length === 0) return;
+    content.append(element("h5", "", heading));
+    const list = element("ul", "decision-brief-remaining");
+    items.forEach(({ message }) => list.append(element("li", "", message)));
+    content.append(list);
+  };
+  appendRemaining(remainingReasons, "Further Northstar reasons");
+  appendRemaining(remainingConsiderations, "Further Northstar considerations");
+  content.append(element("h5", "", "Supporting answers and facts"),
+    element("p", "decision-brief-context",
+      "These inputs support the assessments above. They do not show that one answer alone caused the ranking. Apple facts are recorded catalogue snapshots."));
+  const list = element("dl", "decision-brief-evidence-list");
+  evidence.forEach((item) => {
+    const row = element("div", `decision-brief-evidence-row evidence-${item.kind}`);
+    const value = element("dd", "", item.text);
+    if (item.signals.length > 0) {
+      const signals = element("ul", "decision-brief-signals");
+      item.signals.forEach((signal) => signals.append(element("li", "",
+        `${signal.answer} — ${signal.text}${signal.attainsTarget ? "; matches this target" : "; contributes to this assessment"}.`)));
+      value.append(signals);
+    }
+    item.sources.forEach((source) => {
+      const link = element("a", "decision-brief-source", source.label);
+      link.href = source.url;
+      link.target = "_blank";
+      link.rel = "noreferrer";
+      link.setAttribute("aria-label", `${source.label} (opens in a new tab)`);
+      value.append(element("p", "decision-brief-source-date", `Recorded verification: ${source.recordedDate}.`), link);
+    });
+    row.append(element("dt", "", item.label), value);
+    list.append(row);
+  });
+  content.append(list);
+  disclosure.append(content);
+  section.append(disclosure);
+  return section;
+}
+
+export function createResultCard(match, product, { labelPrefix = "Recommendation", decisionBrief = null } = {}) {
   const card = element("article", "recommendation-card");
   card.dataset.matchType = match.matchType;
+  const brief = decisionBrief?.leadingMatch.productId === product.id
+    && decisionBrief.leadingMatch.resultGroup === match.resultGroup ? decisionBrief : null;
   const stableId = product.id.replace(/[^a-z0-9-]/g, "-");
 
   const header = element("div", "recommendation-card-header");
@@ -418,18 +493,11 @@ function createResultCard(match, product, { labelPrefix = "Recommendation" } = {
     `View ${product.displayName}, ${product.configurationName}, on Apple UK (opens in a new tab)`,
   );
 
-  card.append(
-    header,
-    configuration,
-    factsHeading,
-    facts,
-    reasonsHeading,
-    reasons,
-    compromisesHeading,
-    compromises,
-    createRankingExplanation(match),
-    source,
-  );
+  card.append(header, configuration);
+  if (brief) card.append(createDecisionBrief(brief, stableId));
+  card.append(factsHeading, facts);
+  if (!brief) card.append(reasonsHeading, reasons, compromisesHeading, compromises);
+  card.append(createRankingExplanation(match), source);
   return card;
 }
 
@@ -686,7 +754,7 @@ function createComparisonButton(matches, catalogue) {
   return button;
 }
 
-function createRecommendationGroup(matches, catalogue, { stretch = false } = {}) {
+function createRecommendationGroup(matches, catalogue, { stretch = false, decisionBrief = null } = {}) {
   const section = element("section", stretch ? "stretch-results" : "primary-results");
   const title = element(
     "h3",
@@ -710,6 +778,7 @@ function createRecommendationGroup(matches, catalogue, { stretch = false } = {})
       cards.append(
         createResultCard(match, product, {
           labelPrefix: stretch ? "Stretch alternative" : "Recommendation",
+          decisionBrief,
         }),
       );
     }
@@ -721,7 +790,7 @@ function createRecommendationGroup(matches, catalogue, { stretch = false } = {})
 export function renderRecommendationResults(
   output,
   catalogue,
-  { onEditAnswer = null, isRefresh = false, isShared = false } = {},
+  { onEditAnswer = null, isRefresh = false, isShared = false, decisionBrief = null } = {},
 ) {
   const section = document.querySelector("#results");
   const title = document.querySelector("#results-title");
@@ -761,6 +830,7 @@ export function renderRecommendationResults(
     container.append(
       createRecommendationGroup(mainMatches, catalogue, {
         stretch: primaryMatches.length === 0,
+        decisionBrief,
       }),
     );
     if (comparisonButton) container.append(comparisonButton);

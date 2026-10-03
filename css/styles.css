@@ -1189,6 +1189,117 @@ html:not(.js) .results-section {
   font-size: 0.92rem;
 }
 
+.decision-brief {
+  margin: 0.25rem 0 1rem;
+  padding: 1rem;
+  min-width: 0;
+  border: 1px solid rgba(104, 224, 193, 0.3);
+  border-radius: var(--radius-small);
+  background: rgba(8, 16, 29, 0.35);
+  overflow-wrap: anywhere;
+}
+
+.decision-brief > h4 {
+  margin-top: 0;
+  font-size: 1.15rem;
+}
+
+.decision-brief-label {
+  margin: 0.25rem 0 0.75rem;
+  color: var(--colour-muted);
+  font-size: 0.9rem;
+}
+
+.decision-brief-reasons,
+.decision-brief-remaining,
+.decision-brief-signals {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.decision-brief-consideration,
+.decision-brief-confidence {
+  margin: 1rem 0;
+}
+
+.decision-brief-runner {
+  margin: 1rem 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--colour-line);
+}
+
+.decision-brief-runner p {
+  margin: 0.35rem 0;
+}
+
+.decision-brief-details > summary {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.65rem 0.5rem;
+  color: var(--colour-accent);
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.decision-brief-more-count {
+  margin: 0.25rem 0;
+  color: var(--colour-muted);
+  font-size: 0.9rem;
+}
+
+.decision-brief-evidence h5 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1rem;
+}
+
+.decision-brief-context {
+  color: var(--colour-muted);
+}
+
+.decision-brief-evidence-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 0;
+}
+
+.decision-brief-evidence-row {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--colour-line);
+}
+
+.decision-brief-evidence-row dt {
+  margin-bottom: 0.25rem;
+  font-weight: 750;
+}
+
+.decision-brief-evidence-row dd {
+  margin: 0;
+  color: var(--colour-muted);
+}
+
+.decision-brief-signals {
+  margin-top: 0.5rem;
+}
+
+.decision-brief-source-date {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+}
+
+.decision-brief-source {
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.35rem 0;
+  color: var(--colour-accent);
+  text-underline-offset: 0.2rem;
+}
+
 .evidence-label {
   display: inline-block;
   margin: 0 0.2rem 0.2rem 0;
