@@ -4,9 +4,14 @@
 
 Date: 3 October 2026
 
-Branch: `feature/decision-brief-v1.3`, from synchronized `main` at `9054c08` after merged PR #7.
-Local, uncommitted implementation of the separately approved first visible Decision Clarity phase.
-These results are not a deployment, CI run or v1.3 release assessment.
+Developed on `feature/decision-brief-v1.3`, from synchronized `main` at `9054c08` after merged PR #7.
+PR #8 records this phase's integration history.
+
+### Historical pre-commit verification checkpoint
+
+The following local results were captured before the separately approved first visible Decision
+Clarity implementation was committed. They remain historical verification evidence, not a
+deployment, CI run or v1.3 release assessment.
 
 | Check | Result |
 | --- | --- |
@@ -66,6 +71,16 @@ Actual 200% browser zoom could not be activated in the available in-app browser:
 left viewport width and pixel ratio unchanged, and no zoom control was exposed. It remains an open
 manual check. Reduced-motion behaviour is covered by Playwright, not a manually changed OS setting.
 No physical-device, Safari/WebKit, screen-reader, production smoke or new Lighthouse result is claimed.
+
+### Committed-branch verification checkpoint
+
+The committed implementation at `fc0d759` passed PR #8 CI:
+[Pull request CI run 37133211769](https://github.com/taufeeqahmed-dev/Apple-Product-recommender/actions/runs/37133211769).
+The logs confirm **237 Node tests passed**, **45 JavaScript syntax checks passed** and **60 Playwright
+tests passed**. The final review also confirmed `git diff --check` passed for that committed branch.
+CI uses Chromium with desktop, tablet and mobile viewport emulation; these checks do not replace
+manual accessibility or physical-device verification. Actual 200% browser zoom, VoiceOver,
+Narrator/Windows screen reader and physical iPhone/Safari checks remain outstanding.
 
 ## v1.3 pure insight layer verification
 

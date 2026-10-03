@@ -84,7 +84,7 @@ the fragment. Browser storage is origin-scoped and uses `northstar.questionnaire
 Production has no framework or runtime package dependency. Playwright remains exact-version,
 development-only test tooling and is excluded from the Pages artifact.
 
-## v1.3 Decision Brief integration (local implementation)
+## v1.3 Decision Brief integration
 
 The approved first Decision Clarity phase adds `js/recommendation-insights.js`. Its
 `buildRecommendationInsights({ output, catalogue })` function consumes an existing engine result
@@ -121,5 +121,7 @@ flowchart LR
 Only insight/presentation construction is caught if it fails; valid recommendations still render
 their existing reasons and compromises. Calculation and DOM rendering remain outside that catch.
 Editing, restoration and shared-state adoption rebuild the brief through the same calculation flow.
-It never enters storage, serialization or URL transport. This branch is local and uncommitted;
-the production architecture and version metadata above remain the released v1.2.0 baseline.
+It never enters storage, serialization or URL transport. The implementation was developed on
+`feature/decision-brief-v1.3`; PR #8 records this phase's integration history. The published v1.2.0
+release remains the current tagged release, and application version remains 1.2.0 until formal
+v1.3 release preparation. Later v1.3 features require separately approved scope.

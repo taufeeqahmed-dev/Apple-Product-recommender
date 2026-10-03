@@ -1,7 +1,7 @@
 # Recommendation insights: pure-layer contract
 
-The approved pure contract was integrated through PR #7. The separately approved, local v1.3
-Decision Brief phase now consumes it through a pure presentation mapping and leader-only rendering.
+The approved pure contract was integrated through PR #7. The separately approved v1.3 Decision Brief
+is an implemented consumer through a pure presentation mapping and leader-only rendering.
 The contract, catalogue, rules, questionnaires, scores, ordering, confidence calculation, persistence
 and shared URLs are unchanged. The published v1.2.0 release is preserved.
 
@@ -281,6 +281,7 @@ existing focus styles and at least 44×44 CSS px new interactive targets. Result
 unchanged. Saved edits, restoration and shared answers rebuild the brief from the current calculation;
 cancelling an edit preserves it. It is never cached independently, persisted or shared.
 
-The local implementation and measurements are recorded in
-[Decision Brief verification](testing.md#v13-decision-brief-verification). It is uncommitted and not
-deployed; broader results redesign and subsequent v1.3 phases remain outside this approval.
+The implementation was developed on `feature/decision-brief-v1.3`; PR #8 records this phase's
+integration history. Historical local measurements and committed-branch verification are recorded in
+[Decision Brief verification](testing.md#v13-decision-brief-verification). Broader results redesign
+and subsequent v1.3 phases remain outside this approval.

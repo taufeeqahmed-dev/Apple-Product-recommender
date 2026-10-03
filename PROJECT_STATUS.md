@@ -59,13 +59,14 @@ persistence, sharing and all version/release metadata remain unchanged.
 See [the insight contract](docs/recommendation-insights.md) and
 [local verification evidence](docs/testing.md#v13-pure-insight-layer-verification).
 
-## v1.3 Decision Brief: local visible implementation
+## v1.3 Decision Brief: approved visible implementation
 
-Branch: `feature/decision-brief-v1.3`, from synchronized `main` at `9054c08` after merged PR #7.
+Developed on `feature/decision-brief-v1.3`, from synchronized `main` at `9054c08` after merged PR #7.
 
-The explicitly approved **Why this fits** phase is implemented locally and uncommitted. A separate
-pure presentation helper resolves existing insight references into immutable display data. The
-actual eligible leader receives two existing reasons, its main consideration, the original
+The explicitly approved **Why this fits** phase is complete and committed; PR #8 records this phase's
+integration history. A separate pure presentation helper resolves existing insight references into
+immutable display data. The actual eligible leader receives two existing reasons, its main
+consideration, the original
 same-group runner annotation and Moderate/Low qualification where applicable. Remaining explanations
 and supporting labelled evidence are available in a closed native disclosure. Source dates remain
 the recorded catalogue dates; no new product verification is claimed.
@@ -76,12 +77,14 @@ Secondary cards and the existing comparison, confidence, answer-review and block
 retain their behaviour. No scoring, ranking, eligibility, product, questionnaire/schema, persistence,
 sharing or release/version changes were made. Further UI features require separately approved scope.
 
-Local verification: **237 Node tests**, **45 JavaScript syntax checks**, **60 Playwright tests** and
-diff/whitespace checks pass. Desktop, tablet, mobile and 320 px visual inspection and native keyboard
-disclosure checks found no horizontal overflow. Actual 200% browser zoom, physical-device and
-screen-reader testing remain unverified; reduced-motion coverage is automated. Full measurements and
-limitations are in [Decision Brief verification](docs/testing.md#v13-decision-brief-verification).
-No commit, push or PR has been made for this phase; it stops for review.
+Recorded local and PR #8 CI verification: **237 Node tests**, **45 JavaScript syntax checks** and
+**60 Playwright tests** pass; diff/whitespace checks also pass. Desktop, tablet, mobile and 320 px
+visual inspection and native keyboard disclosure checks found no horizontal overflow. Actual 200%
+browser zoom, VoiceOver, Narrator and physical iPhone/Safari verification remain outstanding;
+reduced-motion coverage is automated. Full measurements and limitations are in
+[Decision Brief verification](docs/testing.md#v13-decision-brief-verification).
+Blocked-result recovery, broader comparison redesign and refinement-action UI have not begun and
+remain separately scoped future phases.
 
 ## v1.2 Phase 1 foundation
 
