@@ -14,6 +14,8 @@ import {
   removeQuestionnaireShareStateFromUrl,
 } from "./questionnaire-url.js";
 import { recommendMacBooks } from "./recommendation-engine.js";
+import { buildRecommendationInsights } from "./recommendation-insights.js";
+import { buildRecommendationInsightPresentation } from "./recommendation-insight-presentation.js";
 import { initialiseResultsShare } from "./results-share.js";
 import { clearRecommendationResults, renderRecommendationResults } from "./results.js";
 import { initialiseNavigation } from "./ui.js";
@@ -88,7 +90,18 @@ const saveStableQuestionnaireState = (state) => {
 
 const renderResults = (answers, { isEdit = false, isShared = false } = {}) => {
   const output = recommendMacBooks({ catalogue: productCatalogue, answers });
+  let decisionBrief = null;
+  if (output.status === "ok") {
+    try {
+      const insights = buildRecommendationInsights({ output, catalogue: productCatalogue });
+      decisionBrief = buildRecommendationInsightPresentation({ insights, output, catalogue: productCatalogue });
+    } catch {
+      // An explanation failure retains the existing recommendation presentation.
+      // Calculation and DOM rendering deliberately remain outside this boundary.
+    }
+  }
   const rendered = renderRecommendationResults(output, productCatalogue, {
+    decisionBrief,
     isRefresh: isEdit,
     isShared,
     onEditAnswer(questionId, returnTarget) {

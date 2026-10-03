@@ -206,7 +206,7 @@ Persisted or shared v1.2 state never contains this output. It contains validated
 decision IDs only; restoration reconstructs current compatible answers and invokes this engine
 again against the current verified catalogue.
 
-## v1.3 insight projection (pure layer only)
+## v1.3 insight projection and Decision Brief
 
 `buildRecommendationInsights({ output, catalogue })` is a separate downstream consumer of this
 unchanged algorithm. It connects existing answer/profile evidence, sourced catalogue references
@@ -220,5 +220,13 @@ existing budget adjustment determines ordering. Fact pairs are contextual, and r
 answer choices produce non-predictive edit destinations rather than hypothetical results.
 
 The complete data/provenance contract and ordering policy are in
-[recommendation-insights.md](recommendation-insights.md). The application does not consume this
-pure layer yet; rendering and interaction remain outside this implementation phase.
+[recommendation-insights.md](recommendation-insights.md). The approved Decision Brief integration
+maps these references to the leader's first two existing reasons, first compromise or neutral
+absence statement, original same-group deciding-factor wording and moderate/low confidence label.
+Further existing reasons/considerations and supporting evidence remain in a closed native disclosure.
+Stable-ID ties use neutral wording, and existing close-ranking qualification is retained. Fact pairs,
+component advantages/gaps and refinement opportunities are not displayed in the brief.
+
+This local presentation phase changes no recommendation output, scoring, eligibility, classification,
+confidence calculation or rules. If explanation construction fails, the existing card explanations
+remain available. Terminal result experiences are unchanged and receive no Decision Brief.

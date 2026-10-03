@@ -153,6 +153,7 @@ test("the seven-step branch preserves answers and clears only obsolete activitie
   await choose(page, "button", "See recommendations");
   await expect(page.locator("#results-title")).toBeFocused();
   await expect(page.getByRole("heading", { name: "Why no exact match was found" })).toBeVisible();
+  await expect(page.locator(".decision-brief")).toHaveCount(0);
   await expect(page.getByRole("region", { name: /Recommendation confidence:/ })).toHaveCount(0);
   await expect(page.locator(".results-blockers")).toContainText("maximum weight:");
   await expect(page.locator(".results-blockers")).toContainText("external monitors:");
@@ -179,6 +180,7 @@ test("grouped results editing refreshes recommendations without stale state", as
   await choose(page, "button", "Save changes");
   await expect(page.locator("#results-title")).toBeFocused();
   await expect(page.locator("#results-stage-label")).toHaveText("Recommendations refreshed");
+  await expect(page.locator(".decision-brief")).toHaveCount(1);
 
   const review = page.getByRole("region", { name: "Review your answers", exact: true });
   await expect(review).toContainText("Programming and software development");
@@ -538,6 +540,7 @@ test("completed progress is recalculated on restore and confirmed restart preven
   await expect(page.locator("#results-title")).toBeFocused();
   await expect(page.getByRole("article")).toHaveCount(3);
   await expect(page.locator(".recommendation-card h3").first()).toHaveText(firstResultBeforeReload);
+  await expect(page.locator(".decision-brief")).toHaveCount(1);
 
   await page.getByRole("button", { name: "Restart questionnaire", exact: true }).last().click();
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
@@ -553,6 +556,7 @@ test("completed progress is recalculated on restore and confirmed restart preven
   await expect(resume).toBeHidden();
   await expect(page.locator("#questionnaire-form")).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(0);
+  await expect(page.locator(".decision-brief")).toHaveCount(0);
   await expectNoRuntimeErrors(errors);
 });
 
@@ -641,6 +645,7 @@ test("a complete share URL recalculates recommendations in a fresh browser conte
   );
   await expect(sharedPage.getByRole("article")).toHaveCount(3);
   await expect(sharedPage.locator(".recommendation-card h3").first()).toHaveText(expectedFirstResult);
+  await expect(sharedPage.locator(".decision-brief")).toHaveCount(1);
   const stored = await sharedPage.evaluate(
     (key) => localStorage.getItem(key),
     QUESTIONNAIRE_STORAGE_KEY,

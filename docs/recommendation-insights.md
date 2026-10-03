@@ -1,8 +1,9 @@
 # Recommendation insights: pure-layer contract
 
-Implementation phase: v1.3 Decision Clarity, pure builder and tests only. The application does not
-import or render this module yet. The v1.2.0 production baseline, catalogue, rules, questionnaires,
-scores, ordering, confidence, persistence and shared URLs are unchanged.
+The approved pure contract was integrated through PR #7. The separately approved v1.3 Decision Brief
+is an implemented consumer through a pure presentation mapping and leader-only rendering.
+The contract, catalogue, rules, questionnaires, scores, ordering, confidence calculation, persistence
+and shared URLs are unchanged. The published v1.2.0 release is preserved.
 
 ## Boundary and input
 
@@ -28,7 +29,9 @@ The builder checks catalogue metadata, selected product IDs/prices and supported
 Inconsistent or unsupported successful contracts throw `TypeError`. These checks cannot prove
 that all catalogue facts match an earlier calculation: the current engine does not include a full
 catalogue fingerprint. Supplying the original pair remains a caller precondition. No upstream
-contract changes are required. Error handling for future UI integration is outside this phase.
+contract changes are required. The current application catches only insight/presentation construction
+failures and retains the existing recommendation explanations; calculation and rendering are outside
+that failure boundary.
 
 ## Root contract
 
@@ -227,7 +230,58 @@ unchanged `c133db9` baseline before the builder was implemented. They also compa
 before/after projection and a fresh calculation. Digest changes require inspecting the full engine
 change; do not refresh them merely to make an insight test pass.
 
-Current local results are recorded in [testing.md](testing.md). Existing browser tests are regression
-checks for the unchanged application, not tests of a visible insight interface. Rendering, focus,
-announcements, responsive presentation and edit actions require a separately approved phase and
-future UI/browser coverage. No results module or application wiring changes belong in this phase.
+The pure-phase local results remain recorded in [testing.md](testing.md). The separately approved
+Decision Brief phase below adds presentation/UI/browser coverage without changing this contract.
+
+## Decision Brief presentation contract
+
+```js
+const presentation = buildRecommendationInsightPresentation({ insights, output, catalogue });
+```
+
+`js/recommendation-insight-presentation.js` consumes the approved insight object, the **same original
+engine output** to resolve annotation messages (the insight contract intentionally stores references,
+not messages), and the same catalogue for product labels, fact values and supported source records.
+Question labels resolve from the existing definition module. These are read-only inputs; the helper
+never calls the engine, derives needs, calculates scores/confidence or accesses DOM/storage/URLs.
+Successful data is newly constructed and deeply frozen; terminal outcomes return `null` without
+reading the catalogue. Unsupported or inconsistent successful references throw `TypeError`.
+
+| Field | Presentation policy |
+| --- | --- |
+| `leadingMatch` | Detached existing product/group/rank/classification reference; identifies the only card receiving the brief. |
+| `heading` | `Why this fits`. |
+| `reasons` | First two existing reason messages, with evidence IDs and `Northstar assessment` labels, preserving engine order. |
+| `consideration` | First existing compromise, including a minor one, or `none-identified` with a null evidence ID and neutral absence wording. |
+| `runnerUp` | Same-group product/configuration label, exact deciding-factor evidence ID and original message. Stable-ID ties use neutral wording; existing close-ranking qualification is copied. Null when there is no same-group candidate two. |
+| `confidenceQualifier` | Short qualification for the supplied Moderate/Low label only; High returns null. Detailed thresholds remain in the existing confidence disclosure. |
+| `details.remainingReasons` / `remainingConsiderations` | Remaining original messages in engine order, with evidence IDs and assessment labels. |
+| `details.evidence` | Supporting answer/need/fact rows with IDs, provenance labels, display text, source records and workload contributors. |
+
+The disclosure follows the retained reasons' and compromises' `inputRefs` and signal `answerRef`
+connections. It deduplicates reachable evidence, then preserves the approved evidence-array order;
+it does not expose the complete answer review. Intermediate assessments stay in the reason and
+consideration text rather than becoming score diagnostics. Runner-up wording resolves only
+`runnerUpComparison.evidenceId`; ranking components, numeric gaps, fact pairs, refinements and
+counterfactual predictions are not rendered as supporting evidence.
+
+Rows distinguish **Your answer**, **Northstar-derived need** and **Verified Apple fact**. The brief
+and further explanations are explicitly labelled **Northstar assessment**. Need values and all
+workload signals are copied from the contract, including every contributor attaining a target;
+no activity is presented as independently requiring that target. Preferred budget and permitted
+maximum retain distinct labels. Sources preserve supported catalogue indexes, recorded verification
+dates and price snapshot dates, with descriptive links rather than raw URLs. They imply no fresh
+verification. Optional facts without supported references produce no row.
+
+`results.js` places the brief after the leader's configuration and before its complete fact list,
+replacing only that card's duplicated legacy reasons/considerations. H4/H5 headings preserve the
+existing hierarchy. Further explanation counts remain visible before the closed native **Answers
+and evidence** disclosure. The layout stays vertical at every width, with native keyboard operation,
+existing focus styles and at least 44×44 CSS px new interactive targets. Results-heading focus is
+unchanged. Saved edits, restoration and shared answers rebuild the brief from the current calculation;
+cancelling an edit preserves it. It is never cached independently, persisted or shared.
+
+The implementation was developed on `feature/decision-brief-v1.3`; PR #8 records this phase's
+integration history. Historical local measurements and committed-branch verification are recorded in
+[Decision Brief verification](testing.md#v13-decision-brief-verification). Broader results redesign
+and subsequent v1.3 phases remain outside this approval.

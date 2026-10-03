@@ -84,7 +84,7 @@ the fragment. Browser storage is origin-scoped and uses `northstar.questionnaire
 Production has no framework or runtime package dependency. Playwright remains exact-version,
 development-only test tooling and is excluded from the Pages artifact.
 
-## v1.3 pure insight layer (not integrated into the application)
+## v1.3 Decision Brief integration
 
 The approved first Decision Clarity phase adds `js/recommendation-insights.js`. Its
 `buildRecommendationInsights({ output, catalogue })` function consumes an existing engine result
@@ -98,6 +98,30 @@ cannot independently explain ranking. Terminal outcomes contain no fabricated ev
 Explicit ordering, provenance and failure behavior are documented in
 [recommendation-insights.md](recommendation-insights.md).
 
-This module is exercised directly by unit and quality tests. `app.js`, `results.js` and the runtime
-flow above are unchanged; there is no visible insight UI or new serialized data. Integration and
-rendering require a separately approved phase.
+PR #7 records the pure layer's integration history. The separately approved visible phase adds
+`js/recommendation-insight-presentation.js`, a pure, deeply frozen presentation mapping. It resolves
+existing annotation messages from the same engine output and labels/source records from the
+question definitions and catalogue. Neither downstream module invokes the engine or derives needs.
+
+For each eligible calculation, `app.js` builds insights and the presentation model, then passes the
+model to `results.js`. Only the identified leader receives **Why this fits**, before its full facts.
+The leader's existing reasons/considerations move into the brief; secondary cards, comparison,
+confidence details and answer review retain their existing presentation. A native closed disclosure
+contains retained explanations and their supporting evidence. No new independent cache exists.
+
+```mermaid
+flowchart LR
+  E["existing engine output"] --> I["pure insight references"]
+  I --> P["pure presentation mapping"]
+  E --> P
+  P --> R["leader-only Decision Brief"]
+  E --> R
+```
+
+Only insight/presentation construction is caught if it fails; valid recommendations still render
+their existing reasons and compromises. Calculation and DOM rendering remain outside that catch.
+Editing, restoration and shared-state adoption rebuild the brief through the same calculation flow.
+It never enters storage, serialization or URL transport. The implementation was developed on
+`feature/decision-brief-v1.3`; PR #8 records this phase's integration history. The published v1.2.0
+release remains the current tagged release, and application version remains 1.2.0 until formal
+v1.3 release preparation. Later v1.3 features require separately approved scope.
