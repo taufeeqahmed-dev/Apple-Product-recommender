@@ -41,6 +41,85 @@ async function tabTo(page, locator, maximumTabs = 60) {
   throw new Error(`Could not reach ${await locator.getAttribute("id")} using Tab.`);
 }
 
+for (const session of ["saved", "shared"]) {
+  test(`cancelling a completed budget edit preserves ${session} state, results, focus and sharing`, async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: { async writeText(value) { window.__cancelEditCopiedUrl = value; } },
+      });
+    });
+    const errors = watchForRuntimeErrors(page);
+    await openNorthstar(page);
+    await completeBaselineJourney(page);
+    if (session === "shared") {
+      const sharedUrl = await createShareUrlFromStoredState(page);
+      await page.goto("about:blank");
+      await openAbsoluteNorthstar(page, sharedUrl);
+      await choose(page, "button", "Continue with shared answers");
+    } else {
+      await page.reload();
+      await page.getByRole("region", { name: "Continue where you left off?", exact: true })
+        .getByRole("button", { name: "Continue", exact: true }).click();
+    }
+    await expect(page.locator("#results-title")).toBeFocused();
+    const brief = page.getByRole("region", { name: "Why this fits", exact: true });
+    await brief.locator("summary").click();
+    const cardsBefore = await page.locator(".recommendation-card").allTextContents();
+    const resultsAnnouncementBefore = await page.locator("#results-announcement").textContent();
+    const urlBefore = page.url();
+    const shareUrlBefore = await createShareUrlFromStoredState(page);
+    const storedBefore = await page.evaluate((key) => {
+      const serialized = localStorage.getItem(key);
+      window.__cancelEditStorageWrites = [];
+      const originalSetItem = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (storageKey, value) {
+        if (this === localStorage && storageKey === key) window.__cancelEditStorageWrites.push(value);
+        return Reflect.apply(originalSetItem, this, [storageKey, value]);
+      };
+      return serialized;
+    }, QUESTIONNAIRE_STORAGE_KEY);
+
+    const editControl = await editAnswer(page, "Edit budget");
+    await choose(page, "radio", "Up to £1,500");
+    await choose(page, "radio", "No — do not go over my budget");
+    expect(await page.evaluate((key) => localStorage.getItem(key), QUESTIONNAIRE_STORAGE_KEY)).toBe(storedBefore);
+    expect(page.url()).toBe(urlBefore);
+    await page.getByRole("button", { name: "Cancel edit", exact: true }).focus();
+    await page.keyboard.press("Enter");
+
+    await expect(editControl).toBeFocused();
+    await expect(page.locator("#questionnaire-form")).toBeHidden();
+    await expect(page.locator("#results")).toHaveAttribute("data-state", "ok");
+    expect(await page.locator(".recommendation-card").allTextContents()).toEqual(cardsBefore);
+    await expect(brief.locator("details")).toHaveJSProperty("open", true);
+    expect(await page.locator("#results-announcement").textContent()).toBe(resultsAnnouncementBefore);
+    expect(await page.evaluate((key) => localStorage.getItem(key), QUESTIONNAIRE_STORAGE_KEY)).toBe(storedBefore);
+    expect(await page.evaluate(() => window.__cancelEditStorageWrites)).toEqual([]);
+    expect(page.url()).toBe(urlBefore);
+
+    await choose(page, "button", "Share results");
+    await expect(page.getByRole("region", { name: "Share this result", exact: true })).toBeVisible();
+    await choose(page, "button", "Copy link");
+    await expect(page.locator("#results-share-status")).toHaveText("Recommendation link copied.");
+    expect(await page.evaluate(() => window.__cancelEditCopiedUrl)).toBe(shareUrlBefore);
+
+    await page.reload();
+    if (session === "shared") {
+      await choose(page, "button", "Continue with shared answers");
+    } else {
+      await page.getByRole("region", { name: "Continue where you left off?", exact: true })
+        .getByRole("button", { name: "Continue", exact: true }).click();
+    }
+    await expect(page.locator("#results-title")).toBeFocused();
+    expect(await page.locator(".recommendation-card").allTextContents()).toEqual(cardsBefore);
+    await expect(page.getByRole("button", { name: "Share results", exact: true })).toBeVisible();
+    expect(await page.evaluate((key) => localStorage.getItem(key), QUESTIONNAIRE_STORAGE_KEY)).toBe(storedBefore);
+    expect(page.url()).toBe(urlBefore);
+    await expectNoRuntimeErrors(errors);
+  });
+}
+
 test("the seven-step branch preserves answers and clears only obsolete activities", async ({ page }) => {
   const errors = watchForRuntimeErrors(page);
   await openNorthstar(page);

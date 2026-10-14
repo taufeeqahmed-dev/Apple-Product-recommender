@@ -12,8 +12,17 @@ import {
   markQuestionAttempted,
   requestAnswerChange,
   resetQuestionnaire,
+  restoreQuestionnaireState,
   setCurrentQuestion,
 } from "../js/questionnaire-state.js";
+import {
+  createQuestionnaireState,
+  serializeQuestionnaireState,
+} from "../js/questionnaire-serialization.js";
+import {
+  createResultsShareUrl,
+  isCompleteQuestionnaireStateShareable,
+} from "../js/results-share.js";
 import { getQuestionDefinition } from "../js/questionnaire-definition.js";
 import {
   getAnswerValue,
@@ -97,6 +106,109 @@ test("cancelling a grouped results edit restores the complete answer snapshot", 
   assert.equal(cancelled.editing.active, false);
   assert.deepEqual(cancelled.answers, everydayPortableAnswers);
 });
+
+test("cancelling an earlier edit preserves a canonically reconstructable completed state", () => {
+  const before = createQuestionnaireState({
+    status: "complete",
+    currentQuestionId: "essentialRequirements",
+    answers: everydayPortableAnswers,
+  });
+  restoreQuestionnaireState(before);
+  beginEditing("budget");
+  const cancelled = cancelEditing();
+  assert.deepEqual(cancelled.answers, everydayPortableAnswers);
+  const after = createQuestionnaireState(cancelled);
+  assert.equal(after.currentQuestionId, "essentialRequirements");
+  assert.equal(serializeQuestionnaireState(after), serializeQuestionnaireState(before));
+});
+
+const adaptiveCompletedAnswers = cloneAnswers();
+adaptiveCompletedAnswers.essentialRequirements = ["exact-screen", "maximum-weight", "external-displays"];
+adaptiveCompletedAnswers.essentialDetails = { maximumWeight: "up-to-1.55kg", externalDisplayCount: "two" };
+
+const cancellationCases = [
+  {
+    name: "budget controls hidden by a draft target",
+    questionId: "budget",
+    changes: [["budgetTarget", "no-fixed-target"]],
+    checkDraft(draft) {
+      assert.equal(draft.answers.budget.mode, null);
+    },
+  },
+  {
+    name: "activities cleared by a draft primary use",
+    questionId: "primaryUses",
+    changes: [["primaryUses", ["software-development"]]],
+    checkDraft(draft) {
+      assert.deepEqual(draft.answers.activities, []);
+    },
+  },
+  {
+    name: "changed draft activities",
+    questionId: "activities",
+    changes: [["activities", ["research-spreadsheets-tabs"]]],
+  },
+  {
+    name: "an exact-screen Essential cleared by a draft screen preference",
+    questionId: "devicePreferences",
+    changes: [["screenSize", "no-preference"]],
+    checkDraft(draft) {
+      assert.ok(!draft.answers.essentialRequirements.includes("exact-screen"));
+    },
+  },
+  {
+    name: "Essential details hidden and cleared by a draft requirement",
+    questionId: "essentialRequirements",
+    changes: [["essentialRequirements", ["none"]]],
+    checkDraft(draft) {
+      assert.deepEqual(draft.answers.essentialDetails, { maximumWeight: null, externalDisplayCount: null });
+      assert.equal(getVisibleQuestionIds(draft.answers).at(-1), "essentialRequirements");
+    },
+  },
+  {
+    name: "a newly revealed Essential detail and its temporary edit position",
+    answers: everydayPortableAnswers,
+    questionId: "essentialRequirements",
+    changes: [["essentialRequirements", ["maximum-weight"]], ["maximumWeight", "up-to-1.55kg"]],
+    checkDraft(draft) {
+      assert.ok(getVisibleQuestionIds(draft.answers).includes("maximumWeight"));
+      setCurrentQuestion("maximumWeight");
+    },
+  },
+];
+
+for (const { name, answers = adaptiveCompletedAnswers, questionId, changes, checkDraft } of cancellationCases) {
+  test(`cancelling restores canonical completed answers after ${name}`, () => {
+    const before = createQuestionnaireState({
+      status: "complete",
+      currentQuestionId: getVisibleQuestionIds(answers).at(-1),
+      answers,
+    });
+    restoreQuestionnaireState(before);
+    const originalAnswers = getState().answers;
+    const baseUrl = "https://example.test/northstar/?source=review";
+    const originalShareUrl = createResultsShareUrl(before, baseUrl);
+    beginEditing(questionId);
+    for (const [controlId, value] of changes) {
+      const requested = requestAnswerChange(controlId, value);
+      if (requested.pendingChange) confirmPendingAnswerChange();
+    }
+    const draft = getState();
+    assert.notDeepEqual(draft.answers, originalAnswers);
+    checkDraft?.(draft);
+
+    const cancelled = cancelEditing();
+    assert.equal(cancelled.status, "complete");
+    assert.equal(cancelled.editing.active, false);
+    assert.equal(cancelled.pendingChange, null);
+    assert.deepEqual(cancelled.answers, originalAnswers);
+    assert.equal(cancelled.currentQuestionId, getVisibleQuestionIds(originalAnswers).at(-1));
+    const after = createQuestionnaireState(cancelled);
+    assert.equal(serializeQuestionnaireState(after), serializeQuestionnaireState(before));
+    assert.ok(isCompleteQuestionnaireStateShareable(after));
+    assert.equal(createResultsShareUrl(after, baseUrl), originalShareUrl);
+  });
+}
 
 test("finishing a grouped edit retains complete changed answers", () => {
   const expected = cloneAnswers();
