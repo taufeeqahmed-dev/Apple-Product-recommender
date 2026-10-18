@@ -1,5 +1,59 @@
 # Northstar testing and verification report
 
+## Completed edit cancellation prerequisite verification
+
+Historical pre-commit verification checkpoint: 4 October 2026
+
+Branch: `fix/completed-edit-cancellation-v1.3`, from synchronized `main` at `0cc984c`.
+The fix is implemented, committed and pushed; PR #9 records its integration history.
+Blocked-result recovery has not begun.
+
+The focused regression failed before the fix: cancelling a budget edit restored the original
+completed answers but left `currentQuestionId` at `budget`. `createQuestionnaireState` rejected
+reconstruction with `invalid-complete-current-question`. The same regression passes after extracting
+the existing final-visible-question positioning into one helper used by both `finishEditing` and
+`cancelEditing`; cancellation selects that position from the restored original answers.
+
+| Check | Result |
+| --- | --- |
+| Focused questionnaire-state suite | 13 passed, 0 failed, including 7 new regressions |
+| Focused saved/shared cancellation browser cases | 2 cases × 3 viewport projects = 6 passed |
+| Complete `node --test` suite | 244 passed, 0 failed, 0 skipped, 0 cancelled |
+| `node scripts/check-javascript-syntax.mjs` | 45 JavaScript files passed, 0 failed |
+| Playwright desktop 1440×900 | 22 passed |
+| Playwright tablet 768×1024 | 22 passed |
+| Playwright mobile 390×844 | 22 passed |
+| Complete Playwright suite | 66 passed, 0 failed |
+| `git diff --check` | Passed |
+
+Unit coverage verifies unchanged original answers, complete status, no pending change, the final
+visible question, byte-identical canonical serialization, valid sharing and identical generated
+share URLs. Draft cases include hidden budget controls, cleared activities after changing primary
+uses, changed activities, a cleared exact-screen Essential after changing screen preference, hidden
+Essential details and a newly revealed detail with a temporary edit position.
+
+The browser regressions exercise saved-session restoration and shared-state adoption before editing.
+They verify no questionnaire storage writes during draft editing/cancellation, unchanged stored bytes
+and active URL, unchanged recommendation-card content and open Decision Brief, retained results
+announcement text, keyboard cancellation returning focus to the originating edit button, and an
+identical copied share link after cancellation. Reload/resume or shared adoption still restores the
+original results. Existing successful edit/save and Decision Brief regressions also pass.
+
+The initial shared-case test setup used fragment-only navigation, which did not reload the document
+or run startup import. Loading the shared link in a new document corrected that test assumption;
+no production sharing change was needed. The focused rerun and full browser suite pass.
+
+Only questionnaire-state positioning changed in production. Schemas, serialization, persistence
+keys, URL transport, recommendation logic, product data, Decision Brief rendering and release
+metadata remain unchanged. The table above records historical local automated Edge/viewport checks,
+not deployment or physical accessibility evidence. Actual 200% zoom, VoiceOver, Narrator and physical iPhone/Safari
+verification remain outstanding.
+
+Committed implementation checkpoint: [PR #9 CI passed on 14 October 2026](https://github.com/taufeeqahmed-dev/Apple-Product-recommender/actions/runs/38565953306)
+for `be10d5be13493971546b647d13cba0a1482d73af`, with **244 Node tests**, **45 JavaScript syntax checks**
+and **66 Playwright tests** passed. This CI evidence supplements the historical pre-commit results
+above; it does not replace the outstanding manual checks.
+
 ## v1.3 Decision Brief verification
 
 Date: 3 October 2026

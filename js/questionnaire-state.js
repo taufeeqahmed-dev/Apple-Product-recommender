@@ -59,6 +59,12 @@ function ensureCurrentQuestionIsVisible(nextState) {
   }
 }
 
+function moveToFinalVisibleQuestion(nextState) {
+  const visibleQuestionIds = getVisibleQuestionIds(nextState.answers);
+  nextState.currentQuestionId =
+    visibleQuestionIds[visibleQuestionIds.length - 1] ?? nextState.currentQuestionId;
+}
+
 function applyPreview(preview) {
   state = {
     ...state,
@@ -165,19 +171,17 @@ export function beginEditing(questionId, { returnToResults = true } = {}) {
 
 export function finishEditing() {
   if (!state.editing.active) return snapshot();
-  const visibleQuestionIds = getVisibleQuestionIds(state.answers);
   answersBeforeEditing = null;
   state = {
     ...state,
     status: "complete",
-    currentQuestionId:
-      visibleQuestionIds[visibleQuestionIds.length - 1] ?? state.currentQuestionId,
     editing: {
       active: false,
       originQuestionId: null,
       returnToResults: false,
     },
   };
+  moveToFinalVisibleQuestion(state);
   return snapshot();
 }
 
@@ -195,7 +199,7 @@ export function cancelEditing() {
     pendingChange: null,
   };
   answersBeforeEditing = null;
-  ensureCurrentQuestionIsVisible(state);
+  moveToFinalVisibleQuestion(state);
   return snapshot();
 }
 

@@ -1,6 +1,6 @@
 # Project status
 
-Last updated: 3 October 2026
+Last updated: 4 October 2026
 
 ## Project goal
 
@@ -85,6 +85,24 @@ reduced-motion coverage is automated. Full measurements and limitations are in
 [Decision Brief verification](docs/testing.md#v13-decision-brief-verification).
 Blocked-result recovery, broader comparison redesign and refinement-action UI have not begun and
 remain separately scoped future phases.
+
+## v1.3 prerequisite: completed edit cancellation
+
+The narrowly approved fix is implemented, committed and pushed. It was developed on
+`fix/completed-edit-cancellation-v1.3`, from synchronized `main` at `0cc984c`; PR #9 records its
+integration history. Cancelling a completed questionnaire edit previously restored
+answers while retaining an earlier edit position, causing `invalid-complete-current-question` during
+state reconstruction and hiding otherwise valid sharing controls. Cancellation now restores the
+final visible question for the original answers, using the same position helper as successful edit
+completion. No questionnaire, serialization, persistence, URL, recommendation, product, Decision
+Brief or version contracts changed; no recovery interface has begun.
+
+Local verification passes **244 Node tests**, **45 JavaScript syntax checks** and **66 Playwright
+tests**, with canonical before/after state equality, unchanged saved bytes/shared URLs, preserved
+results and edit-control focus, and working sharing after cancellation. Details and the reproduced
+failure are in [cancellation verification](docs/testing.md#completed-edit-cancellation-prerequisite-verification).
+PR #9 CI passed for the committed implementation with the same full-suite totals. The earlier local
+verification remains a historical checkpoint; no new production or manual accessibility evidence is claimed.
 
 ## v1.2 Phase 1 foundation
 
