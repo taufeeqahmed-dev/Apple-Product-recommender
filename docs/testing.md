@@ -2,10 +2,11 @@
 
 ## Completed edit cancellation prerequisite verification
 
-Date: 4 October 2026
+Historical pre-commit verification checkpoint: 4 October 2026
 
 Branch: `fix/completed-edit-cancellation-v1.3`, from synchronized `main` at `0cc984c`.
-Status: local, uncommitted prerequisite fix for review; blocked-result recovery has not begun.
+The fix is implemented, committed and pushed; PR #9 records its integration history.
+Blocked-result recovery has not begun.
 
 The focused regression failed before the fix: cancelling a budget edit restored the original
 completed answers but left `currentQuestionId` at `budget`. `createQuestionnaireState` rejected
@@ -44,9 +45,14 @@ no production sharing change was needed. The focused rerun and full browser suit
 
 Only questionnaire-state positioning changed in production. Schemas, serialization, persistence
 keys, URL transport, recommendation logic, product data, Decision Brief rendering and release
-metadata remain unchanged. These are local automated Edge/viewport checks, not CI, deployment or
-physical accessibility evidence. Actual 200% zoom, VoiceOver, Narrator and physical iPhone/Safari
+metadata remain unchanged. The table above records historical local automated Edge/viewport checks,
+not deployment or physical accessibility evidence. Actual 200% zoom, VoiceOver, Narrator and physical iPhone/Safari
 verification remain outstanding.
+
+Committed implementation checkpoint: [PR #9 CI passed on 14 October 2026](https://github.com/taufeeqahmed-dev/Apple-Product-recommender/actions/runs/38565953306)
+for `be10d5be13493971546b647d13cba0a1482d73af`, with **244 Node tests**, **45 JavaScript syntax checks**
+and **66 Playwright tests** passed. This CI evidence supplements the historical pre-commit results
+above; it does not replace the outstanding manual checks.
 
 ## v1.3 Decision Brief verification
 

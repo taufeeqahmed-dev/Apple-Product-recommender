@@ -88,8 +88,9 @@ remain separately scoped future phases.
 
 ## v1.3 prerequisite: completed edit cancellation
 
-The narrowly approved fix is local and uncommitted on `fix/completed-edit-cancellation-v1.3`, based
-on synchronized `main` at `0cc984c`. Cancelling a completed questionnaire edit previously restored
+The narrowly approved fix is implemented, committed and pushed. It was developed on
+`fix/completed-edit-cancellation-v1.3`, from synchronized `main` at `0cc984c`; PR #9 records its
+integration history. Cancelling a completed questionnaire edit previously restored
 answers while retaining an earlier edit position, causing `invalid-complete-current-question` during
 state reconstruction and hiding otherwise valid sharing controls. Cancellation now restores the
 final visible question for the original answers, using the same position helper as successful edit
@@ -100,7 +101,8 @@ Local verification passes **244 Node tests**, **45 JavaScript syntax checks** an
 tests**, with canonical before/after state equality, unchanged saved bytes/shared URLs, preserved
 results and edit-control focus, and working sharing after cancellation. Details and the reproduced
 failure are in [cancellation verification](docs/testing.md#completed-edit-cancellation-prerequisite-verification).
-The fix remains uncommitted for review; no new CI, production or manual accessibility evidence is claimed.
+PR #9 CI passed for the committed implementation with the same full-suite totals. The earlier local
+verification remains a historical checkpoint; no new production or manual accessibility evidence is claimed.
 
 ## v1.2 Phase 1 foundation
 
