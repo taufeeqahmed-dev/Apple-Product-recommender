@@ -234,8 +234,9 @@ test("the seven-step branch preserves answers and clears only obsolete activitie
   await expect(page.getByRole("heading", { name: "Why no exact match was found" })).toBeVisible();
   await expect(page.locator(".decision-brief")).toHaveCount(0);
   await expect(page.getByRole("region", { name: /Recommendation confidence:/ })).toHaveCount(0);
-  await expect(page.locator(".results-blockers")).toContainText("maximum weight:");
-  await expect(page.locator(".results-blockers")).toContainText("external monitors:");
+  const recovery = page.getByRole("region", { name: "Review blocking requirements", exact: true });
+  await expect(recovery).toContainText("mandatory maximum weight is 1.25 kg");
+  await expect(recovery).toContainText("at least 4 external monitors");
   await expectNoRuntimeErrors(errors);
 });
 

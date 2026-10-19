@@ -7,6 +7,7 @@ import {
 } from "./questionnaire-persistence.js";
 import { createQuestionnaireState } from "./questionnaire-serialization.js";
 import { getState } from "./questionnaire-state.js";
+import { getVisibleQuestionIds } from "./questionnaire-profile.js";
 import { resolveQuestionnaireStartup } from "./questionnaire-startup.js";
 import {
   createQuestionnaireShareUrl,
@@ -16,8 +17,10 @@ import {
 import { recommendMacBooks } from "./recommendation-engine.js";
 import { buildRecommendationInsights } from "./recommendation-insights.js";
 import { buildRecommendationInsightPresentation } from "./recommendation-insight-presentation.js";
+import { buildRecommendationRecovery } from "./recommendation-recovery.js";
 import { initialiseResultsShare } from "./results-share.js";
-import { clearRecommendationResults, renderRecommendationResults } from "./results.js";
+import { clearRecommendationResults, renderRecommendationResults, restoreResultsEditFocus,
+  setResultsEditing } from "./results.js";
 import { initialiseNavigation } from "./ui.js";
 
 document.documentElement.classList.add("js");
@@ -91,6 +94,7 @@ const saveStableQuestionnaireState = (state) => {
 const renderResults = (answers, { isEdit = false, isShared = false } = {}) => {
   const output = recommendMacBooks({ catalogue: productCatalogue, answers });
   let decisionBrief = null;
+  let recovery = null;
   if (output.status === "ok") {
     try {
       const insights = buildRecommendationInsights({ output, catalogue: productCatalogue });
@@ -100,13 +104,30 @@ const renderResults = (answers, { isEdit = false, isShared = false } = {}) => {
       // Calculation and DOM rendering deliberately remain outside this boundary.
     }
   }
+  if (["budget-limited", "no-match"].includes(output.status)) {
+    try {
+      recovery = buildRecommendationRecovery({ output });
+    } catch {
+      // Optional recovery must not replace an existing terminal result or its answer review.
+    }
+  }
   const rendered = renderRecommendationResults(output, productCatalogue, {
     decisionBrief,
+    recovery,
     isRefresh: isEdit,
     isShared,
     onEditAnswer(questionId, returnTarget) {
+      const state = getState();
+      if (!questionnaireController || state.status !== "complete" || state.editing.active ||
+          !returnTarget?.isConnected || returnTarget.disabled ||
+          !returnTarget.closest("#recommendation-output") ||
+          returnTarget.dataset.editQuestionId !== questionId ||
+          !getVisibleQuestionIds(state.answers).includes(questionId)) return;
       resultsShareController.hide();
-      questionnaireController?.editQuestion(questionId, { returnTarget });
+      questionnaireController.editQuestion(questionId, {
+        returnTarget: { focus: () => restoreResultsEditFocus(returnTarget) },
+      });
+      setResultsEditing(true);
     },
   });
   if (rendered) resultsShareController.show();
@@ -120,6 +141,7 @@ questionnaireController = initialiseQuestionnaire({
     return renderResults(answers, { isEdit, isShared });
   },
   onEditCancelled() {
+    setResultsEditing(false);
     resultsShareController.show();
   },
   onRestart() {

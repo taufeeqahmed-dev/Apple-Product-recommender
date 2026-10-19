@@ -1414,6 +1414,67 @@ html:not(.js) .results-section {
   margin-top: 0.75rem;
 }
 
+.recommendation-recovery {
+  margin-bottom: 2rem;
+  padding: clamp(1rem, 3vw, 2rem);
+  min-width: 0;
+  border: 1px solid var(--colour-line);
+  border-radius: var(--radius-medium);
+  background: var(--colour-surface);
+  overflow-wrap: anywhere;
+}
+
+.recommendation-recovery > h3 {
+  margin: 0 0 0.75rem;
+  font-size: clamp(1.25rem, 2.6vw, 1.75rem);
+}
+
+.recovery-requirements {
+  display: grid;
+  gap: 1rem;
+  margin: 1.25rem 0;
+  padding-left: 1.25rem;
+}
+
+.recovery-requirement h4,
+.recovery-requirement p {
+  margin: 0 0 0.5rem;
+}
+
+.recovery-notice,
+.recovery-guidance {
+  color: var(--colour-muted);
+}
+
+.recovery-actions {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.recovery-edit-button,
+.recovery-detail-actions > summary {
+  min-width: 44px;
+  min-height: 44px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+#recommendation-output button[data-edit-question-id]:disabled {
+  opacity: 0.65;
+  cursor: default;
+  transform: none;
+}
+
+.recovery-detail-actions > summary {
+  display: list-item;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  cursor: pointer;
+  color: var(--colour-accent);
+  font-weight: 750;
+}
+
 .answer-edit-button {
   flex: 0 0 auto;
   padding: 0.55rem 0.75rem;

@@ -596,7 +596,68 @@ function createMethodDisclosure(output) {
   return disclosure;
 }
 
-function createNoMatch(output) {
+export function setResultsEditing(editing) {
+  document.querySelectorAll("#recommendation-output button[data-edit-question-id]").forEach((button) => {
+    button.disabled = editing;
+  });
+  const status = document.querySelector("#recommendation-output .recovery-edit-status");
+  if (status) status.hidden = !editing;
+}
+
+export function restoreResultsEditFocus(origin) {
+  if (origin?.isConnected) {
+    // Respect a disclosure the user closed while editing; do not reopen or focus hidden content.
+    const closedDisclosure = origin.closest("details:not([open])");
+    const target = closedDisclosure?.querySelector("summary") ?? origin;
+    if (!target.disabled && target.getClientRects().length > 0) {
+      target.focus();
+      if (document.activeElement === target) return;
+    }
+  }
+  // A refresh may have replaced the old control. Use the current results heading, not stale DOM.
+  document.querySelector("#results-title")?.focus();
+}
+
+export function createRecommendationRecoveryPanel(recovery, { onEditAnswer = null } = {}) {
+  if (!recovery || !["budget-limited", "no-match"].includes(recovery.status)) return null;
+  const panel = element("section", "recommendation-recovery");
+  panel.setAttribute("aria-labelledby", "recommendation-recovery-title");
+  const title = element("h3", "", "Review blocking requirements");
+  title.id = "recommendation-recovery-title";
+  panel.append(title, element("p", "", recovery.explanation));
+  const list = element("ul", "recovery-requirements");
+  recovery.blockers.forEach((blocker) => {
+    const item = element("li", "recovery-requirement");
+    item.append(element("h4", "", blocker.label), element("p", "", blocker.summary));
+    list.append(item);
+  });
+  if (recovery.blockers.length > 0) panel.append(list);
+  recovery.notices.forEach(({ message }) => panel.append(element("p", "recovery-notice", message)));
+  panel.append(element("p", "recovery-guidance", "You can review these requirements or keep them as they are. Editing an answer does not guarantee a match."));
+  const editStatus = element("p", "recovery-edit-status", "Finish your current edit using Save changes or Cancel edit before reviewing another requirement.");
+  editStatus.hidden = true;
+  panel.append(editStatus);
+  const actions = element("div", "recovery-actions");
+  const specificActions = element("div", "recovery-actions");
+  recovery.actions.forEach((action) => {
+    const button = element("button", "button button-secondary recovery-edit-button", action.label);
+    button.type = "button";
+    button.dataset.editQuestionId = action.questionId;
+    button.addEventListener("click", () => onEditAnswer?.(action.questionId, button));
+    const isSpecific = recovery.actions.length > 3 &&
+      !["budget", "minimumStorage", "essentialRequirements"].includes(action.questionId);
+    (isSpecific ? specificActions : actions).append(button);
+  });
+  if (actions.children.length > 0) panel.append(actions);
+  if (specificActions.children.length > 0) {
+    const disclosure = element("details", "recovery-detail-actions");
+    disclosure.append(element("summary", "", "Review individual requirements"), specificActions);
+    panel.append(disclosure);
+  }
+  return panel;
+}
+
+function createNoMatch(output, { showBlockers = true } = {}) {
   const panel = element("div", "results-message results-message-warning");
   panel.append(
     element("h3", "", "Why no exact match was found"),
@@ -607,7 +668,7 @@ function createNoMatch(output) {
     ),
   );
   const blockers = Object.entries(output.diagnostics.blockerCounts);
-  if (blockers.length > 0) {
+  if (showBlockers && blockers.length > 0) {
     panel.append(element("h4", "", "Requirements that blocked matches"));
     const list = element("ul", "results-blockers");
     blockers.forEach(([code, count]) => {
@@ -790,7 +851,7 @@ function createRecommendationGroup(matches, catalogue, { stretch = false, decisi
 export function renderRecommendationResults(
   output,
   catalogue,
-  { onEditAnswer = null, isRefresh = false, isShared = false, decisionBrief = null } = {},
+  { onEditAnswer = null, isRefresh = false, isShared = false, decisionBrief = null, recovery = null } = {},
 ) {
   const section = document.querySelector("#results");
   const title = document.querySelector("#results-title");
@@ -812,6 +873,14 @@ export function renderRecommendationResults(
     ? "Shared recommendation loaded. These answers came from a shared link, and Northstar recalculated the result using its current verified catalogue."
     : "";
   const sharedAnnouncement = isShared ? "Shared recommendation loaded. " : "";
+  let recoveryPanel = null;
+  if (["budget-limited", "no-match"].includes(output.status) && recovery?.status === output.status) {
+    try {
+      recoveryPanel = createRecommendationRecoveryPanel(recovery, { onEditAnswer });
+    } catch {
+      // Retain the existing terminal explanation and answer editors if optional rendering fails.
+    }
+  }
 
   if (output.status === "ok") {
     const primaryMatches = output.matches.slice(0, 3).map((match, index) =>
@@ -844,7 +913,7 @@ export function renderRecommendationResults(
   } else if (output.status === "no-match") {
     stageLabel.textContent = isRefresh ? "Edited answers produced no exact match" : "No exact match";
     summary.textContent = "No MacBook in Northstar’s verified list meets all of your must-haves.";
-    container.append(createNoMatch(output));
+    container.append(createNoMatch(output, { showBlockers: !recoveryPanel }));
     announcement.textContent = sharedAnnouncement + (isRefresh
       ? "Recommendations were refreshed after your edit, but no exact match was found. Focus moved to the results heading."
       : "No exact match was found. Focus moved to the results heading.");
@@ -862,6 +931,7 @@ export function renderRecommendationResults(
     announcement.textContent = `${sharedAnnouncement}Recommendations could not be calculated. Focus moved to the results heading.`;
   }
 
+  if (recoveryPanel) container.append(recoveryPanel);
   if (output.profile && output.input.answers) {
     container.append(createAnswerReview(output.input.answers, onEditAnswer));
   }
