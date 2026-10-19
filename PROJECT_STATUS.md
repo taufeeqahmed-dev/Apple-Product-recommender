@@ -1,6 +1,6 @@
 # Project status
 
-Last updated: 4 October 2026
+Last updated: 18 October 2026
 
 ## Project goal
 
@@ -83,8 +83,8 @@ visual inspection and native keyboard disclosure checks found no horizontal over
 browser zoom, VoiceOver, Narrator and physical iPhone/Safari verification remain outstanding;
 reduced-motion coverage is automated. Full measurements and limitations are in
 [Decision Brief verification](docs/testing.md#v13-decision-brief-verification).
-Blocked-result recovery, broader comparison redesign and refinement-action UI have not begun and
-remain separately scoped future phases.
+At the Decision Brief checkpoint, blocked-result recovery, broader comparison redesign and
+refinement-action UI remained separately scoped future phases. The approved recovery phase is below.
 
 ## v1.3 prerequisite: completed edit cancellation
 
@@ -95,7 +95,7 @@ answers while retaining an earlier edit position, causing `invalid-complete-curr
 state reconstruction and hiding otherwise valid sharing controls. Cancellation now restores the
 final visible question for the original answers, using the same position helper as successful edit
 completion. No questionnaire, serialization, persistence, URL, recommendation, product, Decision
-Brief or version contracts changed; no recovery interface has begun.
+Brief or version contracts changed; this prerequisite introduced no recovery interface.
 
 Local verification passes **244 Node tests**, **45 JavaScript syntax checks** and **66 Playwright
 tests**, with canonical before/after state equality, unchanged saved bytes/shared URLs, preserved
@@ -103,6 +103,34 @@ results and edit-control focus, and working sharing after cancellation. Details 
 failure are in [cancellation verification](docs/testing.md#completed-edit-cancellation-prerequisite-verification).
 PR #9 CI passed for the committed implementation with the same full-suite totals. The earlier local
 verification remains a historical checkpoint; no new production or manual accessibility evidence is claimed.
+
+## v1.3 blocked-result recovery
+
+The approved implementation was developed on `feature/blocked-result-recovery-v1.3` from `main` at
+`5081aec` after PR #9. A pure, deterministic and deeply frozen recovery model projects existing engine
+blocker evidence into existing answer-edit destinations for `budget-limited` and `no-match` results.
+The visible panel preserves current requirements, groups related must-haves and keeps specific
+value edits available. It never relaxes an answer, predicts a match or recommends excluded products.
+
+Editing reuses existing reconciliation, Save and PR #9 cancellation. Results-heading focus after
+save is preserved. Central entry guards and disabled result-edit buttons prevent repeated or stale
+actions from replacing an active draft. Cancel returns focus to the visible originating action,
+its closed disclosure's summary, or the current results heading if the old action was replaced.
+Defensive validation cross-checks requirements against the existing profile helper and recorded
+filter thresholds; contradictory claims or budget context are omitted without replacement evidence.
+Recovery is reconstructed after restore/shared adoption and never enters persistence or shared
+payloads. Successful recommendations,
+the Decision Brief, rules, catalogue, schemas, persistence/sharing contracts and release version
+remain unchanged. Broader comparison redesign, refinement-action UI and scenario simulation remain
+outside this phase. See [the recovery contract](docs/blocked-result-recovery.md) and
+[verification evidence](docs/testing.md#v13-blocked-result-recovery-verification).
+
+Recorded local verification after the three review corrections: **277 Node tests**, **49 JavaScript
+syntax checks** and **114 Playwright tests** pass, including 48 recovery browser checks across
+desktop, tablet and mobile projects; diff/whitespace checks pass.
+Automated 320px keyboard, focus, target-size and overflow checks and
+the earlier desktop/320px screenshot inspection pass. Actual 200% zoom, VoiceOver, Narrator and physical
+iPhone/Safari verification remain outstanding; no new production or release verification is claimed.
 
 ## v1.2 Phase 1 foundation
 

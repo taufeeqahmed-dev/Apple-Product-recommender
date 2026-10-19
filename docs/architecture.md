@@ -47,6 +47,7 @@ engine to results rendering only. They do not flow into serialization, browser s
 | Product facts | `js/products.js`, `js/product-schema.js` | Verified catalogue records and whole-catalogue validation |
 | Recommendation rules | `js/recommendation-rules.js` | Project-authored thresholds, matrices and weights |
 | Recommendation engine | `js/recommendation-engine.js` | Pure deterministic filtering, scoring, classification and explanation |
+| Terminal recovery | `js/recommendation-recovery.js` | Pure projection of existing blocker evidence into deliberate answer-edit routes |
 | Results | `js/results.js` | Recommendation cards, answer review, editing and comparison |
 | Share UI | `js/results-share.js` | Complete-state eligibility, existing exporter use, Clipboard API and manual fallback |
 | Application orchestration | `js/app.js` | Connect startup, state, persistence, calculation, results and sharing |
@@ -118,10 +119,33 @@ flowchart LR
   E --> R
 ```
 
-Only insight/presentation construction is caught if it fails; valid recommendations still render
+In the Decision Brief flow, only insight/presentation construction is caught if it fails; valid recommendations still render
 their existing reasons and compromises. Calculation and DOM rendering remain outside that catch.
 Editing, restoration and shared-state adoption rebuild the brief through the same calculation flow.
 It never enters storage, serialization or URL transport. The implementation was developed on
 `feature/decision-brief-v1.3`; PR #8 records this phase's integration history. The published v1.2.0
 release remains the current tagged release, and application version remains 1.2.0 until formal
 v1.3 release preparation. Later v1.3 features require separately approved scope.
+
+## v1.3 blocked-result recovery
+
+For `budget-limited` and `no-match`, the existing engine output also flows through
+`buildRecommendationRecovery({ output })` to a labelled terminal recovery panel in `results.js`.
+The pure helper reads applied filter order, exclusions, diagnostic counts, profile hard requirements,
+validated answers and budget-limited context. It does not invoke the engine or apply eligibility
+rules. It calls the existing profile helper solely to validate supplied requirements against answers,
+then checks the recorded failed-filter thresholds and budget context. It never substitutes a new
+profile or replacement evidence. Its detached, deeply frozen model is separate from recommendation
+insights; the insight terminal contract and successful Decision Brief remain unchanged.
+
+Recovery buttons reuse the existing questionnaire editor and its reconciliation, Save and Cancel
+paths. PR #9 provides canonical completed-position restoration on cancel. Save recalculates through
+the normal completion callback; cancel keeps the existing terminal DOM. Central edit-entry guards
+and disabled result-edit buttons prevent overlapping transactions and stale callbacks. A results-layer
+focus adapter returns to the visible origin, its closed disclosure's summary, or the current results
+heading if the old origin was replaced/hidden. No second editor, cache, persisted metadata or URL field
+exists. Reload/resume and shared adoption reconstruct recovery from newly calculated output.
+
+Optional recovery construction/rendering failures retain the prior terminal explanation and answer
+review. `ok`, invalid input and invalid catalogue results keep their existing behaviour. The full
+contract, mapping and ordering are in [blocked-result-recovery.md](blocked-result-recovery.md).

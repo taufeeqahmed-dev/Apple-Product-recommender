@@ -1,12 +1,88 @@
 # Northstar testing and verification report
 
+## v1.3 blocked-result recovery verification
+
+Date: 18 October 2026
+
+Developed on `feature/blocked-result-recovery-v1.3` from `main` at `5081aec` after merged PR #9.
+The approved [recovery implementation](blocked-result-recovery.md) adds deliberate existing-answer
+edit routes for `budget-limited` and `no-match`; no automatic relaxation or hypothetical preview exists.
+
+The initial implementation checkpoint passed 15 recovery-model tests, 18 results UI tests,
+265 Node tests, 49 syntax checks and 102 Playwright tests. The table below records verification
+after correcting repeated edit entry, disclosure focus restoration and contradictory recovery evidence.
+
+| Check | Result |
+| --- | --- |
+| Focused recovery-model tests | 24 passed, 0 failed |
+| Focused results UI suite | 21 passed, including 9 recovery tests |
+| Focused correction Playwright regressions | 4 cases × 3 viewport projects = 12 passed |
+| Complete `node --test` suite | 277 passed, 0 failed, 0 skipped, 0 cancelled |
+| JavaScript syntax checks | 49 JavaScript files passed, 0 failed |
+| Recovery Playwright journeys | 16 cases × 3 viewport projects = 48 passed |
+| Complete Playwright desktop 1440×900 | 38 passed |
+| Complete Playwright tablet 768×1024 | 38 passed |
+| Complete Playwright mobile 390×844 | 38 passed |
+| Complete Playwright suite | 114 passed, 0 failed |
+| `git diff --check` | Passed |
+
+Pure-model tests cover deterministic ordering, detached deep immutability, unchanged mutable input,
+exact failed-filter/answer references, supported question/control mappings, grouped/deduplicated
+actions, strict/flexible/stretch budget limits, catalogue limitations, unavailable destinations,
+inactive requirements, no actionable blockers and outcome separation. An availability-only engine
+fixture proves that catalogue limitations do not create requirement-edit actions. Recorded-DOM tests
+cover terminal-only rendering, heading/section semantics, exact editor callback targets and return
+buttons, grouped native disclosure, fallback and placement before answer review.
+
+The added evidence regressions rejected the earlier implementation before the correction. They now
+cover answer/profile mismatches and contradictory filter thresholds for all seven supported codes,
+plus negative/non-finite or inconsistent budget amounts, product references, exclusion prices,
+non-budget failures and preferred targets. Unsafe claims/actions are omitted without replacing
+evidence. All eight representative valid models (multiple, storage, screen, weight, monitors and
+strict/flexible/stretch budgets) remained byte-for-byte identical across this correction.
+
+The repeated-action and closed-disclosure browser regressions also failed before their fixes and
+pass afterward. Tests verify disabled result-edit controls and guarded synthetic/stale clicks,
+unchanged active drafts, cancellation, later editing, and focus on a visible origin, closed summary
+or current heading after replacement. Open, closed and reopened disclosure cases retain logical Tab
+navigation at 320px. Recorded-DOM tests cover the non-live editing instruction and evidence rejection
+while retaining the original terminal explanation and general answer editors.
+
+Playwright exercises budget and storage recovery, grouped must-have edits with dependent-answer
+clearing, direct weight/screen/monitor edits, unchanged Save, restored/shared terminal results,
+cancellation and optional-model failure. Cancellation checks preserve saved bytes, shared fragments,
+generated links, original terminal content and announcement text, with no draft persistence writes.
+A grouped cancellation also restores the original dependent Essential answers. An instrumented
+browser-only engine counter confirms unchanged Save recalculates exactly once. Existing successful
+recommendations, Decision Brief, editing, cancellation, persistence and sharing regressions pass.
+
+These are local automated headless Microsoft Edge tests using desktop/tablet/mobile viewport
+emulation. The new keyboard journey also runs at 320×844 with reduced motion emulated: native
+disclosure open/close, keyboard reachability and hidden-control skipping, visible focus, originating
+action or closed-summary focus after cancel, results-heading focus after save, unique IDs, at least
+44×44 CSS px new targets and no horizontal overflow pass. Recovery journeys assert no console or
+uncaught page errors. The full correction suite passed without retries or timeout failures.
+At the initial implementation checkpoint, desktop and 320px screenshots of the multiple-blocker
+panel were inspected for wrapping and single-column presentation. Supporting answer references stay
+in the model; the panel displays concise requirement summaries instead of repeating full answers.
+
+Actual 200% browser zoom, physical iPhone/Safari, VoiceOver, Narrator and other previously documented
+manual/device checks remain outstanding. Viewport emulation and screenshot inspection are not
+physical-device or assistive-technology evidence. This checkpoint is not production or release
+verification.
+
+Only downstream recovery orchestration, rendering and styling change production behaviour. The
+engine, rules 2.1.0, catalogue, questionnaire definition/profile/state, insight and Decision Brief
+modules, persistence, schemas, URL transport, shared payloads and application version 1.2.0 are
+unchanged. PR #9's cancellation implementation is reused without another state change.
+
 ## Completed edit cancellation prerequisite verification
 
 Historical pre-commit verification checkpoint: 4 October 2026
 
 Branch: `fix/completed-edit-cancellation-v1.3`, from synchronized `main` at `0cc984c`.
 The fix is implemented, committed and pushed; PR #9 records its integration history.
-Blocked-result recovery has not begun.
+At this prerequisite checkpoint, blocked-result recovery had not begun.
 
 The focused regression failed before the fix: cancelling a budget edit restored the original
 completed answers but left `currentQuestionId` at `budget`. `createQuestionnaireState` rejected

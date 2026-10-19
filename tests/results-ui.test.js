@@ -7,10 +7,14 @@ import {
   buildAnswerReview,
   buildComparisonRows,
   createResultCard,
+  createRecommendationRecoveryPanel,
   formatRankingExplanation,
   getComparisonCandidates,
   getConfidenceDetails,
   getMatchTypeDetails,
+  renderRecommendationResults,
+  restoreResultsEditFocus,
+  setResultsEditing,
 } from "../js/results.js";
 import {
   cloneAnswers,
@@ -19,6 +23,8 @@ import {
 import { buildRecommendationInsights } from "../js/recommendation-insights.js";
 import { buildRecommendationInsightPresentation } from "../js/recommendation-insight-presentation.js";
 import { insightAnswers } from "./fixtures/recommendation-insight-scenarios.js";
+import { buildRecommendationRecovery } from "../js/recommendation-recovery.js";
+import { recoveryAnswers } from "./fixtures/recommendation-recovery-scenarios.js";
 
 test("answer review exposes five compact grouped summaries with targeted edit actions", () => {
   const groups = buildAnswerReview(everydayPortableAnswers);
@@ -122,11 +128,17 @@ class RecordedElement {
     this.dataset = {};
     this.attributes = {};
     this.className = "";
+    this.listeners = {};
   }
   set textContent(value) { this.text = value; this.children = []; }
   get textContent() { return this.text + this.children.map((node) => node.textContent).join(""); }
   append(...nodes) { this.children.push(...nodes); }
   setAttribute(name, value) { this.attributes[name] = value; }
+  removeAttribute(name) { delete this.attributes[name]; }
+  addEventListener(name, callback) { this.listeners[name] = callback; }
+  replaceChildren(...nodes) { this.children = nodes; this.text = ""; }
+  focus() { this.focused = true; }
+  querySelector(tag) { return descendants(this).slice(1).find((node) => node.tagName === tag) ?? null; }
 }
 const descendants = (node) => [node, ...node.children.flatMap(descendants)];
 const hasClass = (node, name) => node.className.split(" ").includes(name);
@@ -215,4 +227,166 @@ test("a brief reference from another result group cannot replace this card's exp
   }));
   assert.equal(descendants(cards[0]).some((node) => hasClass(node, "decision-brief")), false);
   assert.ok(descendants(cards[0]).some((node) => hasClass(node, "recommendation-reasons")));
+});
+
+function renderedOutcome(answers, { recoveryChange = (value) => value, onEditAnswer } = {}, catalogue = productCatalogue) {
+  const output = recommendMacBooks({ catalogue, answers });
+  const recovery = recoveryChange(buildRecommendationRecovery({ output }));
+  const originalDocument = globalThis.document;
+  const surfaces = new Map(["results", "results-title", "results-stage-label", "results-summary",
+    "results-announcement", "results-shared-notice", "recommendation-output", "results-restart"]
+    .map((id) => [`#${id}`, new RecordedElement("div")]));
+  globalThis.document = { createElement: (tag) => new RecordedElement(tag),
+    createTextNode: (text) => new RecordedElement("#text", text),
+    querySelector: (selector) => surfaces.get(selector) ?? null };
+  try {
+    assert.ok(renderRecommendationResults(output, catalogue, { recovery, onEditAnswer }));
+    return { output, recovery, surfaces, tree: descendants(surfaces.get("#recommendation-output")) };
+  } finally {
+    if (originalDocument === undefined) delete globalThis.document;
+    else globalThis.document = originalDocument;
+  }
+}
+
+test("supported terminal results render recovery before answer review with semantic headings and no duplicate blocker list", () => {
+  for (const scenario of ["budget", "multiple"]) {
+    const { tree, surfaces } = renderedOutcome(recoveryAnswers(scenario));
+    const panel = tree.find((node) => hasClass(node, "recommendation-recovery"));
+    assert.equal(panel.tagName, "section");
+    assert.equal(panel.attributes["aria-labelledby"], panel.children[0].id);
+    assert.equal(panel.children[0].tagName, "h3");
+    assert.ok(descendants(panel).some((node) => node.tagName === "h4"));
+    assert.ok(!tree.some((node) => hasClass(node, "results-blockers")));
+    const children = surfaces.get("#recommendation-output").children;
+    assert.ok(children.indexOf(panel) < children.findIndex((node) => hasClass(node, "answer-review")));
+    assert.equal(surfaces.get("#results-title").focused, true);
+    assert.ok(!descendants(panel).some((node) => node.attributes["aria-live"]));
+  }
+});
+
+test("each recovery action invokes the existing editor with the exact question and originating button", () => {
+  const called = [];
+  const { tree, recovery } = renderedOutcome(recoveryAnswers("multiple"), {
+    onEditAnswer: (...args) => called.push(args),
+  });
+  const panel = tree.find((node) => hasClass(node, "recommendation-recovery"));
+  const buttons = descendants(panel).filter((node) => node.tagName === "button");
+  assert.deepEqual(buttons.map(({ textContent }) => textContent), recovery.actions.map(({ label }) => label));
+  buttons.forEach((button, index) => {
+    assert.equal(button.type, "button");
+    button.listeners.click();
+    assert.deepEqual(called[index], [recovery.actions[index].questionId, button]);
+  });
+});
+
+test("grouped Essentials remain directly available while individual editors use native closed details", () => {
+  const { tree } = renderedOutcome(recoveryAnswers("multiple"));
+  const panel = tree.find((node) => hasClass(node, "recommendation-recovery"));
+  const disclosure = descendants(panel).find((node) => node.tagName === "details");
+  assert.equal(disclosure.children[0].tagName, "summary");
+  assert.equal(disclosure.attributes.open, undefined);
+  assert.ok(!descendants(disclosure).some((node) => node.dataset.editQuestionId === "essentialRequirements"));
+  assert.deepEqual(descendants(disclosure).filter((node) => node.tagName === "button")
+    .map(({ dataset }) => dataset.editQuestionId), ["maximumWeight", "devicePreferences", "externalDisplayCount"]);
+});
+
+test("OK and invalid outcomes ignore recovery content and retain their original result presentation", () => {
+  for (const [answers, catalogue] of [[everydayPortableAnswers, productCatalogue], [{}, productCatalogue], [everydayPortableAnswers, {}]]) {
+    const { tree } = renderedOutcome(answers, { recoveryChange: () => ({ status: "no-match" }) }, catalogue);
+    assert.ok(!tree.some((node) => hasClass(node, "recommendation-recovery")));
+  }
+  assert.equal(createRecommendationRecoveryPanel({ status: "invalid-input" }), null);
+});
+
+test("missing or malformed optional recovery preserves the existing terminal explanation and answer editors", () => {
+  for (const recoveryChange of [() => null, () => ({ status: "no-match" })]) {
+    const { tree, surfaces } = renderedOutcome(recoveryAnswers("multiple"), { recoveryChange });
+    assert.ok(!tree.some((node) => hasClass(node, "recommendation-recovery")));
+    assert.ok(tree.some((node) => hasClass(node, "results-blockers")));
+    assert.ok(tree.some((node) => hasClass(node, "answer-review")));
+    assert.equal(surfaces.get("#results").dataset.state, "no-match");
+  }
+});
+
+test("no actionable blocker renders explanatory copy and catalogue notices without invented buttons", () => {
+  const { tree } = renderedOutcome(recoveryAnswers("multiple"), { recoveryChange: (model) => ({ ...model,
+    blockers: [], actions: [], notices: [{ code: "availability", message: "Availability was not verified." }],
+  }) });
+  const panel = tree.find((node) => hasClass(node, "recommendation-recovery"));
+  assert.equal(descendants(panel).filter((node) => node.tagName === "button").length, 0);
+  assert.match(panel.textContent, /Availability was not verified/);
+  assert.match(panel.textContent, /keep them as they are/);
+});
+
+function withRecordedDocument(document, run) {
+  const original = globalThis.document;
+  globalThis.document = document;
+  try { run(); } finally {
+    if (original === undefined) delete globalThis.document;
+    else globalThis.document = original;
+  }
+}
+
+test("an active edit disables both recovery and general answer editors without another live region", () => {
+  const { tree } = renderedOutcome(recoveryAnswers("multiple"));
+  const buttons = tree.filter((node) => node.dataset.editQuestionId);
+  const status = tree.find((node) => hasClass(node, "recovery-edit-status"));
+  assert.equal(status.hidden, true);
+  assert.ok(buttons.some((node) => hasClass(node, "recovery-edit-button")));
+  assert.ok(buttons.some((node) => hasClass(node, "answer-edit-button")));
+  withRecordedDocument({ querySelectorAll: () => buttons, querySelector: () => status }, () => {
+    setResultsEditing(true);
+    assert.ok(buttons.every((button) => button.disabled));
+    assert.equal(status.hidden, false);
+    assert.match(status.textContent, /Save changes or Cancel edit/);
+    assert.equal(status.attributes["aria-live"], undefined);
+    setResultsEditing(false);
+    assert.ok(buttons.every((button) => !button.disabled));
+    assert.equal(status.hidden, true);
+  });
+});
+
+test("edit return focus uses the visible origin, closed summary or current heading after replacement", () => {
+  const document = { activeElement: null };
+  const focusable = () => ({ isConnected: true, disabled: false, getClientRects: () => [{}],
+    focus() { document.activeElement = this; } });
+  const origin = focusable();
+  const summary = focusable();
+  const heading = focusable();
+  let closed = false;
+  origin.closest = () => closed ? { querySelector: () => summary } : null;
+  document.querySelector = () => heading;
+  withRecordedDocument(document, () => {
+    restoreResultsEditFocus(origin);
+    assert.equal(document.activeElement, origin);
+    closed = true;
+    restoreResultsEditFocus(origin);
+    assert.equal(document.activeElement, summary);
+    assert.equal(closed, true, "Focus return does not reopen the disclosure");
+    closed = false;
+    restoreResultsEditFocus(origin);
+    assert.equal(document.activeElement, origin);
+    origin.isConnected = false;
+    restoreResultsEditFocus(origin);
+    assert.equal(document.activeElement, heading);
+    origin.isConnected = true;
+    origin.getClientRects = () => [];
+    restoreResultsEditFocus(origin);
+    assert.equal(document.activeElement, heading, "A hidden origin is never the focus destination");
+  });
+});
+
+test("rejected recovery evidence preserves the original terminal context and general answer review", () => {
+  const answers = recoveryAnswers("budget");
+  const inconsistent = structuredClone(recommendMacBooks({ catalogue: productCatalogue, answers }));
+  inconsistent.budgetLimitedAlternatives[0].amountOverLimitMinor = -1;
+  const { tree, surfaces } = renderedOutcome(answers, {
+    recoveryChange: () => buildRecommendationRecovery({ output: inconsistent }),
+  });
+  assert.equal(surfaces.get("#results").dataset.state, "budget-limited");
+  assert.ok(tree.some((node) => node.textContent === "No MacBook fits your maximum budget"));
+  assert.ok(tree.some((node) => hasClass(node, "answer-edit-button") && node.textContent === "Edit budget"));
+  assert.ok(!tree.some((node) => hasClass(node, "recovery-edit-button")));
+  assert.ok(!tree.some((node) => hasClass(node, "recovery-requirement")));
+  assert.equal(surfaces.get("#results-title").focused, true);
 });

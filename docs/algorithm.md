@@ -229,4 +229,18 @@ component advantages/gaps and refinement opportunities are not displayed in the 
 
 This local presentation phase changes no recommendation output, scoring, eligibility, classification,
 confidence calculation or rules. If explanation construction fails, the existing card explanations
-remain available. Terminal result experiences are unchanged and receive no Decision Brief.
+remain available. That phase retained terminal result experiences and adds no terminal Decision Brief.
+
+## v1.3 blocked-result recovery projection
+
+The engine and its rules remain unchanged. `js/recommendation-recovery.js` reads reported exclusions,
+applied filter codes, blocker counts and active hard requirements; it does not run filters or predict
+alternative outcomes. For `no-match`, supported blockers retain applied-filter order, and counts do
+not rank importance. For `budget-limited`, existing above-maximum configurations supply context for
+reviewing budget while remaining excluded. Preferred targets, strict maxima and explicit absolute
+maxima retain their current meanings; eligible stretch results remain `ok`.
+
+The results panel offers existing answer-edit destinations. Requirements change only after a user
+edits and saves; Save invokes the existing engine once. Cancellation preserves the original result.
+Catalogue limitations and unsupported checks never become user-answer recovery actions. The model,
+ordering, edit flow and safeguards are documented in [blocked-result-recovery.md](blocked-result-recovery.md).
